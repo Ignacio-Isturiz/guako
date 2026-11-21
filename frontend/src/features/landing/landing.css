@@ -1,0 +1,10 @@
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+.hero,
+.roles,
+.how,
+.cta {
+  scroll-snap-align: start;
+}

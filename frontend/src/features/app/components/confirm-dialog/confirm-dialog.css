@@ -1,0 +1,23 @@
+.modal--confirm .modal__card {
+  text-align: left;
+}
+.modal--confirm .modal__title {
+  margin-top: 0.3rem;
+}
+.modal .btn--block {
+  width: 100%;
+  margin-top: 0.4rem;
+}
+.confirm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+.confirm__input {
+  margin-top: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+}

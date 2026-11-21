@@ -1,0 +1,132 @@
+/* ---------- Navbar ---------- */
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 14px 24px;
+  pointer-events: none;
+}
+.nav__bar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1320px;
+  padding: 6px 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0);
+  box-shadow: 0 0 0 rgba(11, 27, 68, 0);
+  color: var(--white);
+  transition:
+    max-width 0.55s cubic-bezier(0.65, 0, 0.35, 1),
+    padding 0.55s cubic-bezier(0.65, 0, 0.35, 1),
+    background-color 0.35s ease,
+    box-shadow 0.45s ease,
+    color 0.35s ease;
+}
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+}
+.nav__brand img {
+  width: 44px;
+  height: 44px;
+  transition: width 0.45s ease, height 0.45s ease;
+}
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Selector de idioma ES | EN */
+.nav__langs {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(8, 20, 56, 0.55);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.3s ease;
+}
+.nav__langs button {
+  min-width: 2.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: background-color 0.25s ease, color 0.25s ease, opacity 0.25s ease;
+}
+.nav__langs button:hover {
+  opacity: 1;
+}
+.nav__langs button.is-on {
+  background: var(--white);
+  color: var(--ink);
+  opacity: 1;
+}
+.btn--nav {
+  padding: 0.7rem 1.25rem;
+  font-size: 0.98rem;
+  background: var(--white);
+  color: var(--ink);
+}
+/* Estado contraído (tras hacer scroll): píldora blanca flotante */
+.nav--compact .nav__bar {
+  max-width: 760px;
+  padding: 6px 8px 6px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 30px rgba(11, 27, 68, 0.22);
+  color: var(--ink);
+  backdrop-filter: blur(10px);
+}
+.nav--compact .nav__brand {
+  font-size: 1.4rem;
+}
+.nav--compact .nav__brand img {
+  width: 36px;
+  height: 36px;
+}
+.nav--compact .nav__langs {
+  background: rgba(11, 42, 107, 0.09);
+}
+.nav--compact .nav__langs button.is-on {
+  background: var(--navy);
+  color: var(--white);
+}
+.nav--compact .btn--nav {
+  background: var(--red);
+  color: var(--white);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .nav {
+    padding: 10px 14px;
+  }
+  .nav__brand {
+    font-size: 1.4rem;
+  }
+  .nav--compact .nav__bar {
+    max-width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav__bar,
+  .nav__brand img {
+    transition: none;
+  }
+}

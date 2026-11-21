@@ -1,0 +1,61 @@
+/* ---------- Diálogos de la app ---------- */
+.modal--test .modal__card {
+  text-align: left;
+}
+.modal--test .modal__title {
+  margin-top: 0.3rem;
+}
+.modal--test .modal__mascot {
+  margin-top: -4.4rem;
+}
+.test__q {
+  margin-top: 1rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: var(--navy);
+}
+.test__es {
+  margin-top: 0.2rem;
+  font-weight: 600;
+  color: rgba(11, 27, 68, 0.6);
+}
+.test__options {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.test__opt {
+  padding: 0.8rem 1rem;
+  border: 3px solid rgba(11, 42, 107, 0.15);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--navy);
+  font: 800 1rem var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.test__opt:hover:not(:disabled) {
+  border-color: var(--navy);
+}
+.test__opt.is-right {
+  border-color: #1aa05a;
+  background: rgba(26, 160, 90, 0.12);
+}
+.test__opt.is-wrong {
+  border-color: var(--red);
+  background: rgba(232, 32, 26, 0.1);
+}
+.test__actions {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.test__go {
+  margin-top: 1rem;
+}
+.modal--test .meter-bar {
+  margin-top: 0.4rem;
+}

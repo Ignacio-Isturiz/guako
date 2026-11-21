@@ -1,0 +1,4 @@
+/* Estilos globales: se cargan una sola vez desde main.js, antes que cualquier módulo. */
+@import './tokens.css'; /* colores, tipografías y medidas de la marca */
+@import './base.css'; /* reinicio y estilos base de etiquetas */
+@import './buttons.css'; /* .btn y .link, compartidos por landing, auth, legal y app */

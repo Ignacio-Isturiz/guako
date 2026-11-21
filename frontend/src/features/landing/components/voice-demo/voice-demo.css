@@ -1,0 +1,211 @@
+/* Demo de voz */
+.demo {
+  position: relative;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.7rem, 1.8vh, 1.2rem) clamp(1rem, 3vw, 1.8rem) clamp(0.6rem, 1.5vh, 1rem);
+  background: #fff6e0;
+  color: var(--ink);
+  border: 5px solid #fff6e0;
+  border-radius: 10px 22px 12px 26px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38), inset 0 0 0 3px rgba(11, 42, 107, 0.06);
+  rotate: -1deg;
+}
+.demo__tag {
+  position: absolute;
+  top: -13px;
+  left: 18px;
+  padding: 0.2rem 0.8rem;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  rotate: -3deg;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+.demo__es {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.62);
+}
+.demo__en {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.4rem, min(3.4vw, 4.4vh), 2.2rem);
+  line-height: 1.15;
+  color: var(--navy);
+}
+.demo .w {
+  display: inline-block;
+  padding: 0 0.12em;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+.demo .w.is-ok {
+  background: var(--yellow);
+  transform: translateY(-3px);
+}
+.demo .w.is-miss {
+  color: var(--red);
+  text-decoration: underline wavy var(--red);
+  text-underline-offset: 6px;
+}
+.demo__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.8rem, 3vw, 1.6rem);
+  margin-top: 0.2rem;
+}
+.demo__mascot {
+  width: clamp(44px, 7vh, 60px);
+  height: auto;
+  transition: transform 0.3s ease;
+}
+.demo.is-listening .demo__mascot {
+  animation: mascot-shake 0.5s ease-in-out infinite;
+}
+.demo.is-done .demo__mascot {
+  animation: mascot-hop 0.6s ease;
+}
+@keyframes mascot-shake {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg) translateY(-3px);
+  }
+}
+@keyframes mascot-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-14px) rotate(-6deg);
+  }
+}
+/* Botón de micrófono */
+.mic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(58px, 9vh, 80px);
+  height: clamp(58px, 9vh, 80px);
+  border: 4px solid #fff6e0;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 0 rgba(11, 27, 68, 0.3);
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+.mic:hover {
+  transform: scale(1.06);
+}
+.mic:active {
+  transform: scale(0.96);
+}
+.mic__ring {
+  position: absolute;
+  inset: -4px;
+  border: 3px solid var(--red);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+.demo.is-listening .mic {
+  background: var(--blue);
+}
+.demo.is-listening .mic__ring {
+  animation: ring 1.4s ease-out infinite;
+}
+.demo.is-listening .mic__ring--b {
+  animation-delay: 0.7s;
+}
+@keyframes ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+/* Ondas de voz */
+.wave {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  width: clamp(44px, 7vh, 60px);
+}
+.wave i {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--navy);
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+.demo.is-listening .wave i {
+  opacity: 1;
+  animation: bars 0.9s ease-in-out infinite;
+}
+.wave i:nth-child(2) {
+  animation-delay: -0.2s;
+}
+.wave i:nth-child(3) {
+  animation-delay: -0.4s;
+}
+.wave i:nth-child(4) {
+  animation-delay: -0.6s;
+}
+.wave i:nth-child(5) {
+  animation-delay: -0.8s;
+}
+@keyframes bars {
+  0%,
+  100% {
+    height: 8px;
+  }
+  50% {
+    height: 40px;
+  }
+}
+.demo__status {
+  min-height: 2.4em;
+  max-width: 44ch;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--navy);
+}
+.demo__next {
+  padding: 0.3rem 0.9rem;
+  border: 2px solid rgba(11, 42, 107, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.demo__next:hover {
+  background: rgba(11, 42, 107, 0.1);
+}
+@media (max-width: 860px) {
+  .demo {
+    padding-inline: 0.9rem;
+  }
+}

@@ -1,0 +1,59 @@
+/* ---------- Botones ---------- */
+.btn {
+  appearance: none;
+  /* Los <button> traen fondo y color propios del navegador: se neutralizan aquí */
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.25s ease, color 0.25s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn--primary {
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.22);
+}
+.btn--ghost {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: var(--white);
+}
+.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--navy);
+  font: 800 inherit var(--font-body);
+  text-decoration: underline;
+  text-decoration-color: rgba(11, 42, 107, 0.35);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.link:hover {
+  text-decoration-color: var(--navy);
+}
+.link[disabled] {
+  color: rgba(11, 27, 68, 0.5);
+  text-decoration: none;
+  cursor: default;
+}
+.link--right {
+  justify-self: end;
+  margin-top: -0.35rem;
+  font-size: 0.85rem;
+}

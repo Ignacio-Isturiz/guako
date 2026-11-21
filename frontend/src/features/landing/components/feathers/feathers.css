@@ -1,0 +1,57 @@
+/* ---------- Plumas (cursor y explosión) ---------- */
+.feather-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+.feather {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.25));
+}
+.feather-cursor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 80px;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  will-change: transform;
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.3));
+}
+.feather-cursor.is-on {
+  opacity: 1;
+}
+.feather-cursor__in {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+.feather-cursor__in.is-pop {
+  animation: pop 0.35s ease;
+}
+@keyframes pop {
+  0% { transform: scale(1) rotate(0); }
+  30% { transform: scale(0.8) rotate(-14deg); }
+  60% { transform: scale(1.06) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+/* En pantallas con mouse, la pluma reemplaza al cursor dentro de la pila */
+@media (hover: hover) and (pointer: fine) {
+  .hero__stack,
+  .hero__stack .stack,
+  .hero__stack .stack:active {
+    cursor: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feather-layer {
+    display: none;
+  }
+}

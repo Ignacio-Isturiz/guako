@@ -1,0 +1,330 @@
+/* ---------- Sección: Roles y temas para hablar ---------- */
+.roles {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--nav-h) + 1.5vh) 24px 3vh;
+  background: var(--yellow);
+  color: var(--ink);
+  text-align: center;
+}
+/* Trama de puntos, como papel impreso */
+.roles::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(11, 42, 107, 0.11) 1.7px, transparent 1.9px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at 50% 45%, #000 0%, transparent 72%);
+  pointer-events: none;
+}
+.roles > * {
+  position: relative;
+}
+.roles__stage {
+  width: 100%;
+}
+.roles__head {
+  max-width: 760px;
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+.roles__eyebrow {
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--yellow);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transform: rotate(-2deg);
+}
+.roles h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.9rem, min(4.2vw, 6vh), 3.2rem);
+  line-height: 1.05;
+  color: var(--navy);
+}
+.roles__head p {
+  font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 62ch;
+}
+/* Escenario: roles — Guako — temas */
+.roles__stage {
+  --gap: clamp(70px, 9vw, 130px);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: var(--gap);
+  max-width: 1100px;
+  margin: clamp(0.7rem, 2.8vh, 2.2rem) auto;
+}
+.roles__col {
+  display: grid;
+  gap: clamp(16px, 3vh, 32px);
+}
+/* Cajas de roles (izquierda) y píldoras de temas (derecha) */
+.rcard,
+.tpill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem 1rem 0.6rem 0.6rem;
+  text-align: left;
+  rotate: var(--tilt);
+  box-shadow: 0 10px 22px rgba(11, 42, 107, 0.25);
+  transition: rotate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rcard:hover,
+.tpill:hover {
+  rotate: 0deg;
+  scale: 1.04;
+}
+.rcard {
+  background: var(--navy);
+  color: #fff;
+  border: 5px solid #fff6e0;
+  border-radius: 8px 16px 10px 18px;
+}
+.tpill {
+  background: var(--red);
+  color: #fff;
+  border: 5px solid #fff6e0;
+  border-radius: 26px;
+  flex-direction: row-reverse;
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+}
+/* Ilustración de cada card */
+.cardimg {
+  flex: none;
+  width: clamp(56px, 10vh, 92px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid #fff6e0;
+  border-radius: 6px 12px 8px 14px;
+  background: #fff6e0;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+  rotate: -3deg;
+}
+.tpill .cardimg {
+  rotate: 3deg;
+}
+.cardimg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Marcador provisional mientras no hay ilustración */
+.cardimg--ph {
+  background: var(--yellow);
+}
+.cardimg--ph img {
+  object-fit: contain;
+  padding: 12%;
+}
+.card__body {
+  min-width: 0;
+}
+.rcard__tag,
+.tpill__tag {
+  display: inline-block;
+  margin-bottom: 0.2rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.rcard h3,
+.tpill h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  line-height: 1.1;
+}
+.rcard p,
+.tpill p {
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+/* Flechas: salen de Guako y terminan en cada card (las dibuja el JS) */
+.roles__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.roles__line {
+  fill: none;
+  stroke: var(--navy);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.roles__tip {
+  fill: var(--navy);
+}
+/* Centro: el asset de Guako */
+.roles__center {
+  position: relative;
+  width: clamp(140px, 27vh, 240px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #fff6e0;
+  box-shadow: 0 14px 30px rgba(11, 42, 107, 0.28);
+}
+.halo::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 3px dashed var(--navy);
+  border-radius: 50%;
+  opacity: 0.55;
+  animation: spin 40s linear infinite;
+}
+.roles__asset {
+  position: relative;
+  width: 74%;
+  height: auto;
+  animation: float 4.5s ease-in-out infinite;
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.25));
+}
+.bubble {
+  position: absolute;
+  padding: 0.35rem 0.75rem;
+  border-radius: 18px 18px 18px 4px;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(11, 42, 107, 0.25);
+  animation: float 5s ease-in-out infinite;
+}
+.bubble--a {
+  top: -4%;
+  left: -14%;
+  rotate: -5deg;
+}
+.bubble--b {
+  bottom: 2%;
+  right: -22%;
+  rotate: 4deg;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--navy);
+  color: #fff;
+  animation-delay: -2s;
+}
+@keyframes float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -10px;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Entrada ligada al scroll: --pi (0 a 1) lo calcula el JS según la posición */
+[data-reveal] {
+  opacity: calc(var(--pi, 1) * 2);
+  will-change: transform, opacity;
+}
+[data-reveal='left'] {
+  transform: translateX(calc((1 - var(--pi, 1)) * -58vw));
+}
+[data-reveal='right'] {
+  transform: translateX(calc((1 - var(--pi, 1)) * 58vw));
+}
+[data-reveal='up'] {
+  transform: translateY(calc((1 - var(--pi, 1)) * 40px));
+}
+[data-reveal='pop'] {
+  transform: scale(calc(0.6 + var(--pi, 1) * 0.4));
+}
+/* Móvil: Guako arriba y roles/temas en dos columnas, sin conectores */
+@media (max-width: 860px) {
+  .roles {
+    padding-inline: 18px;
+  }
+  .roles__stage {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+    row-gap: 2.2rem;
+  }
+  .roles__center {
+    grid-column: 1 / -1;
+    order: -1;
+    justify-self: center;
+    width: min(170px, 46vw);
+    margin-block: 0.4rem 0.6rem;
+  }
+  .roles__lines {
+    display: none;
+  }
+  .rcard,
+  .tpill {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem 0.8rem;
+    border-width: 4px;
+  }
+  .cardimg {
+    width: 64px;
+  }
+  .tpill {
+    border-radius: 20px;
+  }
+  .rcard h3,
+  .tpill h3 {
+    font-size: 1.15rem;
+  }
+  .rcard p,
+  .tpill p {
+    font-size: 0.85rem;
+  }
+  .bubble--a {
+    left: -10%;
+  }
+  .bubble--b {
+    right: -12%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .halo::before,
+  .roles__asset,
+  .bubble {
+    animation: none;
+  }
+}

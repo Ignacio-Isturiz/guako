@@ -1,0 +1,53 @@
+/* ---------- Anillos de puntaje (estilo Aura) ---------- */
+.ring {
+  position: relative;
+  flex: none;
+  width: var(--size);
+  height: var(--size);
+}
+.ring svg {
+  display: block;
+}
+.ring__track {
+  stroke: rgba(11, 42, 107, 0.09);
+}
+.ring__bar {
+  animation: ring-in 1s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+}
+@keyframes ring-in {
+  from {
+    stroke-dashoffset: var(--c);
+  }
+}
+.ring__label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1;
+}
+.ring__label strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: calc(var(--size) * 0.31);
+  color: var(--navy);
+}
+.ring__label small {
+  margin-top: 0.15em;
+  font-size: calc(var(--size) * 0.1);
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.55);
+}
+.ring--ghost {
+  display: grid;
+  place-items: center;
+  border: 7px dashed rgba(11, 42, 107, 0.14);
+  border-radius: 50%;
+  color: rgba(11, 42, 107, 0.4);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ring__bar {
+    animation: none !important;
+  }
+}

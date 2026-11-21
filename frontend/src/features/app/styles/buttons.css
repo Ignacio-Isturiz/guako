@@ -1,0 +1,56 @@
+/* ---------- Botones extra ---------- */
+.btn--navy {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(8, 20, 56, 0.35);
+}
+.btn--outline {
+  background: #fff;
+  color: var(--navy);
+  border-color: rgba(11, 42, 107, 0.22);
+}
+.btn--outline:hover {
+  border-color: var(--navy);
+}
+.btn--ok {
+  background: #1aa05a;
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(10, 80, 42, 0.35);
+}
+.btn--danger {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 5px 0 rgba(120, 12, 8, 0.35);
+}
+.btn--glass {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+}
+.btn--glass:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.btn--sm {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+.btn--lg {
+  padding: 1rem 1.8rem;
+  font-size: 1.15rem;
+}
+.btn--block {
+  width: 100%;
+}
+.btn svg {
+  margin-right: 0.45rem;
+}
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.app .btn {
+  gap: 0;
+}

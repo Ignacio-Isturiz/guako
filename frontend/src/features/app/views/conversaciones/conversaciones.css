@@ -1,0 +1,124 @@
+/* ---------- Mis conversaciones ---------- */
+.listbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}
+.search {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border: 2px solid var(--app-line);
+  border-radius: 999px;
+  background: #fff;
+  color: rgba(11, 27, 68, 0.55);
+}
+.search input {
+  flex: 1;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: 600 1rem var(--font-body);
+  color: var(--ink);
+}
+.search:focus-within {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 4px rgba(255, 199, 0, 0.5);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.chipbtn {
+  padding: 0.5rem 0.9rem;
+  border: 2px solid var(--app-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: 800 0.88rem var(--font-body);
+  cursor: pointer;
+}
+.chipbtn.is-on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.listcount {
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.55);
+}
+.listcount:empty {
+  display: none;
+}
+.convlist {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.conv {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid rgba(11, 42, 107, 0.05);
+  box-shadow: 0 8px 22px rgba(11, 42, 107, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.conv:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(11, 42, 107, 0.12);
+}
+.conv .thumb {
+  width: 64px;
+  height: 64px;
+}
+.conv__info {
+  flex: 1;
+  min-width: 0;
+}
+.conv__info h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--navy);
+}
+.conv__info p {
+  margin-top: 0.15rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(11, 27, 68, 0.6);
+}
+.conv__score {
+  display: grid;
+  place-items: center;
+  min-width: 70px;
+}
+.conv__analyzing {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--blue);
+}
+.conv__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+@media (max-width: 860px) {
+  .conv {
+    flex-wrap: wrap;
+  }
+  .conv__actions {
+    width: 100%;
+  }
+}

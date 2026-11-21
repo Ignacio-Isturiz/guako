@@ -1,0 +1,127 @@
+/* ---------- Práctica ---------- */
+.practice {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+.plist {
+  display: grid;
+  gap: 0.9rem;
+  max-height: calc(100vh - 8rem);
+  overflow: auto;
+}
+.plist ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pprogress {
+  display: grid;
+  gap: 0.3rem;
+}
+.pprogress small {
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.6);
+}
+.pitem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pitem:hover {
+  background: var(--app-soft);
+}
+.pitem.is-on {
+  background: #fff3d1;
+  border-color: var(--yellow);
+}
+.pitem__dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(11, 42, 107, 0.2);
+  color: #fff;
+}
+.pitem__dot.is-done {
+  background: #1aa05a;
+  border-color: #1aa05a;
+}
+.pitem__text {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pitem small {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.5);
+}
+.pcard {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  text-align: center;
+}
+.pcard__text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  line-height: 1.05;
+  color: var(--navy);
+}
+.pcard__text.is-phrase {
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  max-width: 24ch;
+}
+.pcard__note {
+  max-width: 52ch;
+  font-weight: 600;
+  line-height: 1.5;
+  color: rgba(11, 27, 68, 0.72);
+}
+.pcard__listen,
+.pcard__mark {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+}
+.pcard__hint {
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.55);
+}
+.pcard__done {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 800;
+  color: #0f6b3b;
+}
+@media (max-width: 1100px) {
+  .practice {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .plist {
+    max-height: 320px;
+  }
+}

@@ -1,0 +1,13 @@
+:root {
+  --navy: #0b2a6b;
+  --blue: #0a7cff;
+  --red: #e8201a;
+  --yellow: #ffc700;
+  --white: #ffffff;
+  --ink: #0b1b44;
+
+  --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  --nav-h: 76px;
+}

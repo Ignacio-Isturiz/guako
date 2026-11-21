@@ -1,0 +1,31 @@
+/* =========================================================================
+   Aplicación de Guako
+   Mezcla: estructura de Gurwi (menú lateral, saludo, tarjetas grandes) +
+   suavidad de Aura (tarjetas redondeadas, anillos de puntaje) + la esencia de
+   la landing (papel recortado, cinta, Baloo 2 y los colores de la marca).
+   ========================================================================= */
+html.is-app,
+html.is-app body {
+  background: #fcf6e8;
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+html.is-app body {
+  color: var(--ink);
+}
+.app {
+  --app-line: rgba(11, 42, 107, 0.1);
+  --app-soft: rgba(11, 42, 107, 0.06);
+  --radius: 22px;
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  min-height: 100vh;
+  background-image: radial-gradient(rgba(11, 42, 107, 0.045) 1.6px, transparent 1.8px);
+  background-size: 24px 24px;
+}
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 5.2rem;
+  }
+}

@@ -1,0 +1,152 @@
+/* ---------- Progreso ---------- */
+.progress {
+  display: grid;
+  gap: 1.2rem;
+}
+#progBody {
+  display: grid;
+  gap: 1.2rem;
+}
+.seg {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid var(--app-line);
+}
+.seg button {
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(11, 27, 68, 0.65);
+  font: 800 0.9rem var(--font-display);
+  cursor: pointer;
+}
+.seg button.is-on {
+  background: var(--navy);
+  color: #fff;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+.tile {
+  display: grid;
+  gap: 0.2rem;
+}
+.tile small {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(11, 27, 68, 0.55);
+}
+.tile strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.1rem;
+  line-height: 1.1;
+  color: var(--navy);
+}
+.tile span {
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.6);
+}
+.delta.is-up {
+  color: #0f6b3b;
+}
+.delta.is-down {
+  color: var(--red);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+.legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid var(--app-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: 800 0.85rem var(--font-body);
+  cursor: pointer;
+}
+.legend__item i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.legend__item.is-off {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.chart {
+  position: relative;
+  margin-top: 0.6rem;
+}
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.chart .grid {
+  stroke: rgba(11, 42, 107, 0.09);
+  stroke-dasharray: 4 5;
+}
+.chart .axis {
+  fill: rgba(11, 27, 68, 0.55);
+  font: 700 12px var(--font-body);
+}
+.chart .guide {
+  stroke: rgba(11, 42, 107, 0.35);
+  stroke-width: 1.5;
+}
+.chart .guide[hidden] {
+  display: none;
+}
+.tip {
+  position: absolute;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  gap: 3px;
+  min-width: 160px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 14px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transform: translateX(-50%);
+  pointer-events: none;
+  box-shadow: 0 10px 24px rgba(11, 42, 107, 0.35);
+}
+.tip[hidden] {
+  display: none;
+}
+.tip span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.tip strong {
+  margin-left: auto;
+  padding-left: 0.6rem;
+}
+.tip i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+@media (max-width: 860px) {
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,506 @@
+:root {
+  --navy: #0b2a6b;
+  --blue: #0a7cff;
+  --red: #e8201a;
+  --yellow: #ffc700;
+  --white: #ffffff;
+  --ink: #0b1b44;
+
+  --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  --nav-h: 76px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--white);
+  background: var(--navy);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+img {
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.25s ease, color 0.25s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+.btn--primary {
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.22);
+}
+.btn--ghost {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: var(--white);
+}
+.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ---------- Navbar ---------- */
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  padding: 14px 24px;
+  pointer-events: none;
+}
+
+.nav__bar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1320px;
+  padding: 6px 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0);
+  box-shadow: 0 0 0 rgba(11, 27, 68, 0);
+  color: var(--white);
+  transition:
+    max-width 0.55s cubic-bezier(0.65, 0, 0.35, 1),
+    padding 0.55s cubic-bezier(0.65, 0, 0.35, 1),
+    background-color 0.35s ease,
+    box-shadow 0.45s ease,
+    color 0.35s ease;
+}
+
+.nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+}
+.nav__brand img {
+  width: 44px;
+  height: 44px;
+  transition: width 0.45s ease, height 0.45s ease;
+}
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav__lang {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  background: rgba(8, 20, 56, 0.55);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.3s ease;
+}
+.nav__lang:hover {
+  background: rgba(8, 20, 56, 0.75);
+}
+
+.btn--nav {
+  padding: 0.7rem 1.25rem;
+  font-size: 0.98rem;
+  background: var(--white);
+  color: var(--ink);
+}
+
+/* Estado contraído (tras hacer scroll): píldora blanca flotante */
+.nav--compact .nav__bar {
+  max-width: 760px;
+  padding: 6px 8px 6px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 30px rgba(11, 27, 68, 0.22);
+  color: var(--ink);
+  backdrop-filter: blur(10px);
+}
+.nav--compact .nav__brand {
+  font-size: 1.4rem;
+}
+.nav--compact .nav__brand img {
+  width: 36px;
+  height: 36px;
+}
+.nav--compact .nav__lang {
+  background: rgba(11, 42, 107, 0.09);
+}
+.nav--compact .nav__lang:hover {
+  background: rgba(11, 42, 107, 0.17);
+}
+.nav--compact .btn--nav {
+  background: var(--red);
+  color: var(--white);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: calc(var(--nav-h) + 24px) clamp(24px, 5vw, 72px) 48px;
+  /* El fondo recorre los colores de la marca */
+  animation: bg-cycle 28s ease-in-out infinite;
+}
+
+@keyframes bg-cycle {
+  0%,
+  100% {
+    background-color: #0b2a6b;
+  }
+  25% {
+    background-color: #0a5fd6;
+  }
+  50% {
+    background-color: #d41f1a;
+  }
+  75% {
+    background-color: #5b1f8c;
+  }
+}
+
+.hero__copy {
+  position: relative;
+  z-index: 2;
+  max-width: 660px;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 5.4vw, 4.8rem);
+  line-height: 1.04;
+}
+.hero h1 .line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* La palabra rotatoria sobre su "cuadro" de papel */
+.mark {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.28em;
+  margin: 0 0.04em;
+  color: var(--ink);
+  z-index: 0;
+  vertical-align: bottom;
+  transition: width 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.mark::before {
+  content: '';
+  position: absolute;
+  inset: 0.08em 0 0.02em;
+  background: var(--yellow);
+  border-radius: 0.2em;
+  transform: rotate(-2.5deg);
+  z-index: -1;
+  box-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.22);
+}
+.mark__word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.mark__word,
+#phrase {
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.is-out {
+  opacity: 0;
+  transform: translateY(0.35em);
+}
+
+.hero__lead {
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.55;
+  max-width: 48ch;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* Globo de diálogo: Guako "habla" en inglés */
+.say {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.say img {
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+.say__bubble {
+  position: relative;
+  padding: 0.6rem 1rem;
+  border-radius: 18px 18px 18px 4px;
+  background: #fff6e0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+  transform: rotate(-1deg);
+}
+.say__hint {
+  font-weight: 600;
+  opacity: 0.65;
+}
+.say__bubble strong {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+/* ---------- Muro de collage: columnas verticales ---------- */
+.hero__wall {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60%;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  overflow: hidden;
+  /* Se desvanece arriba, abajo y hacia el texto */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%),
+    linear-gradient(to right, transparent 0, #000 14%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%),
+    linear-gradient(to right, transparent 0, #000 14%);
+  mask-composite: intersect;
+}
+
+.col {
+  position: relative;
+  width: 262px;
+  flex: none;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 14px;
+}
+
+.col__track {
+  display: flex;
+  flex-direction: column;
+  animation: rise var(--speed) linear infinite;
+  animation-delay: var(--phase);
+  will-change: transform;
+}
+.col--down .col__track {
+  animation-direction: reverse;
+}
+.col:hover .col__track {
+  animation-play-state: paused;
+}
+
+@keyframes rise {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/* Cada card: papel pegado con cinta, ligeramente torcido */
+.card {
+  position: relative;
+  flex: none;
+  width: 100%;
+  height: var(--h);
+  margin: 14px 0 22px;
+  transform: rotate(var(--tilt));
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.card:hover {
+  transform: rotate(0deg) scale(1.05);
+  z-index: 3;
+}
+.card__paper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 6px solid #fff6e0;
+  border-radius: 6px 12px 8px 14px;
+  background: #fff6e0;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.28);
+}
+.card__paper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Cinta adhesiva */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 74px;
+  height: 22px;
+  margin-left: -37px;
+  background: rgba(255, 226, 140, 0.82);
+  transform: rotate(calc(var(--tilt) * -2));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+/* Etiqueta de papel con el beneficio */
+.card__label {
+  position: absolute;
+  left: -8px;
+  bottom: 16px;
+  max-width: 88%;
+  padding: 0.35rem 0.75rem;
+  background: #fff6e0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.1;
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transform: rotate(calc(var(--tilt) * -0.7));
+  z-index: 2;
+}
+
+/* ---------- Sección siguiente (placeholder) ---------- */
+.next {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  background: #fff;
+  color: var(--ink);
+}
+.next h2 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .nav {
+    padding: 10px 14px;
+  }
+  .nav__brand {
+    font-size: 1.4rem;
+  }
+  .nav--compact .nav__bar {
+    max-width: 100%;
+  }
+
+  .hero {
+    align-items: flex-start;
+    padding-top: calc(var(--nav-h) + 16px);
+  }
+  .hero__copy {
+    gap: 1.1rem;
+  }
+
+  .hero h1 .line {
+    white-space: normal;
+  }
+  .say__hint {
+    display: none;
+  }
+
+  .hero__wall {
+    inset: auto 0 0 0;
+    width: 100%;
+    height: 34%;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 30%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 30%);
+    -webkit-mask-composite: initial;
+    mask-composite: initial;
+  }
+  .col {
+    width: 150px;
+    padding: 0 8px;
+    margin-left: -6px;
+  }
+  .card {
+    height: calc(var(--h) * 0.56);
+    margin: 10px 0 16px;
+  }
+  .card__paper {
+    border-width: 4px;
+  }
+  .card__label {
+    font-size: 0.72rem;
+    bottom: 10px;
+    left: -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .col__track {
+    animation: none;
+  }
+  .nav__bar,
+  .nav__brand img,
+  .mark {
+    transition: none;
+  }
+}

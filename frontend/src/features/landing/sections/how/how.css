@@ -1,0 +1,318 @@
+/* ---------- Sección: ¿Cómo aprenderás? ---------- */
+.how {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: calc(var(--nav-h) + 2vh) clamp(24px, 5vw, 72px) 4vh;
+  background: var(--red);
+  color: #fff;
+}
+/* Trama de puntos, como papel impreso */
+.how::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.7px, transparent 1.9px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 70% 50%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse at 70% 50%, #000 0%, transparent 70%);
+  pointer-events: none;
+}
+.how__inner {
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: clamp(32px, 5vw, 80px);
+  align-items: center;
+}
+/* Columna de texto */
+.how h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.2rem, min(5vw, 7.5vh), 4.2rem);
+  line-height: 1.04;
+  margin-bottom: clamp(1rem, 3vh, 1.8rem);
+}
+.how__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(0.8rem, 2.4vh, 1.5rem);
+}
+.how__list li {
+  position: relative;
+  padding-left: 2.2rem;
+}
+/* Viñeta de papel */
+.how__list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.3rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  background: var(--yellow);
+  border: 3px solid #fff6e0;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+.how__list b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+  line-height: 1.15;
+}
+.how__list span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0.92;
+}
+/* Columna de opciones */
+.how__options {
+  display: grid;
+  gap: clamp(0.7rem, 2vh, 1.3rem);
+}
+.how__label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+.how__label span {
+  margin-top: 0.2rem;
+  padding: 0.3rem 0.95rem;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  border-radius: 6px 12px 8px 14px;
+  rotate: 2deg;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.22);
+}
+.how__label svg {
+  flex: none;
+  margin-top: -0.2rem;
+  height: clamp(40px, 7vh, 58px);
+  width: auto;
+}
+/* Collage de 3 formas irregulares de papel recortado */
+.how__gallery {
+  position: relative;
+  width: 100%;
+  height: clamp(250px, 44vh, 400px);
+}
+.blob {
+  position: absolute;
+  margin: 0;
+  rotate: var(--tilt);
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.32));
+  transition: rotate 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.blob:hover {
+  rotate: 0deg;
+  scale: 1.04;
+  z-index: 5;
+}
+.blob--1 {
+  left: 0;
+  top: 0;
+  width: 51%;
+  height: 62%;
+  z-index: 1;
+  --poly: polygon(6% 10%, 38% 2%, 72% 6%, 96% 20%, 92% 58%, 98% 88%, 60% 98%, 24% 94%, 3% 80%, 8% 44%);
+}
+.blob--2 {
+  right: 0;
+  top: 10%;
+  width: 52%;
+  height: 66%;
+  z-index: 2;
+  --poly: polygon(10% 4%, 52% 8%, 90% 2%, 98% 40%, 94% 80%, 70% 96%, 30% 90%, 4% 98%, 2% 50%);
+}
+.blob--3 {
+  left: 22%;
+  bottom: 0;
+  width: 48%;
+  height: 54%;
+  z-index: 3;
+  --poly: polygon(4% 14%, 40% 4%, 78% 12%, 96% 36%, 90% 74%, 62% 98%, 22% 92%, 6% 66%);
+}
+.blob__shape {
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  background: #fff6e0;
+  clip-path: var(--poly);
+}
+.blob__shape img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: var(--poly);
+}
+.blob.is-ph .blob__shape img {
+  object-fit: contain;
+  padding: 18%;
+  background: var(--yellow);
+}
+.blob__num {
+  position: absolute;
+  top: 2%;
+  left: 2%;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--yellow);
+  border: 3px solid #fff6e0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+  z-index: 2;
+}
+.blob__cap {
+  position: absolute;
+  left: 6%;
+  bottom: 9%;
+  max-width: 88%;
+  padding: 0.3rem 0.7rem 0.35rem;
+  background: #fff6e0;
+  color: var(--ink);
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  rotate: -2deg;
+  z-index: 2;
+}
+/* La etiqueta de la 2 va a la derecha para que no la tape la 3 */
+.blob--2 .blob__cap {
+  left: auto;
+  right: 6%;
+  bottom: 8%;
+  rotate: 2deg;
+}
+.blob__cap strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.98rem;
+  line-height: 1.1;
+}
+.blob__cap small {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.25;
+  opacity: 0.75;
+}
+/* Cuarta opción: barra ancha */
+.how__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  height: clamp(74px, 12vh, 104px);
+  padding: 0.5rem 0.6rem 0.5rem 0.8rem;
+  background: #fff6e0;
+  color: var(--ink);
+  border: 4px solid #fff6e0;
+  border-radius: 8px 20px 10px 22px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+  rotate: -1deg;
+}
+.how__barnum {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--yellow);
+  border: 3px solid #fff6e0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+.how__bartext {
+  min-width: 0;
+  flex: 1;
+}
+.how__bartext strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1.1;
+}
+.how__bartext small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0.75;
+}
+.how__barimg {
+  flex: none;
+  align-self: stretch;
+  width: 36%;
+  overflow: hidden;
+  border-radius: 6px 12px 8px 14px;
+  background: #fff6e0;
+}
+.how__barimg img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.how__bar.is-ph .how__barimg {
+  background: var(--yellow);
+}
+.how__bar.is-ph .how__barimg img {
+  object-fit: contain;
+  padding: 6%;
+}
+/* Móvil: una sola columna */
+@media (max-width: 860px) {
+  .how {
+    padding-inline: 18px;
+    padding-bottom: 56px;
+  }
+  .how__inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .how__gallery {
+    height: min(360px, 92vw);
+  }
+  .blob__cap small {
+    display: none;
+  }
+  .blob--1 .blob__cap {
+    bottom: auto;
+    top: 12%;
+    left: auto;
+    right: 2%;
+    rotate: 2deg;
+  }
+  .how__barimg {
+    width: 30%;
+  }
+}

@@ -1,0 +1,247 @@
+/* ---------- Formularios ---------- */
+.form {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.1rem;
+  text-align: left;
+}
+.field {
+  display: grid;
+  gap: 0.3rem;
+}
+.field label,
+.otp legend {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+.field__box {
+  position: relative;
+}
+.field input[type='text'],
+.field input[type='email'],
+.field input[type='password'] {
+  width: 100%;
+  padding: 0.75rem 0.95rem;
+  background: #fff;
+  color: var(--ink);
+  border: 3px solid rgba(11, 42, 107, 0.2);
+  border-radius: 12px;
+  font: 600 1rem var(--font-body);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.field input::placeholder {
+  color: rgba(11, 27, 68, 0.4);
+}
+.field input:hover {
+  border-color: rgba(11, 42, 107, 0.4);
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 4px rgba(255, 199, 0, 0.55);
+}
+.field__box input[type='password'],
+.field__box input[type='text'][name='password'],
+.field__box input[type='text'][name='confirm'] {
+  padding-right: 3rem;
+}
+.field.has-error input {
+  border-color: var(--red);
+}
+.field__eye {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  margin-top: -19px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(11, 27, 68, 0.55);
+  cursor: pointer;
+}
+.field__eye:hover,
+.field__eye.is-on {
+  color: var(--navy);
+  background: rgba(11, 42, 107, 0.08);
+}
+.field__hint {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(11, 27, 68, 0.6);
+}
+.field__err {
+  min-height: 0;
+  font-style: normal;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--red);
+}
+.field__err:empty {
+  display: none;
+}
+.form__error,
+.form__notice {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.form__error {
+  background: rgba(232, 32, 26, 0.1);
+  border: 2px solid rgba(232, 32, 26, 0.45);
+  color: #a01510;
+}
+.form__notice {
+  background: rgba(10, 124, 255, 0.1);
+  border: 2px solid rgba(10, 124, 255, 0.4);
+  color: var(--navy);
+}
+.form__error[hidden],
+.form__notice[hidden] {
+  display: none;
+}
+/* Fortaleza de la contraseña */
+.meter {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  margin-top: -0.35rem;
+}
+.meter i {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(11, 42, 107, 0.15);
+  transition: background-color 0.25s ease;
+}
+.meter[data-level='0'] i.on {
+  background: var(--red);
+}
+.meter[data-level='1'] i.on {
+  background: var(--yellow);
+}
+.meter[data-level='2'] i.on {
+  background: #1aa05a;
+}
+.meter span {
+  min-width: 4.5em;
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.65);
+}
+/* Casilla de aceptación */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-family: var(--font-body) !important;
+  font-weight: 600 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--navy);
+  cursor: pointer;
+}
+.modal__switch {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(11, 27, 68, 0.8);
+}
+.modal__legal {
+  margin: 0.9rem auto 0;
+  max-width: 36ch;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(11, 27, 68, 0.6);
+}
+.modal__legal .link {
+  font-size: inherit;
+}
+
+/* ---------- Código OTP ---------- */
+.otp {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+.otp legend {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+.otp__row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 10px);
+}
+.otp__d {
+  width: clamp(40px, 12vw, 50px);
+  height: clamp(50px, 14vw, 60px);
+  padding: 0;
+  background: #fff;
+  color: var(--navy);
+  border: 3px solid rgba(11, 42, 107, 0.25);
+  border-radius: 12px;
+  text-align: center;
+  font: 800 1.6rem var(--font-display);
+  caret-color: var(--red);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.otp__d:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 4px rgba(255, 199, 0, 0.55);
+  transform: translateY(-2px);
+}
+.otp__row.is-shake {
+  animation: shake 0.4s ease;
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-7px);
+  }
+  40%,
+  80% {
+    transform: translateX(7px);
+  }
+}
+
+/* ---------- Estado final ---------- */
+.done {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+}
+.done .btn {
+  margin-top: 0.6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp__row.is-shake {
+    animation: none;
+  }
+}

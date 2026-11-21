@@ -1,0 +1,37 @@
+/* La palabra rotatoria sobre su "cuadro" de papel */
+.mark {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.28em;
+  margin: 0 0.04em;
+  color: var(--ink);
+  z-index: 0;
+  vertical-align: bottom;
+  transition: width 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.mark::before {
+  content: '';
+  position: absolute;
+  inset: 0.08em 0 0.02em;
+  background: var(--yellow);
+  border-radius: 0.2em;
+  transform: rotate(-2.5deg);
+  z-index: -1;
+  box-shadow: 0 0.08em 0 rgba(0, 0, 0, 0.22);
+}
+.mark__word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.mark__word {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.is-out {
+  opacity: 0;
+  transform: translateY(0.35em);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mark {
+    transition: none;
+  }
+}
