@@ -1,23 +1,14 @@
 // Capa de autenticación del frontend.
 //
-// El backend todavía no tiene endpoints de autenticación (solo /api/health), así que por
-// defecto esto corre en MODO DEMO: no envía correos ni guarda contraseñas, y cualquier
-// código OTP válido es MOCK_CODE. Para conectarlo al backend real, define
-// VITE_AUTH_MOCK=false y expón estos endpoints (todos POST, JSON, cookie de sesión httpOnly):
+// Habla con el backend (fastapi-users, sesión en cookie httpOnly):
+//   POST /api/auth/register  { username, email, password }  → crea la cuenta
+//   POST /api/auth/login     (formulario: username=<correo>, password) → cookie de sesión
+//   POST /api/auth/logout
+//   GET  /api/users/me       → { username, email, … }
 //
-//   /api/auth/login            { email, password }        → { name, email }
-//   /api/auth/register         { name, email, password }  → {}            (envía OTP por correo)
-//   /api/auth/register/verify  { email, code }            → { name, email }
-//   /api/auth/password/forgot  { email }                  → {}            (responde igual exista o no el correo)
-//   /api/auth/password/verify  { email, code }            → { token }
-//   /api/auth/password/reset   { token, password }        → {}
-//   /api/auth/otp/resend       { email, purpose }         → {}            (purpose: "register" | "reset")
-//
-// Los errores deben responder { code } con uno de: credentials, badCode, tooMany, expired,
-// exists, weak. Cualquier otro se muestra como un error genérico.
+// Con VITE_AUTH_MOCK=true corre en MODO DEMO sin backend (cualquier cuenta funciona).
 
-export const MOCK = import.meta.env.VITE_AUTH_MOCK !== 'false'
-export const MOCK_CODE = '123456'
+export const MOCK = import.meta.env.VITE_AUTH_MOCK === 'true'
 
 export class AuthError extends Error {
   constructor(code) {
@@ -28,6 +19,7 @@ export class AuthError extends Error {
 
 /* ---------- Validaciones compartidas ---------- */
 export const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)
+export const isUsername = (v) => /^[A-Za-z0-9_.-]{3,30}$/.test(v)
 export const isStrongEnough = (v) => v.length >= 8 && /[A-Za-z]/.test(v) && /\d/.test(v)
 // 0 = débil, 1 = aceptable, 2 = fuerte
 export const passwordScore = (v) => {
@@ -35,7 +27,7 @@ export const passwordScore = (v) => {
   return v.length >= 12 && /[^A-Za-z0-9]/.test(v) ? 2 : 1
 }
 
-/* ---------- Sesión (solo datos no sensibles) ---------- */
+/* ---------- Sesión (solo datos no sensibles; la real vive en la cookie httpOnly) ---------- */
 const SESSION_KEY = 'guako.session'
 
 export const getSession = () => {
@@ -64,103 +56,48 @@ export const clearSession = () => {
 }
 
 /* ---------- Implementación DEMO ---------- */
-const wait = (ms = 650) => new Promise((r) => setTimeout(r, ms))
-const pending = new Map() // email → { purpose, name, attempts, expires, verified }
-const nameOf = (email) => {
-  try {
-    const map = JSON.parse(localStorage.getItem('guako.names')) || {}
-    if (map[email]) return map[email]
-  } catch {
-    /* ignorar */
-  }
-  return email
-    .split('@')[0]
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
-}
-const rememberName = (email, name) => {
-  try {
-    const map = JSON.parse(localStorage.getItem('guako.names')) || {}
-    map[email] = name
-    localStorage.setItem('guako.names', JSON.stringify(map))
-  } catch {
-    /* ignorar */
-  }
-}
-const issue = (email, purpose, extra = {}) =>
-  pending.set(email, { purpose, attempts: 0, expires: Date.now() + 10 * 60 * 1000, ...extra })
-
-const checkCode = (email, purpose, code) => {
-  const p = pending.get(email)
-  if (!p || p.purpose !== purpose) throw new AuthError('expired')
-  if (Date.now() > p.expires) throw new AuthError('expired')
-  if (p.attempts >= 5) throw new AuthError('tooMany')
-  if (code !== MOCK_CODE) {
-    p.attempts++
-    throw new AuthError(p.attempts >= 5 ? 'tooMany' : 'badCode')
-  }
-  return p
-}
+const wait = (ms = 450) => new Promise((r) => setTimeout(r, ms))
 
 const mock = {
   async login({ email, password }) {
     await wait()
     // Demo: cualquier cuenta funciona, salvo las de @error.test (para ver el error)
     if (email.endsWith('@error.test') || !password) throw new AuthError('credentials')
-    return { name: nameOf(email), email }
+    return { name: email.split('@')[0], email }
   },
-  async register({ name, email }) {
+  async register({ username, email }) {
     await wait()
+    if (username.toLowerCase() === 'existe') throw new AuthError('usernameTaken')
     if (email === 'existe@guako.test') throw new AuthError('exists')
-    issue(email, 'register', { name })
-    return {}
+    return { name: username, email }
   },
-  async verifyRegister({ email, code }) {
-    await wait(500)
-    const p = checkCode(email, 'register', code)
-    pending.delete(email)
-    rememberName(email, p.name)
-    return { name: p.name, email }
-  },
-  async forgot({ email }) {
-    await wait()
-    issue(email, 'reset')
-    return {}
-  },
-  async verifyReset({ email, code }) {
-    await wait(500)
-    checkCode(email, 'reset', code)
-    pending.get(email).verified = true
-    return { token: `demo-${email}` }
-  },
-  async reset({ token, password }) {
-    await wait()
-    const email = token.replace(/^demo-/, '')
-    if (!pending.get(email)?.verified) throw new AuthError('expired')
-    if (!isStrongEnough(password)) throw new AuthError('weak')
-    pending.delete(email)
-    return {}
-  },
-  async resend({ email, purpose }) {
-    await wait(450)
-    const prev = pending.get(email)
-    issue(email, purpose, prev?.name ? { name: prev.name } : {})
-    return {}
-  },
+  async logout() {},
 }
 
 /* ---------- Implementación REAL (HTTP) ---------- */
-async function http(path, body) {
+// Traduce las respuestas de error de fastapi-users a nuestros códigos
+const codeOf = (detail) => {
+  if (typeof detail === 'string') {
+    if (detail === 'LOGIN_BAD_CREDENTIALS') return 'credentials'
+    if (detail === 'REGISTER_USER_ALREADY_EXISTS') return 'exists'
+    return 'generic'
+  }
+  const code = detail?.code
+  return code === 'REGISTER_INVALID_PASSWORD' ? 'weak' : code || 'generic'
+}
+
+async function request(path, { method = 'POST', json, form } = {}) {
+  const headers = {}
+  let body
+  if (json) {
+    headers['Content-Type'] = 'application/json'
+    body = JSON.stringify(json)
+  } else if (form) {
+    body = new URLSearchParams(form) // application/x-www-form-urlencoded
+  }
   let res
   try {
-    res = await fetch(`/api/auth${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    })
+    res = await fetch(path, { method, headers, credentials: 'include', body })
   } catch {
     throw new AuthError('network')
   }
@@ -170,18 +107,32 @@ async function http(path, body) {
   } catch {
     /* sin cuerpo JSON */
   }
-  if (!res.ok) throw new AuthError(data?.code || 'generic')
-  return data || {}
+  if (!res.ok) throw new AuthError(codeOf(data?.detail))
+  return data
+}
+
+async function login({ email, password }) {
+  // fastapi-users usa el campo "username" del formulario OAuth2 para el correo
+  await request('/api/auth/login', { form: { username: email, password } })
+  const me = await request('/api/users/me', { method: 'GET' })
+  return { name: me.username, email: me.email }
 }
 
 const real = {
-  login: (b) => http('/login', b),
-  register: (b) => http('/register', b),
-  verifyRegister: (b) => http('/register/verify', b),
-  forgot: (b) => http('/password/forgot', b),
-  verifyReset: (b) => http('/password/verify', b),
-  reset: (b) => http('/password/reset', b),
-  resend: (b) => http('/otp/resend', b),
+  login,
+  async register({ username, email, password }) {
+    await request('/api/auth/register', { json: { username, email, password } })
+    return login({ email, password })
+  },
+  async logout() {
+    await request('/api/auth/logout').catch(() => {})
+  },
 }
 
 export const auth = MOCK ? mock : real
+
+// Cierra la sesión en el servidor (borra la cookie) y en el navegador
+export async function logout() {
+  await auth.logout()
+  clearSession()
+}

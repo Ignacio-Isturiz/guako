@@ -9,8 +9,7 @@
   display: grid;
   gap: 0.3rem;
 }
-.field label,
-.otp legend {
+.field label {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.95rem;
@@ -85,8 +84,7 @@
 .field__err:empty {
   display: none;
 }
-.form__error,
-.form__notice {
+.form__error {
   margin: 0;
   padding: 0.55rem 0.8rem;
   border-radius: 10px;
@@ -99,13 +97,7 @@
   border: 2px solid rgba(232, 32, 26, 0.45);
   color: #a01510;
 }
-.form__notice {
-  background: rgba(10, 124, 255, 0.1);
-  border: 2px solid rgba(10, 124, 255, 0.4);
-  color: var(--navy);
-}
-.form__error[hidden],
-.form__notice[hidden] {
+.form__error[hidden] {
   display: none;
 }
 /* Fortaleza de la contraseña */
@@ -173,75 +165,4 @@
 }
 .modal__legal .link {
   font-size: inherit;
-}
-
-/* ---------- Código OTP ---------- */
-.otp {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  text-align: center;
-}
-.otp legend {
-  display: block;
-  width: 100%;
-  margin-bottom: 0.4rem;
-}
-.otp__row {
-  display: flex;
-  justify-content: center;
-  gap: clamp(6px, 2vw, 10px);
-}
-.otp__d {
-  width: clamp(40px, 12vw, 50px);
-  height: clamp(50px, 14vw, 60px);
-  padding: 0;
-  background: #fff;
-  color: var(--navy);
-  border: 3px solid rgba(11, 42, 107, 0.25);
-  border-radius: 12px;
-  text-align: center;
-  font: 800 1.6rem var(--font-display);
-  caret-color: var(--red);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-}
-.otp__d:focus {
-  outline: none;
-  border-color: var(--navy);
-  box-shadow: 0 0 0 4px rgba(255, 199, 0, 0.55);
-  transform: translateY(-2px);
-}
-.otp__row.is-shake {
-  animation: shake 0.4s ease;
-}
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20%,
-  60% {
-    transform: translateX(-7px);
-  }
-  40%,
-  80% {
-    transform: translateX(7px);
-  }
-}
-
-/* ---------- Estado final ---------- */
-.done {
-  display: grid;
-  gap: 0.6rem;
-  justify-items: center;
-}
-.done .btn {
-  margin-top: 0.6rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .otp__row.is-shake {
-    animation: none;
-  }
 }

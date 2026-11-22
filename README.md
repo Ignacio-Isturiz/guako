@@ -9,7 +9,10 @@ Backend (http://127.0.0.1:8000, docs en `/docs`):
 
 ```powershell
 cd backend
+python -m venv .venv   # solo la primera vez
 .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt   # solo la primera vez
+copy .env.example .env            # solo la primera vez; cambia SECRET
 fastapi dev app/main.py
 ```
 
@@ -45,7 +48,7 @@ frontend/src/
     │   ├── lib/            scroll-reveal.js (entrada ligada al scroll)
     │   ├── assets/         benefits/, how/
     │   └── i18n/           es.js, en.js
-    ├── auth/               Login, registro con OTP, recuperar contraseña (service.js + auth-modal)
+    ├── auth/               Login y registro (usuario, correo, contraseña y confirmación) (service.js + auth-modal)
     ├── legal/              Términos y Privacidad (content.js + legal-modal)
     └── app/                Aplicación con sesión "/app/..."
         ├── routes.js       Rutas → views/<nombre>/

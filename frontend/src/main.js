@@ -6,7 +6,7 @@ import '@/shared/styles/index.css'
 import { setLang, applyMeta } from '@/core/i18n.js'
 import { navigate } from '@/core/router.js'
 import { mountLanding, unmountLanding, updateNavbarAuth } from '@/features/landing/index.js'
-import { initAuth, openAuth, clearSession, getSession } from '@/features/auth/index.js'
+import { initAuth, openAuth, logout, getSession } from '@/features/auth/index.js'
 import { initLegal, openLegal } from '@/features/legal/index.js'
 import { isAppPath, mountApp, unmountApp, routeApp, appAction } from '@/features/app/index.js'
 
@@ -79,7 +79,7 @@ document.addEventListener('click', (e) => {
 
   const action = e.target.closest('[data-action]')?.dataset.action
   if (action === 'app-logout' || action === 'logout') {
-    clearSession()
+    logout()
     navigate('/')
   } else if (action) appAction(action)
 })

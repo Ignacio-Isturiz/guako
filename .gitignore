@@ -35,3 +35,4 @@ Thumbs.db
 # Archivos temporales y copias locales
 *.local
 tmp/
+*.db
