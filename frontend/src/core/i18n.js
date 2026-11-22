@@ -27,7 +27,7 @@ const dig = (dict, path) => path.split('.').reduce((o, k) => (o == null ? o : o[
 
 export const getLang = () => lang
 
-// t('hero.lead')  ·  t('auth.otp.subtitle', { email })  ·  también devuelve listas y objetos
+// t('hero.lead')  ·  t('hero.lead')  ·  también devuelve listas y objetos
 export function t(path, params) {
   let v = dig(DICTS[lang], path)
   if (v === undefined) v = dig(DICTS.es, path)

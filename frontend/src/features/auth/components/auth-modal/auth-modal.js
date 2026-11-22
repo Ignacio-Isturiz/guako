@@ -1,41 +1,31 @@
 import './auth-modal.css'
 import logo from '@/shared/assets/brand/guako-logo.png'
 import { t } from '@/core/i18n.js'
+import { navigate } from '@/core/router.js'
 import { createModal } from '@/shared/components/modal/modal.js'
-import { auth, AuthError, MOCK, MOCK_CODE, isEmail, isStrongEnough, passwordScore, setSession } from '@/features/auth/service.js'
+import { auth, AuthError, isEmail, isUsername, isStrongEnough, passwordScore, setSession } from '@/features/auth/service.js'
 
 /* ---------------------------------------------------------------------------
-   Modal de autenticación. Vistas:
-   login · register · otp (verificar correo / código de recuperación) · forgot · reset · done
+   Modal de autenticación. Vistas: login · register
 --------------------------------------------------------------------------- */
 
-const RESEND_SECONDS = 30
-const KNOWN_ERRORS = ['credentials', 'badCode', 'tooMany', 'expired', 'exists', 'network']
+const KNOWN_ERRORS = ['credentials', 'exists', 'usernameTaken', 'usernameInvalid', 'network']
 
 function fresh() {
   return {
     view: 'login',
-    values: { name: '', email: '', password: '', confirm: '', accept: false },
+    values: { username: '', email: '', password: '', confirm: '', accept: false },
     errors: {},
     formError: '',
-    notice: '',
     loading: false,
-    context: 'register', // para qué es el código OTP: 'register' | 'reset'
-    otp: '',
-    token: '',
-    resendAt: 0,
-    doneKind: 'login',
-    user: null,
   }
 }
 
 let state = fresh()
-let timer = 0
 const modal = createModal({
   className: 'modal--auth',
   onClose: () => {
-    stopTimer()
-    state = fresh() // no dejamos contraseñas ni códigos en memoria
+    state = fresh() // no dejamos contraseñas en memoria
   },
 })
 modal.labelledBy('authTitle')
@@ -54,7 +44,6 @@ const head = (title, sub) => `
   ${sub ? `<p class="modal__sub">${sub}</p>` : ''}`
 
 const formError = () => `<p class="form__error" role="alert" ${state.formError ? '' : 'hidden'}>${esc(state.formError)}</p>`
-const noticeHtml = () => `<p class="form__notice" role="status" ${state.notice ? '' : 'hidden'}>${esc(state.notice)}</p>`
 
 function field({ name, label, type = 'text', autocomplete = 'off', hint = '', focus = false, inputmode = '' }) {
   const err = state.errors[name]
@@ -84,7 +73,6 @@ const views = {
       ${formError()}
       ${field({ name: 'email', label: t('auth.login.email'), type: 'email', autocomplete: 'email', inputmode: 'email', focus: true })}
       ${field({ name: 'password', label: t('auth.login.password'), type: 'password', autocomplete: 'current-password' })}
-      <button type="button" class="link link--right" data-go="forgot">${t('auth.login.forgot')}</button>
       ${submit(t('auth.login.submit'))}
     </form>
     <p class="modal__switch">${t('auth.login.noAccount')} <button type="button" class="link" data-go="register">${t('auth.login.register')}</button></p>
@@ -94,10 +82,11 @@ const views = {
     ${head(t('auth.register.title'), t('auth.register.subtitle'))}
     <form class="form" novalidate data-form="register">
       ${formError()}
-      ${field({ name: 'name', label: t('auth.register.name'), autocomplete: 'name', focus: true })}
+      ${field({ name: 'username', label: t('auth.register.username'), autocomplete: 'username', hint: t('auth.register.usernameHint'), focus: true })}
       ${field({ name: 'email', label: t('auth.register.email'), type: 'email', autocomplete: 'email', inputmode: 'email' })}
       ${field({ name: 'password', label: t('auth.register.password'), type: 'password', autocomplete: 'new-password', hint: t('auth.register.hint') })}
       ${meter()}
+      ${field({ name: 'confirm', label: t('auth.register.confirm'), type: 'password', autocomplete: 'new-password' })}
       <div class="field ${state.errors.accept ? 'has-error' : ''}" data-field="accept">
         <label class="check">
           <input type="checkbox" name="accept" ${state.values.accept ? 'checked' : ''} aria-describedby="e-accept" />
@@ -108,72 +97,6 @@ const views = {
       ${submit(t('auth.register.submit'))}
     </form>
     <p class="modal__switch">${t('auth.register.hasAccount')} <button type="button" class="link" data-go="login">${t('auth.register.login')}</button></p>`,
-
-  otp: () => {
-    const reg = state.context === 'register'
-    const email = `<strong>${esc(state.values.email)}</strong>`
-    const boxes = Array.from(
-      { length: 6 },
-      (_, i) =>
-        `<input class="otp__d" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="${i === 0 ? 'one-time-code' : 'off'}"
-          aria-label="${t('auth.otp.digit', { n: i + 1 })}" value="${esc(state.otp[i] || '')}" ${i === 0 ? 'data-autofocus' : ''} />`,
-    ).join('')
-    return `
-    ${head(reg ? t('auth.otp.registerTitle') : t('auth.otp.resetTitle'), t(reg ? 'auth.otp.registerSubtitle' : 'auth.otp.resetSubtitle', { email }))}
-    ${MOCK ? `<p class="modal__demo">${t('auth.demo', { code: MOCK_CODE })}</p>` : ''}
-    <form class="form" novalidate data-form="otp">
-      ${formError()}
-      ${noticeHtml()}
-      <fieldset class="otp" aria-label="${t('auth.otp.label')}">
-        <legend>${t('auth.otp.label')}</legend>
-        <div class="otp__row">${boxes}</div>
-      </fieldset>
-      <p class="modal__small">${t('auth.otp.expires')}</p>
-      ${submit(t('auth.otp.submit'))}
-    </form>
-    <p class="modal__switch">
-      <button type="button" class="link" data-resend>${t('auth.otp.resend')}</button>
-      · <button type="button" class="link" data-go="${reg ? 'register' : 'forgot'}">${t('auth.otp.change')}</button>
-    </p>`
-  },
-
-  forgot: () => `
-    ${head(t('auth.forgot.title'), t('auth.forgot.subtitle'))}
-    <form class="form" novalidate data-form="forgot">
-      ${formError()}
-      ${field({ name: 'email', label: t('auth.login.email'), type: 'email', autocomplete: 'email', inputmode: 'email', focus: true })}
-      ${submit(t('auth.forgot.submit'))}
-    </form>
-    <p class="modal__switch"><button type="button" class="link" data-go="login">${t('auth.forgot.back')}</button></p>`,
-
-  reset: () => `
-    ${head(t('auth.reset.title'), t('auth.reset.subtitle'))}
-    <form class="form" novalidate data-form="reset">
-      ${formError()}
-      ${field({ name: 'password', label: t('auth.reset.password'), type: 'password', autocomplete: 'new-password', hint: t('auth.register.hint'), focus: true })}
-      ${meter()}
-      ${field({ name: 'confirm', label: t('auth.reset.confirm'), type: 'password', autocomplete: 'new-password' })}
-      ${submit(t('auth.reset.submit'))}
-    </form>`,
-
-  done: () => {
-    const k = state.doneKind
-    const name = esc(state.user?.name || '')
-    const title = t(`auth.done.${k}Title`)
-    const text = t(`auth.done.${k}Text`, { name })
-    const action =
-      k === 'reset'
-        ? `<button class="btn btn--primary btn--block" type="button" data-go="login" data-autofocus>${t('auth.done.toLogin')}</button>`
-        : `<button class="btn btn--primary btn--block" type="button" data-close data-nav="/app/inicio" data-autofocus>${t('auth.done.close')}</button>`
-    return `
-    <button class="modal__close" type="button" data-close aria-label="${t('auth.close')}">×</button>
-    <div class="done">
-      <img class="modal__mascot modal__mascot--big" src="${logo}" alt="" width="96" height="96" />
-      <h2 class="modal__title" id="authTitle">${title}</h2>
-      <p class="modal__sub">${text}</p>
-      ${action}
-    </div>`
-  },
 }
 
 /* ---------- Render y eventos ---------- */
@@ -181,8 +104,6 @@ function render() {
   modal.body.innerHTML = views[state.view]()
   bind()
   updateMeter()
-  if (state.view === 'otp') startTimer()
-  else stopTimer()
   modal.body.querySelector('[data-autofocus]')?.focus()
 }
 
@@ -191,7 +112,6 @@ function go(view) {
   state.loading = false
   state.errors = {}
   state.formError = ''
-  state.notice = ''
   render()
 }
 
@@ -209,9 +129,7 @@ function bind() {
       b.classList.toggle('is-on', show)
     }),
   )
-  body.querySelector('[data-resend]')?.addEventListener('click', onResend)
   body.querySelector('form[data-form]')?.addEventListener('submit', onSubmit)
-  if (state.view === 'otp') bindOtp()
 }
 
 function onInput(e) {
@@ -256,15 +174,6 @@ function setFormError(msg) {
   }
 }
 
-function setNotice(msg) {
-  state.notice = msg
-  const el = modal.body.querySelector('.form__notice')
-  if (el) {
-    el.textContent = msg
-    el.hidden = !msg
-  }
-}
-
 function setLoading(on) {
   state.loading = on
   const btn = modal.body.querySelector('button[type="submit"]')
@@ -285,7 +194,6 @@ async function onSubmit(e) {
   e.preventDefault()
   if (state.loading) return
   const kind = e.currentTarget.dataset.form
-  if (kind === 'otp') return submitOtp()
 
   const v = state.values
   const email = v.email.trim()
@@ -296,15 +204,12 @@ async function onSubmit(e) {
     if (!need('email', email) && !isEmail(email)) errors.email = t('auth.errors.email')
     need('password', v.password)
   } else if (kind === 'register') {
-    need('name', v.name.trim())
+    const username = v.username.trim()
+    if (!need('username', username) && !isUsername(username)) errors.username = t('auth.errors.username')
     if (!need('email', email) && !isEmail(email)) errors.email = t('auth.errors.email')
-    if (!need('password', v.password) && !isStrongEnough(v.password)) errors.password = t('auth.errors.password')
-    if (!v.accept) errors.accept = t('auth.errors.accept')
-  } else if (kind === 'forgot') {
-    if (!need('email', email) && !isEmail(email)) errors.email = t('auth.errors.email')
-  } else if (kind === 'reset') {
     if (!need('password', v.password) && !isStrongEnough(v.password)) errors.password = t('auth.errors.password')
     if (!errors.password && !need('confirm', v.confirm) && v.confirm !== v.password) errors.confirm = t('auth.errors.mismatch')
+    if (!v.accept) errors.accept = t('auth.errors.accept')
   }
 
   state.errors = errors
@@ -318,32 +223,17 @@ async function onSubmit(e) {
   try {
     if (kind === 'login') {
       const user = await auth.login({ email, password: v.password })
-      finish('login', user)
+      finish(user)
     } else if (kind === 'register') {
-      await auth.register({ name: v.name.trim(), email, password: v.password })
-      state.values.email = email
-      state.context = 'register'
-      state.otp = ''
-      state.resendAt = Date.now() + RESEND_SECONDS * 1000
-      go('otp')
-    } else if (kind === 'forgot') {
-      await auth.forgot({ email })
-      state.values.email = email
-      state.context = 'reset'
-      state.otp = ''
-      state.resendAt = Date.now() + RESEND_SECONDS * 1000
-      go('otp')
-    } else if (kind === 'reset') {
-      await auth.reset({ token: state.token, password: v.password })
-      state.values.password = ''
-      state.values.confirm = ''
-      state.token = ''
-      state.doneKind = 'reset'
-      go('done')
+      const user = await auth.register({ username: v.username.trim(), email, password: v.password })
+      finish(user)
     }
   } catch (err) {
     if (err instanceof AuthError && err.code === 'exists') {
       state.errors = { email: t('auth.errors.exists') }
+      showErrors()
+    } else if (err instanceof AuthError && (err.code === 'usernameTaken' || err.code === 'usernameInvalid')) {
+      state.errors = { username: t(`auth.errors.${err.code}`) }
       showErrors()
     } else if (err instanceof AuthError && err.code === 'weak') {
       state.errors = { password: t('auth.errors.password') }
@@ -355,123 +245,11 @@ async function onSubmit(e) {
   }
 }
 
-// Sesión iniciada o cuenta verificada
-function finish(kind, user) {
+// Sesión iniciada o cuenta creada: se cierra el modal y se entra a la app
+function finish(user) {
   setSession(user)
-  state.user = user
-  state.doneKind = kind
-  state.values.password = ''
-  go('done')
-}
-
-/* ---------- Código OTP ---------- */
-function bindOtp() {
-  const boxes = [...modal.body.querySelectorAll('.otp__d')]
-  const sync = () => (state.otp = boxes.map((b) => b.value).join(''))
-  boxes.forEach((b, i) => {
-    b.addEventListener('input', () => {
-      b.value = b.value.replace(/\D/g, '').slice(-1)
-      sync()
-      setFormError('')
-      if (b.value && i < 5) boxes[i + 1].focus()
-      if (state.otp.length === 6) submitOtp()
-    })
-    b.addEventListener('keydown', (e) => {
-      if (e.key === 'Backspace' && !b.value && i > 0) {
-        e.preventDefault()
-        boxes[i - 1].value = ''
-        boxes[i - 1].focus()
-        sync()
-      } else if (e.key === 'ArrowLeft' && i > 0) boxes[i - 1].focus()
-      else if (e.key === 'ArrowRight' && i < 5) boxes[i + 1].focus()
-    })
-    b.addEventListener('paste', (e) => {
-      e.preventDefault()
-      const digits = (e.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 6)
-      if (!digits) return
-      boxes.forEach((box, k) => (box.value = digits[k] || ''))
-      sync()
-      boxes[Math.min(digits.length, 5)].focus()
-      if (state.otp.length === 6) submitOtp()
-    })
-    b.addEventListener('focus', () => b.select())
-  })
-}
-
-async function submitOtp() {
-  if (state.loading) return
-  if (state.otp.length < 6) {
-    setFormError(t('auth.errors.code'))
-    return
-  }
-  setFormError('')
-  setNotice('')
-  setLoading(true)
-  try {
-    const email = state.values.email
-    if (state.context === 'register') {
-      const user = await auth.verifyRegister({ email, code: state.otp })
-      finish('register', user)
-    } else {
-      const { token } = await auth.verifyReset({ email, code: state.otp })
-      state.token = token
-      state.otp = ''
-      go('reset')
-    }
-  } catch (err) {
-    setFormError(msgFor(err))
-    setLoading(false)
-    // Si el código quedó bloqueado o venció, se puede pedir uno nuevo de inmediato
-    if (err instanceof AuthError && (err.code === 'tooMany' || err.code === 'expired')) {
-      state.resendAt = 0
-      tick()
-    }
-    const boxes = [...modal.body.querySelectorAll('.otp__d')]
-    boxes.forEach((b) => (b.value = ''))
-    state.otp = ''
-    const row = modal.body.querySelector('.otp__row')
-    row?.classList.remove('is-shake')
-    void row?.offsetWidth
-    row?.classList.add('is-shake')
-    boxes[0]?.focus()
-  }
-}
-
-async function onResend() {
-  if (Date.now() < state.resendAt || state.loading) return
-  state.loading = true
-  try {
-    await auth.resend({ email: state.values.email, purpose: state.context })
-    state.resendAt = Date.now() + RESEND_SECONDS * 1000
-    state.otp = ''
-    modal.body.querySelectorAll('.otp__d').forEach((b) => (b.value = ''))
-    modal.body.querySelector('.otp__d')?.focus()
-    setFormError('')
-    setNotice(t('auth.otp.resent'))
-    startTimer()
-  } catch (err) {
-    setFormError(msgFor(err))
-  } finally {
-    state.loading = false
-  }
-}
-
-// Cuenta atrás para poder reenviar el código
-function tick() {
-  const btn = modal.body.querySelector('[data-resend]')
-  if (!btn) return stopTimer()
-  const left = Math.max(0, Math.ceil((state.resendAt - Date.now()) / 1000))
-  btn.disabled = left > 0
-  btn.textContent = left > 0 ? t('auth.otp.resendIn', { s: left }) : t('auth.otp.resend')
-}
-function startTimer() {
-  stopTimer()
-  tick()
-  timer = setInterval(tick, 500)
-}
-function stopTimer() {
-  clearInterval(timer)
-  timer = 0
+  modal.close()
+  navigate('/app/inicio')
 }
 
 /* ---------- API pública ---------- */
