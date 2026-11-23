@@ -1,0 +1,27 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# VCS
+.git
+.gitignore
+
+# Python bytecode, virtual envs and caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Tests, scripts and local data (not needed at runtime)
+tests/
+scripts/
+*.db
+
+# Docker files themselves
+Dockerfile
+docker-compose*.yml
+.dockerignore
