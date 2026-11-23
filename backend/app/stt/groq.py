@@ -55,6 +55,9 @@ class GroqWhisperSTTProvider(STTProvider):
                 response = self._client.audio.transcriptions.create(
                     file=(path.name, audio_file.read()),
                     model=self.model,
+                    # Without a hint Whisper often misdetects accented English
+                    # as Spanish, Romanian, etc. and returns the wrong language.
+                    **({"language": settings.stt_language} if settings.stt_language else {}),
                     response_format="verbose_json",
                     timestamp_granularities=["word"],
                 )

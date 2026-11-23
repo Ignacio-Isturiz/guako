@@ -36,6 +36,8 @@ class BaseLLMProvider(ABC):
 
     def __init__(self, *, max_retries: int = 2) -> None:
         self.max_retries = max_retries
+        # Attempts used by the most recent generate() call (1 = no retry).
+        self.last_attempts = 0
 
     @abstractmethod
     def _complete(self, prompt: str, system: str | None, response_model: type[BaseModel]) -> RawCompletion:
@@ -47,6 +49,7 @@ class BaseLLMProvider(ABC):
         last_error = ""
         attempts = self.max_retries + 1
         for attempt in range(1, attempts + 1):
+            self.last_attempts = attempt
             start = time.perf_counter()
             raw = self._complete(current_prompt, system, response_model)
             latency_ms = (time.perf_counter() - start) * 1000

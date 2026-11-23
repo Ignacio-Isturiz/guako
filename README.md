@@ -25,6 +25,35 @@ npm run dev
 
 El frontend redirige `/api/*` al backend (ver `frontend/vite.config.js`).
 
+## Medir la latencia del pipeline de audio (backend)
+
+Mide STT → LLM → TTS con las APIs reales (consume cuota gratuita; Groq TTS permite 100 llamadas/día). Los 20 audios (WAV u OGG) y su `manifest.csv` van en `backend/evals/audio/latency/` (nombres `lat_NN_<length>_<condition>`).
+
+```powershell
+cd backend
+python -m scripts.measure_latency --runs 3
+```
+
+Opciones: `--runs N` (por defecto 3), `--pause-s S` (espera de 3 s antes de cada turno, fuera de la medición, para no chocar con el límite de peticiones por minuto de Groq), `--limit N` (solo los primeros N audios, para una prueba barata), `--audio-dir`, `--manifest`, `--results-dir`. Cada corrida escribe `backend/results/latency/<run_id>.jsonl` (nunca sobrescribe corridas anteriores) e imprime un resumen.
+
+Cada audio se mide en dos modos: `cold` (caché de TTS vacía, llamada real al TTS) y `warm` (caché llena: el TTS se sirve del disco; reutiliza el texto de la respuesta del `cold`, porque el LLM no responde idéntico dos veces).
+
+Columnas de cada línea del JSONL:
+
+| Columna | Significado |
+|---|---|
+| `run_id`, `timestamp_utc` | Identificador de la corrida y hora UTC de la medición |
+| `file`, `condition`, `audio_seconds` | Audio medido, su condición (`short_clean`, `medium_noisy`…) y su duración |
+| `mode` | `cold` o `warm` |
+| `stt_ms`, `llm_ms`, `tts_ms` | Tiempo de cada etapa en milisegundos |
+| `total_ms` | Desde que empieza el turno hasta que el audio de respuesta está listo (`null` si hubo error) |
+| `tts_cache_hit` | Si el TTS salió de la caché |
+| `retries` | Reintentos del LLM por salida inválida |
+| `error` | Mensaje del error, o `null` |
+| `stt_model`, `llm_model`, `tts_model` | Modelos usados |
+
+**Cómo leer p50 y p95:** p50 (mediana) es el tiempo típico: la mitad de los turnos fue más rápida. p95 es el tiempo que el 95 % de los turnos no supera: refleja los casos lentos que el usuario sí nota. La meta del MVP es p50 < 3 s y p95 cercano a 3 s en `total_ms`. Con menos de 30 mediciones válidas por modo el p95 no es estable (el resumen lo advierte). Para comparar cambios de modelo, prompt o caché, corre antes y después con las mismas opciones y compara los resúmenes.
+
 ## Estructura del frontend (monolito modular)
 
 Cada cosa vive en su módulo, y cada pieza visual tiene su carpeta con su `.js` y su `.css` juntos. Los imports usan el alias `@/` (= `frontend/src/`).

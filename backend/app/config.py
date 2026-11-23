@@ -29,6 +29,8 @@ class Settings(BaseSettings):
 
     # --- Speech-to-text (Groq-hosted Whisper; reuses groq_api_key) ----
     stt_model: str = "whisper-large-v3"
+    # ISO-639-1 language hint sent to Whisper (the tutor listens to English). Empty = auto-detect.
+    stt_language: str = "en"
     # Per-request timeout in seconds.
     stt_timeout_seconds: float = Field(default=10.0, gt=0)
 
