@@ -1,0 +1,8 @@
+{"id": "pr_01", "kind": "pronunciation", "text": "I think the weather is nice today.", "target_words": ["think", "weather"], "mispronunciation": "Pronounces 'think' as 'sink' and 'weather' with a /d/ sound", "audio_file": null}
+{"id": "pr_02", "kind": "pronunciation", "text": "The ship is leaving from the dock.", "target_words": ["ship"], "mispronunciation": "Pronounces 'ship' as 'sheep'", "audio_file": null}
+{"id": "pr_03", "kind": "pronunciation", "text": "I live near a very big beach.", "target_words": ["live", "beach"], "mispronunciation": "Confuses /ɪ/ and /iː/ in 'live' and 'beach'", "audio_file": null}
+{"id": "pr_04", "kind": "pronunciation", "text": "Three birds are sitting on the tree.", "target_words": ["three", "birds"], "mispronunciation": "Pronounces 'three' as 'tree'", "audio_file": null}
+{"id": "pr_05", "kind": "pronunciation", "text": "I would like some water, please.", "target_words": ["would", "water"], "mispronunciation": "Pronounces the 'l' in 'would'", "audio_file": null}
+{"id": "pr_06", "kind": "pronunciation", "text": "She is very busy at work.", "target_words": ["very", "busy"], "mispronunciation": "Pronounces 'very' as 'berry' and 'busy' with /uː/", "audio_file": null}
+{"id": "pr_07", "kind": "pronunciation", "text": "He bought a new jacket yesterday.", "target_words": ["jacket", "yesterday"], "mispronunciation": "Pronounces 'j' as /y/ (Spanish-influenced)", "audio_file": null}
+{"id": "pr_08", "kind": "pronunciation", "text": "I need to choose a vegetable for dinner.", "target_words": ["choose", "vegetable"], "mispronunciation": "Pronounces 'choose' as 'shoes'", "audio_file": null}

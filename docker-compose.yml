@@ -3,7 +3,7 @@ name: guako
 services:
   db:
     image: pgvector/pgvector:pg16
-    env_file: .env
+    env_file: backend/.env
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -16,14 +16,23 @@ services:
       retries: 10
 
   api:
-    build: .
+    build: ./backend
     image: guako-api
-    env_file: .env
+    env_file: backend/.env
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8000:8000"
+
+  web:
+    build: ./frontend
+    image: guako-web
+    depends_on:
+      - api
+    ports:
+      # 5173 = the origin already allowed in CORS_ORIGINS
+      - "5173:80"
 
 volumes:
   pgdata:

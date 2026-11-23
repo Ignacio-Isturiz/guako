@@ -6,4 +6,6 @@ asyncpg
 tzdata
 google-genai
 groq
-
+alembic
+langgraph
+openai

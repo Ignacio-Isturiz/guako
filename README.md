@@ -13,8 +13,11 @@ python -m venv .venv   # solo la primera vez
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt   # solo la primera vez
 copy .env.example .env            # solo la primera vez; cambia SECRET
+alembic upgrade head              # crea/actualiza las tablas; repítelo tras cada git pull con migraciones nuevas
 fastapi dev app/main.py
 ```
+
+Las tablas ya no se crean al arrancar la API: las gestiona Alembic (`backend/alembic/versions/`). Para cambiar el esquema, edita el modelo en `app/db.py` y genera la migración con `alembic revision --autogenerate -m "descripción"`. En Docker, el contenedor `api` aplica las migraciones solo al arrancar.
 
 Frontend (http://localhost:5173):
 
@@ -24,6 +27,22 @@ npm run dev
 ```
 
 El frontend redirige `/api/*` al backend (ver `frontend/vite.config.js`).
+
+## Conversación turno a turno (backend)
+
+Cada turno es una petición HTTP que ejecuta un grafo de LangGraph (`backend/app/conversation/`): `transcribe → tutor_reply → synthesize`. El historial sale de la tabla `turns` en cada petición; el checkpointer del grafo está en memoria (se pierde al reiniciar) y `get_checkpointer()` es el único sitio que cambia para pasarlo a Postgres.
+
+- `POST /api/sessions` `{level: A1|A2|B1|B2|C1, topic}` crea la sesión (`audio_consent` empieza en `false`).
+- `POST /api/sessions/{id}/turns` (multipart, campo `audio`) devuelve `{turn_number, reply_text, reply_audio_url}`. Si falla STT, LLM o TTS no se guarda ningún turno.
+- `GET /api/sessions/{id}/turns/{n}/reply-audio` sirve el audio de la respuesta.
+
+Sin `audio_consent`, el audio del usuario se borra tras transcribirlo y `turns.user_audio_path` queda vacío.
+
+**Proveedores con respaldo** (en `backend/.env`, ver `.env.example`):
+- LLM: `LLM_PROVIDER=groq` primero y `LLM_FALLBACK_PROVIDER=gemini` si falla. Cada uno necesita su clave.
+- Voz: Groq Orpheus (gratis, con cuota diaria) primero; si falla o se agota, OpenAI (de pago) si hay `OPENAI_API_KEY`. `TTS_FALLBACK_PROVIDER=none` lo desactiva. Cada proveedor tiene su propia caché.
+
+**Límite diario:** `DAILY_LIMIT_MINUTES=20`. Cuenta el audio del usuario más el de la respuesta, por día en la zona horaria del usuario (la de la racha). Al alcanzarlo, `POST .../turns` responde 429 `daily_limit_reached` sin gastar ninguna llamada. El turno que cruza el límite sí termina; el siguiente se rechaza.
 
 ## Medir la latencia del pipeline de audio (backend)
 
