@@ -2,6 +2,7 @@ fastapi[standard]
 pydantic-settings
 fastapi-users[sqlalchemy]
 aiosqlite
+asyncpg
 tzdata
 google-genai
 groq
