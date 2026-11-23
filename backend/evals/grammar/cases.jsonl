@@ -1,0 +1,40 @@
+{"id": "gr_01", "kind": "grammar", "text": "I goed to the market yesterday.", "expected_errors": [{"original": "goed", "correction": "went", "error_type": "verb tense"}]}
+{"id": "gr_02", "kind": "grammar", "text": "She don't like coffee.", "expected_errors": [{"original": "don't", "correction": "doesn't", "error_type": "subject-verb agreement"}]}
+{"id": "gr_03", "kind": "grammar", "text": "He have two brothers.", "expected_errors": [{"original": "have", "correction": "has", "error_type": "subject-verb agreement"}]}
+{"id": "gr_04", "kind": "grammar", "text": "I am agree with you.", "expected_errors": [{"original": "am agree", "correction": "agree", "error_type": "verb form"}]}
+{"id": "gr_05", "kind": "grammar", "text": "Yesterday I go to the cinema with my friends.", "expected_errors": [{"original": "go", "correction": "went", "error_type": "verb tense"}]}
+{"id": "gr_06", "kind": "grammar", "text": "I have been to Paris last year.", "expected_errors": [{"original": "have been", "correction": "went", "error_type": "verb tense"}]}
+{"id": "gr_07", "kind": "grammar", "text": "She is more taller than her sister.", "expected_errors": [{"original": "more taller", "correction": "taller", "error_type": "comparative"}]}
+{"id": "gr_08", "kind": "grammar", "text": "I need an advice about my job.", "expected_errors": [{"original": "an advice", "correction": "some advice", "error_type": "countable/uncountable"}]}
+{"id": "gr_09", "kind": "grammar", "text": "They has a big house near the beach.", "expected_errors": [{"original": "has", "correction": "have", "error_type": "subject-verb agreement"}]}
+{"id": "gr_10", "kind": "grammar", "text": "I'm interested on learning English.", "expected_errors": [{"original": "on", "correction": "in", "error_type": "preposition"}]}
+{"id": "gr_11", "kind": "grammar", "text": "He is good in playing football.", "expected_errors": [{"original": "in", "correction": "at", "error_type": "preposition"}]}
+{"id": "gr_12", "kind": "grammar", "text": "We arrived to the airport at six.", "expected_errors": [{"original": "arrived to", "correction": "arrived at", "error_type": "preposition"}]}
+{"id": "gr_13", "kind": "grammar", "text": "I have 25 years old.", "expected_errors": [{"original": "have 25 years old", "correction": "am 25 years old", "error_type": "verb choice"}]}
+{"id": "gr_14", "kind": "grammar", "text": "She is teacher at a small school.", "expected_errors": [{"original": "is teacher", "correction": "is a teacher", "error_type": "article"}]}
+{"id": "gr_15", "kind": "grammar", "text": "I want to buy a umbrella.", "expected_errors": [{"original": "a umbrella", "correction": "an umbrella", "error_type": "article"}]}
+{"id": "gr_16", "kind": "grammar", "text": "He didn't went to work today.", "expected_errors": [{"original": "didn't went", "correction": "didn't go", "error_type": "verb form"}]}
+{"id": "gr_17", "kind": "grammar", "text": "There is many people in the street.", "expected_errors": [{"original": "is", "correction": "are", "error_type": "subject-verb agreement"}]}
+{"id": "gr_18", "kind": "grammar", "text": "I can to swim very well.", "expected_errors": [{"original": "can to swim", "correction": "can swim", "error_type": "modal verb"}]}
+{"id": "gr_19", "kind": "grammar", "text": "My brother works in a bank since five years.", "expected_errors": [{"original": "since five years", "correction": "for five years", "error_type": "preposition"}]}
+{"id": "gr_20", "kind": "grammar", "text": "She said me that she was tired.", "expected_errors": [{"original": "said me", "correction": "told me", "error_type": "word choice"}]}
+{"id": "gr_21", "kind": "grammar", "text": "I look forward to see you soon.", "expected_errors": [{"original": "to see", "correction": "to seeing", "error_type": "verb form"}]}
+{"id": "gr_22", "kind": "grammar", "text": "If I will have time, I will call you.", "expected_errors": [{"original": "will have", "correction": "have", "error_type": "conditional"}]}
+{"id": "gr_23", "kind": "grammar", "text": "He is the most tallest boy in class.", "expected_errors": [{"original": "most tallest", "correction": "tallest", "error_type": "comparative"}]}
+{"id": "gr_24", "kind": "grammar", "text": "I like very much pizza.", "expected_errors": [{"original": "like very much pizza", "correction": "like pizza very much", "error_type": "word order"}]}
+{"id": "gr_25", "kind": "grammar", "text": "Do you can help me with this?", "expected_errors": [{"original": "Do you can help", "correction": "Can you help", "error_type": "modal verb"}]}
+{"id": "gr_26", "kind": "grammar", "text": "We has dinner at eight every night.", "expected_errors": [{"original": "has", "correction": "have", "error_type": "subject-verb agreement"}]}
+{"id": "gr_27", "kind": "grammar", "text": "I didn't saw him at the party.", "expected_errors": [{"original": "saw", "correction": "see", "error_type": "verb form"}]}
+{"id": "gr_28", "kind": "grammar", "text": "She have been waiting for an hour and still no answer.", "expected_errors": [{"original": "have been", "correction": "has been", "error_type": "subject-verb agreement"}]}
+{"id": "gr_29", "kind": "grammar", "text": "The informations are very useful.", "expected_errors": [{"original": "informations", "correction": "information", "error_type": "countable/uncountable"}, {"original": "are", "correction": "is", "error_type": "subject-verb agreement"}]}
+{"id": "gr_30", "kind": "grammar", "text": "I am living here since 2020.", "expected_errors": [{"original": "am living", "correction": "have lived", "error_type": "verb tense"}]}
+{"id": "gr_31", "kind": "grammar", "text": "Me and my friend goes to the gym.", "expected_errors": [{"original": "Me and my friend", "correction": "My friend and I", "error_type": "pronoun"}, {"original": "goes", "correction": "go", "error_type": "subject-verb agreement"}]}
+{"id": "gr_32", "kind": "grammar", "text": "He asked me where did I live.", "expected_errors": [{"original": "where did I live", "correction": "where I lived", "error_type": "word order"}]}
+{"id": "gr_33", "kind": "grammar", "text": "They are boring because the class is long.", "expected_errors": [{"original": "boring", "correction": "bored", "error_type": "word choice"}]}
+{"id": "gr_34", "kind": "grammar", "text": "I enjoy to watch movies on weekends.", "expected_errors": [{"original": "to watch", "correction": "watching", "error_type": "verb form"}]}
+{"id": "gr_35", "kind": "grammar_correct", "text": "I usually wake up at seven and drink a cup of coffee.", "expected_errors": []}
+{"id": "gr_36", "kind": "grammar_correct", "text": "She has lived in Medellín for three years.", "expected_errors": []}
+{"id": "gr_37", "kind": "grammar_correct", "text": "We went to the beach last weekend, and it was great.", "expected_errors": []}
+{"id": "gr_38", "kind": "grammar_correct", "text": "Can you tell me where the station is?", "expected_errors": []}
+{"id": "gr_39", "kind": "grammar_correct", "text": "He is a good cook, and he loves trying new recipes.", "expected_errors": []}
+{"id": "gr_40", "kind": "grammar_correct", "text": "If it rains tomorrow, we will stay at home.", "expected_errors": []}

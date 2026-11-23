@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.db import User, get_user_db
+from app.enums import FeedbackLanguage
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,30}$")
 
@@ -19,6 +20,7 @@ USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,30}$")
 # ---------- Esquemas (lo que entra y sale por la API) ----------
 class UserRead(schemas.BaseUser[int]):
     username: str
+    feedback_language: FeedbackLanguage
 
 
 class UserCreate(schemas.BaseUserCreate):

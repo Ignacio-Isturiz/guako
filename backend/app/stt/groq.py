@@ -93,6 +93,7 @@ class GroqWhisperSTTProvider(STTProvider):
             return TranscriptionResult(
                 text=str(payload.get("text", "")).strip(),
                 language=payload.get("language"),
+                duration=float(payload["duration"]) if payload.get("duration") is not None else None,
                 words=words,
             )
         except (KeyError, TypeError, ValueError, ValidationError) as exc:

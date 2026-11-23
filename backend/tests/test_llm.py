@@ -77,6 +77,7 @@ def _make(**kwargs: Any) -> Settings:
 def _settings(provider: str) -> Settings:
     return _make(
         llm_provider=provider,
+        llm_fallback_provider="none",  # selection is tested without the backup wrapper
         gemini_api_key=SecretStr("dummy-a"),
         groq_api_key=SecretStr("dummy-b"),
     )

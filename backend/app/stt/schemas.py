@@ -18,4 +18,6 @@ class TranscriptionResult(BaseModel):
     text: str
     # Language detected or reported by the provider (e.g. "english"), if any.
     language: str | None = None
+    # Length of the audio in seconds, when the provider reports it.
+    duration: float | None = None
     words: list[WordTiming]

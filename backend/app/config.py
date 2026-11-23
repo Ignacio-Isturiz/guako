@@ -16,7 +16,9 @@ class Settings(BaseSettings):
 
     # --- LLM providers -------------------------------------------------
     # API keys are SecretStr so they never show up in repr(), logs or tracebacks.
-    llm_provider: Literal["gemini", "groq"] = "gemini"
+    llm_provider: Literal["gemini", "groq"] = "groq"
+    # Used when the primary fails (rate limit, outage, invalid output). "none" disables it.
+    llm_fallback_provider: Literal["gemini", "groq", "none"] = "gemini"
     gemini_api_key: SecretStr | None = None
     groq_api_key: SecretStr | None = None
     gemini_model: str = "gemini-3.5-flash-lite"
@@ -39,6 +41,20 @@ class Settings(BaseSettings):
     tts_voice: str = "hannah"
     tts_timeout_seconds: float = Field(default=10.0, gt=0)
     tts_cache_dir: str = "cache/tts"
+    # Backup used when Groq TTS fails or hits its daily quota. "none" disables it.
+    tts_fallback_provider: Literal["openai", "none"] = "openai"
+    # OpenAI is paid, so it only runs as the backup. voice is part of the cache key.
+    openai_api_key: SecretStr | None = None
+    openai_tts_model: str = "gpt-4o-mini-tts"
+    openai_tts_voice: str = "alloy"
+
+    # --- Conversation ----
+    # Where uploaded user audio (with consent) and tutor reply audio are written.
+    sessions_audio_dir: str = "output/sessions"
+    # Largest accepted turn upload.
+    max_turn_audio_bytes: int = 10 * 1024 * 1024
+    # Product rule: audio minutes (learner + tutor) a user can use per day.
+    daily_limit_minutes: int = Field(default=20, gt=0)
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
