@@ -10,3 +10,9 @@ class GrammarError(BaseModel):
 
 class GrammarAnalysis(BaseModel):
     errors: list[GrammarError]
+
+
+class TutorReply(BaseModel):
+    """Short spoken reply from the English tutor."""
+
+    reply: str
