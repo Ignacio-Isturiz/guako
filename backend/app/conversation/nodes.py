@@ -14,7 +14,8 @@ from app.tts.audio import wav_duration_seconds
 
 Node = Callable[[ConversationState], dict]
 
-TUTOR_PROMPT_VERSION = 1
+TUTOR_PROMPT_VERSION = 2
+DEFAULT_ROLE = "a friendly English tutor who chats with the learner."
 
 
 def make_transcribe(stt: STTProvider) -> Node:
@@ -47,7 +48,8 @@ def _format_history(messages: list[Message], learner_text: str) -> str:
 
 def make_tutor_reply(llm: LLMProvider) -> Node:
     def tutor_reply(state: ConversationState) -> dict:
-        system = load_prompt("tutor", TUTOR_PROMPT_VERSION, level=state["level"], topic=state["topic"])
+        role = (state.get("role") or "").strip() or DEFAULT_ROLE
+        system = load_prompt("tutor", TUTOR_PROMPT_VERSION, level=state["level"], topic=state["topic"], role=role)
         history = state.get("messages", [])
         learner_text = state["user_transcript"]
         reply = llm.generate(_format_history(history, learner_text), TutorReply, system=system).reply

@@ -7,24 +7,12 @@ import { roleArt as art } from '@/shared/assets/illustrations/index.js'
 import { explain, gloss } from '@/features/app/utils/explain.js'
 import { topicName, fmtDate } from '@/features/app/utils/format.js'
 import { toast } from '@/features/app/components/toast/toast.js'
+import { markText } from '@/features/app/utils/mark-text.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
+import { liveReviewHead, renderLiveReview, initLiveReview } from './revision-live.js'
 
-// Marca en el texto del usuario cada fragmento con error (numerado)
-function markText(text, notes) {
-  const ranges = []
-  notes.forEach((n, i) => {
-    const at = text.indexOf(n.frag)
-    if (at >= 0) ranges.push({ at, len: n.frag.length, i })
-  })
-  ranges.sort((a, b) => a.at - b.at)
-  let out = ''
-  let cur = 0
-  for (const r of ranges) {
-    if (r.at < cur) continue
-    out += `${esc(text.slice(cur, r.at))}<mark class="err">${esc(text.slice(r.at, r.at + r.len))}<sup>${r.i + 1}</sup></mark>`
-    cur = r.at + r.len
-  }
-  return out + esc(text.slice(cur))
-}
+// Con backend, la revisión es la de la sesión real; los ids de ejemplo ("c_seed_1") siguen siendo locales
+const isLive = (p) => !DEMO_MODE && !getConversation(p.id)
 
 const mmss = (s) => `0:${String(s).padStart(2, '0')}`
 
@@ -41,7 +29,7 @@ function turn(tn, idx) {
     <li class="rv rv--user" id="turn-${idx}">
       <span class="rv__who">${t('app.talk.you')}</span>
       <div class="rv__bubble">
-        <p>${markText(tn.text, tn.notes)}</p>
+        <p>${markText(tn.text, tn.notes.map((n) => n.frag))}</p>
         <div class="rv__audio">
           <button type="button" class="say say--sm" data-audio aria-label="${t('app.review.play')}">${icon('play', 16)}</button>
           <span class="wave-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
@@ -62,10 +50,12 @@ function turn(tn, idx) {
 // 6. Revisar lo dicho: texto completo con errores marcados y el audio de cada turno
 export default {
   head: (p) => {
+    if (isLive(p)) return liveReviewHead()
     const c = getConversation(p.id)
     return { eyebrow: t('app.review.eyebrow'), title: c ? topicName(c) : t('app.review.title') }
   },
   render(p) {
+    if (isLive(p)) return renderLiveReview(p)
     const c = getConversation(p.id)
     if (!c) {
       return `<div class="card empty"><p>${t('app.review.notFound')}</p>
@@ -92,7 +82,8 @@ export default {
         </aside>
       </div>`
   },
-  init(root, _p, scope) {
+  init(root, p, scope) {
+    if (isLive(p)) return initLiveReview(root, p, scope)
     // El audio real llega con el backend; por ahora se avisa en vez de simular un sonido
     scope.listen(root, 'click', (e) => {
       if (e.target.closest('[data-audio]')) toast(t('app.review.audioDemo'))

@@ -10,12 +10,14 @@ import { esc } from '@/features/app/utils/html.js'
 import { roleArt as art } from '@/shared/assets/illustrations/index.js'
 import { topicName, fmtDate, fmtWeekday, greeting, firstName } from '@/features/app/utils/format.js'
 import { tone, ASPECT_COLOR } from '@/features/app/utils/scores.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
+import { loadHistory } from '@/features/app/data/history.js'
 
 const RING_COLOR = { high: '#1aa05a', mid: '#f0a500', low: '#e8201a' }
 
 // Mini gráfica de los últimos puntajes generales
 function sparkline(list) {
-  const pts = [...list].reverse().slice(-8).map((c) => c.overall)
+  const pts = [...list].reverse().slice(-8).map((c) => c.overall).filter((v) => v != null)
   if (pts.length < 2) return ''
   const W = 220
   const H = 64
@@ -62,7 +64,7 @@ function streakCard() {
 function lastCard(c) {
   if (!c) {
     return `
-      <article class="card last last--empty">
+      <article class="card last last--empty" id="lastCard">
         <h2 class="card__eyebrow">${t('app.home.lastTitle')}</h2>
         <img src="${logo}" alt="" width="72" height="72" />
         <p>${t('app.home.lastEmpty')}</p>
@@ -70,7 +72,7 @@ function lastCard(c) {
       </article>`
   }
   return `
-    <article class="card last">
+    <article class="card last" id="lastCard">
       <h2 class="card__eyebrow">${t('app.home.lastTitle')}</h2>
       <div class="last__row">
         <div class="thumb"><img src="${art(c.art)}" alt="" width="120" height="120" /></div>
@@ -78,7 +80,7 @@ function lastCard(c) {
           <h3>${esc(topicName(c))}</h3>
           <p>${fmtDate(c.date)} · ${t('app.list.min', { n: c.durationMin })} · <span class="chip chip--sm">${c.level}</span></p>
         </div>
-        ${ring(c.overall, { size: 92, stroke: 10, color: RING_COLOR[tone(c.overall)], sub: t('app.home.overall') })}
+        ${c.overall != null ? ring(c.overall, { size: 92, stroke: 10, color: RING_COLOR[tone(c.overall)], sub: t('app.home.overall') }) : ''}
       </div>
       <div class="last__actions">
         <button class="btn btn--navy" type="button" data-nav="/app/informe/${c.id}">${t('app.home.report')}</button>
@@ -91,6 +93,19 @@ function lastCard(c) {
 export default {
   head: () => ({ eyebrow: greeting(), title: firstName(getSession()?.name) }),
   init(root, _params, scope) {
+    // Con backend, la última conversación y la gráfica llegan del historial real
+    if (!DEMO_MODE) {
+      let gone = false
+      scope.onCleanup(() => (gone = true))
+      loadHistory()
+        .then((list) => {
+          if (gone) return
+          root.querySelector('#lastCard')?.replaceWith(...new DOMParser().parseFromString(lastCard(list[0] || null), 'text/html').body.children)
+          const box = root.querySelector('#sparkBox')
+          if (box) box.innerHTML = sparkline(list) || '<div class="spark spark--empty"></div>'
+        })
+        .catch((err) => console.warn('No se pudo cargar el historial', err)) // se queda lo que ya se ve
+    }
     // Cuando llega el estado del servidor, se repinta solo la tarjeta de la racha
     scope.listen(window, 'streakchange', () => {
       const card = root.querySelector('#streakCard')
@@ -99,7 +114,7 @@ export default {
   },
   render() {
     const name = firstName(getSession()?.name)
-    const list = conversations()
+    const list = DEMO_MODE ? conversations() : [] // con backend se llena al cargar el historial
     const last = list[0] || null
     const words = practiceItems().length
     return `
@@ -122,7 +137,7 @@ export default {
         ${lastCard(last)}
         <article class="card mini">
           <h2 class="card__eyebrow">${t('app.home.progressTitle')}</h2>
-          ${sparkline(list) || `<div class="spark spark--empty"></div>`}
+          <div id="sparkBox">${sparkline(list) || `<div class="spark spark--empty"></div>`}</div>
           <p>${t('app.home.progressText')}</p>
           <button class="btn btn--outline btn--sm" type="button" data-nav="/app/progreso">${t('app.home.progressBtn')}</button>
         </article>

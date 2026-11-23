@@ -6,6 +6,7 @@ import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
 import { isDemo, bannerHidden } from '@/features/app/data/store.js'
 import { streak, loadStreak } from '@/features/app/data/streak.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
 
 // Menú principal (los apartados de MVP.md: Inicio, Mis conversaciones, Progreso, Práctica, Ajustes)
 const NAV = [
@@ -106,7 +107,7 @@ export function updateChrome(routeName, head) {
     banner.innerHTML =
       isDemo() && !bannerHidden()
         ? `<div class="demo-note" role="note">
-             <span>${t('app.demoBanner.text')}</span>
+             <span>${t(DEMO_MODE ? 'app.demoBanner.text' : 'app.demoBanner.textLive')}</span>
              <span class="demo-note__actions">
                <button type="button" class="link" data-action="demo-fresh">${t('app.demoBanner.fresh')}</button>
                <button type="button" class="link" data-action="demo-hide">${t('app.demoBanner.hide')}</button>

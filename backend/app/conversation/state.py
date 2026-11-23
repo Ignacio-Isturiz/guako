@@ -18,6 +18,8 @@ class ConversationState(TypedDict, total=False):
     session_id: int
     level: str
     topic: str
+    # The part Guako plays; absent or empty means the default tutor.
+    role: str
     # Number of completed turns; tutor_reply increments it.
     turn_number: int
     messages: list[Message]

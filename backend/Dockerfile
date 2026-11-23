@@ -10,6 +10,12 @@ WORKDIR /app
 # Unprivileged user: a compromised process can't act as root inside the container
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 
+# Writable data (turn audio, TTS cache). /app belongs to root, so the app user needs its own
+# directory; docker-compose mounts a volume here so the files survive container rebuilds.
+RUN mkdir /data && chown app:app /data
+ENV SESSIONS_AUDIO_DIR=/data/sessions \
+    TTS_CACHE_DIR=/data/tts-cache
+
 # Dependencies first: this layer is rebuilt only when requirements.txt changes
 COPY requirements.txt .
 RUN pip install -r requirements.txt
