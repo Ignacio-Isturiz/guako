@@ -11,7 +11,6 @@ const SEED_TEMPLATES = ['travel', 'work', 'daily', 'food', 'travel', 'work', 'da
 const SEED_DAYS_AGO = [1, 2, 3, 4, 8, 11, 15, 20]
 
 const clamp = (v, a = 40, b = 97) => Math.max(a, Math.min(b, Math.round(v)))
-const dayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
 // Variación fija (no aleatoria) para que los datos de ejemplo siempre sean los mismos
 const jitter = (seed, i) => ((Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453) % 1) * 5
 
@@ -129,23 +128,6 @@ export function aspectStatus(conv, now = Date.now()) {
     const prev = i === 0 ? conv.createdAt : conv.readyAt[i - 1]
     return now >= prev ? 'processing' : 'waiting'
   })
-}
-
-/* ---------- Racha ---------- */
-export function streak() {
-  const days = new Set(read().conversations.map((c) => dayKey(new Date(c.date))))
-  const today = days.has(dayKey(new Date()))
-  let d = today ? new Date() : new Date(Date.now() - DAY)
-  let count = 0
-  while (days.has(dayKey(d))) {
-    count++
-    d = new Date(d.getTime() - DAY)
-  }
-  const week = Array.from({ length: 7 }, (_, i) => {
-    const day = new Date(Date.now() - (6 - i) * DAY)
-    return { date: day, done: days.has(dayKey(day)), isToday: i === 6 }
-  })
-  return { count, today, week }
 }
 
 /* ---------- Práctica ---------- */

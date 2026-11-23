@@ -6,5 +6,5 @@ import en from './i18n/en.js'
 
 addMessages({ es, en })
 
-export { getSession, clearSession, logout } from './service.js'
+export { getSession, clearSession, logout, MOCK } from './service.js'
 export { initAuth, openAuth } from './components/auth-modal/auth-modal.js'

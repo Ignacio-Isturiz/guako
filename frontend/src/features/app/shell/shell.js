@@ -4,7 +4,8 @@ import { t, getLang } from '@/core/i18n.js'
 import { getSession } from '@/features/auth/index.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
-import { streak, isDemo, bannerHidden } from '@/features/app/data/store.js'
+import { isDemo, bannerHidden } from '@/features/app/data/store.js'
+import { streak, loadStreak } from '@/features/app/data/streak.js'
 
 // Menú principal (los apartados de MVP.md: Inicio, Mis conversaciones, Progreso, Práctica, Ajustes)
 const NAV = [
@@ -73,6 +74,17 @@ export function renderShell() {
     </div>`
 }
 
+// Contador de racha de la barra superior
+function paintStreak() {
+  const chip = document.querySelector('#topStreak')
+  if (!chip) return
+  const s = streak()
+  chip.classList.toggle('is-on', s.status === 'done')
+  chip.classList.toggle('is-warn', s.status === 'recoverable')
+  chip.innerHTML = `${icon('flame', 18)}<strong>${s.count}</strong>`
+}
+window.addEventListener('streakchange', paintStreak)
+
 // Marca el apartado activo y actualiza título, racha y aviso de modo demo
 export function updateChrome(routeName, head) {
   document.querySelectorAll('[data-match]').forEach((el) => {
@@ -86,12 +98,8 @@ export function updateChrome(routeName, head) {
   if (title) title.textContent = head.title || ''
   document.title = `${head.title} · Guako`
 
-  const s = streak()
-  const chip = document.querySelector('#topStreak')
-  if (chip) {
-    chip.classList.toggle('is-on', s.today)
-    chip.innerHTML = `${icon('flame', 18)}<strong>${s.count}</strong>`
-  }
+  paintStreak()
+  loadStreak() // trae el estado real del servidor; al llegar dispara 'streakchange'
 
   const banner = document.querySelector('#demoBanner')
   if (banner) {
