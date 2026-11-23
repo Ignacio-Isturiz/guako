@@ -27,7 +27,18 @@ class Settings(BaseSettings):
     # Extra attempts after the first one when the output fails validation.
     llm_max_retries: int = Field(default=2, ge=0, le=10)
 
-    model_config = SettingsConfigDict(env_file=".env")
+    # --- Speech-to-text (Groq-hosted Whisper; reuses groq_api_key) ----
+    stt_model: str = "whisper-large-v3"
+    # Per-request timeout in seconds.
+    stt_timeout_seconds: float = Field(default=10.0, gt=0)
+
+    # --- Text-to-speech (Groq-hosted Orpheus; reuses groq_api_key) ----
+    tts_model: str = "canopylabs/orpheus-v1-english"
+    tts_voice: str = "hannah"
+    tts_timeout_seconds: float = Field(default=10.0, gt=0)
+    tts_cache_dir: str = "cache/tts"
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()
