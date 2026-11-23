@@ -120,6 +120,17 @@
 .streak__text b {
   color: var(--navy);
 }
+.streak.is-risk .streak__text {
+  color: var(--red);
+}
+.streak__lives {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.55);
+}
 .week {
   display: flex;
   justify-content: space-between;
@@ -143,6 +154,10 @@
 .week__day.is-done i {
   background: var(--yellow);
   color: var(--ink);
+}
+.week__day.is-saved i {
+  background: var(--blue);
+  color: #fff;
 }
 .week__day.is-today i {
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--navy);

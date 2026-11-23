@@ -1,7 +1,11 @@
 import re
 
+from collections.abc import AsyncGenerator
+from typing import Any
+
 from fastapi import Depends, HTTPException, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin, InvalidPasswordException, schemas
+from fastapi_users.db import SQLAlchemyUserDatabase
 from fastapi_users.authentication import AuthenticationBackend, CookieTransport, JWTStrategy
 from pydantic import Field
 from sqlalchemy import select
@@ -30,22 +34,25 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = settings.secret
     verification_token_secret = settings.secret
 
-    async def validate_password(self, password: str, user) -> None:
+    async def validate_password(self, password: str, user: schemas.UC | User) -> None:
         if len(password) < 8 or not re.search(r"[A-Za-z]", password) or not re.search(r"\d", password):
             raise InvalidPasswordException(reason="weak")
 
-    async def create(self, user_create, safe: bool = False, request: Request | None = None):
-        username = user_create.username
+    async def create(self, user_create: schemas.UC, safe: bool = False, request: Request | None = None) -> User:
+        username: str = user_create.username  # type: ignore[attr-defined]
         if not USERNAME_RE.match(username):
             raise HTTPException(status_code=400, detail={"code": "usernameInvalid"})
         # Sin distinguir mayúsculas: "Ana" y "ana" cuentan como el mismo usuario
-        taken = await self.user_db.session.execute(select(User.id).where(User.username.ilike(username)))
+        taken = await self.user_db.session.execute(  # type: ignore[attr-defined]
+            select(User.id).where(User.username.ilike(username)))
         if taken.first():
             raise HTTPException(status_code=400, detail={"code": "usernameTaken"})
         return await super().create(user_create, safe, request)
 
 
-async def get_user_manager(user_db=Depends(get_user_db)):
+async def get_user_manager(
+    user_db: SQLAlchemyUserDatabase[User, int] = Depends(get_user_db),
+) -> AsyncGenerator[UserManager, None]:
     yield UserManager(user_db)
 
 
@@ -59,7 +66,7 @@ cookie_transport = CookieTransport(
 )
 
 
-def get_jwt_strategy() -> JWTStrategy:
+def get_jwt_strategy() -> JWTStrategy[Any, Any]:
     return JWTStrategy(secret=settings.secret, lifetime_seconds=settings.session_seconds)
 
 

@@ -2,3 +2,6 @@ fastapi[standard]
 pydantic-settings
 fastapi-users[sqlalchemy]
 aiosqlite
+tzdata
+google-genai
+groq

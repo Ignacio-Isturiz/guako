@@ -10,6 +10,7 @@ import { readSetup, clearSetup } from '@/features/app/data/setup.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
 import { toast } from '@/features/app/components/toast/toast.js'
+import { registerActivity } from '@/features/app/data/streak.js'
 import { explain, gloss } from '@/features/app/utils/explain.js'
 
 // El icono que acompaña a cada expresión de Guako
@@ -208,7 +209,10 @@ export default {
         turns: userTurns,
       })
       clearSetup()
+      // Terminar una conversación es la acción clave del día: suma a la racha
+      const s = await registerActivity()
       navigate(`/app/informe/${id}`)
+      if (s.recoveredToday) toast(t('app.home.streakSaved', { n: s.recoveriesLeft }))
     }
 
     const askEnd = async () => {

@@ -2,7 +2,8 @@ import './inicio.css'
 import logo from '@/shared/assets/brand/guako-logo.png'
 import { t } from '@/core/i18n.js'
 import { getSession } from '@/features/auth/index.js'
-import { conversations, lastConversation, streak, practiceItems } from '@/features/app/data/store.js'
+import { conversations, lastConversation, practiceItems } from '@/features/app/data/store.js'
+import { streak } from '@/features/app/data/streak.js'
 import { ring } from '@/features/app/components/ring/ring.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
@@ -33,16 +34,24 @@ function sparkline(list) {
 function streakCard() {
   const s = streak()
   const label = s.count === 0 ? t('app.home.streakNone') : s.count === 1 ? t('app.home.streakOne') : t('app.home.streakMany', { n: s.count })
-  const note = s.today ? t('app.home.streakToday') : s.count ? t('app.home.streakKeep') : t('app.home.streakStart')
+  const note =
+    s.status === 'done'
+      ? t('app.home.streakToday')
+      : s.status === 'recoverable'
+        ? t('app.home.streakRecover', { n: s.recoveriesLeft })
+        : s.status === 'pending'
+          ? t('app.home.streakKeep')
+          : t('app.home.streakStart')
   return `
-    <article class="card streak">
+    <article class="card streak ${s.status === 'recoverable' ? 'is-risk' : ''}" id="streakCard">
       <h2 class="card__eyebrow">${t('app.home.streakTitle')}</h2>
       <div class="streak__big ${s.count ? 'is-on' : ''}">${icon('flame', 44)}<strong>${s.count}</strong></div>
       <p class="streak__text"><b>${label}</b><br />${note}</p>
+      <p class="streak__lives">${icon('flame', 14)}${t('app.home.streakLives', { n: s.recoveriesLeft, max: s.recoveriesMax })}</p>
       <div class="week" aria-hidden="true">
         ${s.week
           .map(
-            (d) => `<span class="week__day ${d.done ? 'is-done' : ''} ${d.isToday ? 'is-today' : ''}">
+            (d) => `<span class="week__day ${d.done ? 'is-done' : ''} ${d.recovered ? 'is-saved' : ''} ${d.isToday ? 'is-today' : ''}">
               <i>${d.done ? icon('check', 14) : ''}</i><small>${fmtWeekday(d.date)}</small></span>`,
           )
           .join('')}
@@ -81,6 +90,13 @@ function lastCard(c) {
 // 2. Inicio: botón principal, racha y acceso rápido a la última conversación
 export default {
   head: () => ({ eyebrow: greeting(), title: firstName(getSession()?.name) }),
+  init(root, _params, scope) {
+    // Cuando llega el estado del servidor, se repinta solo la tarjeta de la racha
+    scope.listen(window, 'streakchange', () => {
+      const card = root.querySelector('#streakCard')
+      if (card) card.outerHTML = streakCard()
+    })
+  },
   render() {
     const name = firstName(getSession()?.name)
     const list = conversations()
