@@ -1,3 +1,6 @@
+from typing import Literal
+
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +13,19 @@ class Settings(BaseSettings):
     # La cookie de sesión solo viaja por HTTPS cuando esto es True (activarlo en producción)
     cookie_secure: bool = False
     session_seconds: int = 60 * 60 * 24 * 14  # 14 días
+
+    # --- LLM providers -------------------------------------------------
+    # API keys are SecretStr so they never show up in repr(), logs or tracebacks.
+    llm_provider: Literal["gemini", "groq"] = "gemini"
+    gemini_api_key: SecretStr | None = None
+    groq_api_key: SecretStr | None = None
+    gemini_model: str = "gemini-3.5-flash-lite"
+    groq_model: str = "openai/gpt-oss-20b"
+    llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
+    # Per-call timeout in seconds.
+    llm_timeout_seconds: float = Field(default=30.0, gt=0)
+    # Extra attempts after the first one when the output fails validation.
+    llm_max_retries: int = Field(default=2, ge=0, le=10)
 
     model_config = SettingsConfigDict(env_file=".env")
 
