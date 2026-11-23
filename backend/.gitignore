@@ -7,3 +7,6 @@ __pycache__/
 # Generated audio (TTS cache and script output)
 cache/
 output/
+
+# Latency measurement results
+results/
