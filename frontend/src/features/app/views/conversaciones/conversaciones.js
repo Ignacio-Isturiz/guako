@@ -8,6 +8,8 @@ import { esc } from '@/features/app/utils/html.js'
 import { roleArt as art } from '@/shared/assets/illustrations/index.js'
 import { topicName, fmtDate } from '@/features/app/utils/format.js'
 import { tone } from '@/features/app/utils/scores.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
+import { renderLiveList, initLiveList } from './conversaciones-live.js'
 
 const RING_COLOR = { high: '#1aa05a', mid: '#f0a500', low: '#e8201a' }
 
@@ -39,6 +41,7 @@ function row(c) {
 export default {
   head: () => ({ eyebrow: t('app.list.eyebrow'), title: t('app.list.title') }),
   render() {
+    if (!DEMO_MODE) return renderLiveList() // con backend, el historial real
     return `
       <div class="listbar">
         <label class="search">${icon('search', 20)}<input type="search" id="q" placeholder="${esc(t('app.list.search'))}" aria-label="${esc(t('app.list.search'))}" /></label>
@@ -51,6 +54,7 @@ export default {
       <ul class="convlist" id="list"></ul>`
   },
   init(root, _p, scope) {
+    if (!DEMO_MODE) return initLiveList(root, scope)
     const all = conversations()
     let topic = 'all'
     let q = ''

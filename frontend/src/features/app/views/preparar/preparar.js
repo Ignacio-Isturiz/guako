@@ -9,6 +9,8 @@ import { esc } from '@/features/app/utils/html.js'
 import { roleArt as art } from '@/shared/assets/illustrations/index.js'
 import { openLevelTest } from './level-test.js'
 
+const ROLE_MAX = 200 // el backend acepta hasta 200 caracteres
+
 /* ---------- Pantalla ---------- */
 const topicCard = (tp) => `
   <button type="button" class="topic" data-topic="${tp.id}" aria-pressed="false">
@@ -48,6 +50,18 @@ export default {
         </section>
 
         <section class="card">
+          <h2 class="card__title">${t('app.prepare.roleTitle')}</h2>
+          <p class="card__sub">${t('app.prepare.roleText')}</p>
+          <label class="custom role">
+            <span>${t('app.prepare.roleLabel')}</span>
+            <input type="text" id="roleInput" maxlength="${ROLE_MAX}" placeholder="${esc(t('app.prepare.rolePlaceholder'))}" />
+          </label>
+          <div class="role__examples" role="group" aria-label="${t('app.prepare.roleExamplesLabel')}">
+            ${t('app.prepare.roleExamples').map((r) => `<button type="button" class="chip role__chip" data-role="${esc(r)}">${esc(r)}</button>`).join('')}
+          </div>
+        </section>
+
+        <section class="card">
           <h2 class="card__title">${t('app.prepare.levelTitle')}</h2>
           <div class="levels">
             ${LEVELS.map(levelChip).join('')}
@@ -63,6 +77,7 @@ export default {
           <h2 class="card__eyebrow">${t('app.prepare.summary')}</h2>
           <dl>
             <div><dt>${t('app.prepare.summaryTopic')}</dt><dd id="sumTopic"></dd></div>
+            <div><dt>${t('app.prepare.summaryRole')}</dt><dd id="sumRole"></dd></div>
             <div><dt>${t('app.prepare.summaryLevel')}</dt><dd id="sumLevel"></dd></div>
           </dl>
           <button class="btn btn--primary btn--block btn--lg" type="button" id="startBtn">${icon('mic', 22)}${t('app.prepare.start')}</button>
@@ -74,9 +89,11 @@ export default {
 
   init(root, _p, scope) {
     const draft = readSetup() || {}
-    const state = { topicId: draft.topicId || '', custom: draft.custom || '', level: draft.level || savedLevel() || '', suggested: draft.suggested || '' }
+    const state = { topicId: draft.topicId || '', custom: draft.custom || '', level: draft.level || savedLevel() || '', suggested: draft.suggested || '', role: draft.role || '' }
     const customInput = root.querySelector('#customTopic')
+    const roleInput = root.querySelector('#roleInput')
     customInput.value = state.custom
+    roleInput.value = state.role
 
     const ready = () => state.topicId && state.level && (state.topicId !== 'custom' || state.custom.trim())
     const paint = () => {
@@ -97,6 +114,7 @@ export default {
           ? state.custom.trim() || t('app.topics.custom.name')
           : t(`app.topics.${state.topicId}.name`)
         : t('app.prepare.summaryEmpty')
+      root.querySelector('#sumRole').textContent = state.role.trim() || t('app.prepare.roleNone')
       root.querySelector('#sumLevel').textContent = state.level ? `${state.level} · ${t(`app.levels.${state.level}.name`)}` : t('app.prepare.summaryEmpty')
       const ok = !!ready()
       root.querySelector('#startBtn').disabled = !ok
@@ -110,6 +128,13 @@ export default {
         state.topicId = topic.dataset.topic
         paint()
         if (state.topicId === 'custom') customInput.focus()
+        return
+      }
+      const example = e.target.closest('[data-role]')
+      if (example) {
+        state.role = example.dataset.role
+        roleInput.value = state.role
+        paint()
         return
       }
       const lvl = e.target.closest('[data-level]')
@@ -133,6 +158,10 @@ export default {
     })
     scope.listen(customInput, 'input', () => {
       state.custom = customInput.value
+      paint()
+    })
+    scope.listen(roleInput, 'input', () => {
+      state.role = roleInput.value
       paint()
     })
     paint()

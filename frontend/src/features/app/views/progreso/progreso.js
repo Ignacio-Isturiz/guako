@@ -1,6 +1,9 @@
 import './progreso.css'
 import { t } from '@/core/i18n.js'
-import { ASPECTS, conversations } from '@/features/app/data/store.js'
+import { ASPECTS as ALL_ASPECTS, conversations } from '@/features/app/data/store.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
+import { loadHistory, LIVE_ASPECTS } from '@/features/app/data/history.js'
+import { errorText } from '@/features/app/data/sessions-api.js'
 import { esc } from '@/features/app/utils/html.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { fmtDate } from '@/features/app/utils/format.js'
@@ -13,7 +16,7 @@ const M = { l: 38, r: 16, t: 14, b: 34 }
 
 const inRange = (list, range) => (range === 'all' ? list : list.filter((c) => Date.now() - new Date(c.date) <= Number(range) * DAY))
 
-function chart(list, hidden) {
+function chart(list, hidden, ASPECTS) {
   const n = list.length
   const lo = 40
   const hi = 100
@@ -51,7 +54,10 @@ export default {
       </div>`
   },
   init(root, _p, scope) {
-    const all = conversations().reverse() // de la más antigua a la más reciente
+    // Con backend solo existen gramática y fluidez; en demo, los cinco aspectos de ejemplo
+    const ASPECTS = DEMO_MODE ? ALL_ASPECTS : LIVE_ASPECTS
+    let all = DEMO_MODE ? conversations().reverse() : [] // de la más antigua a la más reciente
+    let unscored = 0
     let range = 'all'
     const hidden = new Set()
     const body = root.querySelector('#progBody')
@@ -69,18 +75,18 @@ export default {
       const avg = (c) => Math.round(ASPECTS.reduce((s, a) => s + c.scores[a], 0) / ASPECTS.length)
       const delta = avg(last) - avg(first)
       const sorted = [...ASPECTS].sort((a, b) => last.scores[b] - last.scores[a])
-      const { svg, x } = chart(list, hidden)
+      const { svg, x } = chart(list, hidden, ASPECTS)
 
       body.innerHTML = `
         <div class="tiles">
           <div class="card tile"><small>${t('app.progress.avg')}</small><strong>${avg(last)}</strong>
             <span class="delta ${delta >= 0 ? 'is-up' : 'is-down'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)} ${t('app.progress.change').toLowerCase()}</span></div>
           <div class="card tile"><small>${t('app.progress.best')}</small><strong style="color:${ASPECT_COLOR[sorted[0]]}">${aspectName(sorted[0])}</strong><span>${t('app.progress.points', { n: last.scores[sorted[0]] })}</span></div>
-          <div class="card tile"><small>${t('app.progress.weak')}</small><strong style="color:${ASPECT_COLOR[sorted[4]]}">${aspectName(sorted[4])}</strong><span>${t('app.progress.points', { n: last.scores[sorted[4]] })}</span></div>
+          <div class="card tile"><small>${t('app.progress.weak')}</small><strong style="color:${ASPECT_COLOR[sorted.at(-1)]}">${aspectName(sorted.at(-1))}</strong><span>${t('app.progress.points', { n: last.scores[sorted.at(-1)] })}</span></div>
         </div>
 
         <section class="card chartcard">
-          <h2 class="card__title">${t('app.progress.chartTitle')}</h2>
+          <h2 class="card__title">${t(DEMO_MODE ? 'app.progress.chartTitle' : 'app.progress.live.chartTitle')}</h2>
           <div class="legend" role="group" aria-label="${esc(t('app.progress.legend'))}">
             ${ASPECTS.map((a) => `<button type="button" class="legend__item ${hidden.has(a) ? 'is-off' : ''}" data-aspect="${a}" aria-pressed="${!hidden.has(a)}">
               <i style="background:${ASPECT_COLOR[a]}"></i>${aspectName(a)}</button>`).join('')}
@@ -90,7 +96,8 @@ export default {
             <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('app.progress.chartTitle')}">${svg}</svg>
             <div class="tip" id="tip" hidden></div>
           </div>
-        </section>`
+        </section>
+        ${DEMO_MODE ? '' : `<p class="card__sub">${t('app.progress.live.pending')}${unscored ? ` ${t('app.progress.live.unscored', { n: unscored })}` : ''}</p>`}`
 
       // Al pasar el cursor se ven los cinco puntajes de esa conversación
       const chartEl = body.querySelector('#chart')
@@ -134,6 +141,20 @@ export default {
         paint()
       }
     })
-    paint()
+    if (DEMO_MODE) return paint()
+    body.innerHTML = `<div class="card"><p>${t('app.progress.live.loading')}</p></div>`
+    let gone = false
+    scope.onCleanup(() => (gone = true))
+    loadHistory()
+      .then((history) => {
+        if (gone) return
+        const scored = history.filter((c) => ASPECTS.every((a) => c.scores[a] != null))
+        unscored = history.filter((c) => c.ended).length - scored.length
+        all = scored.reverse()
+        paint()
+      })
+      .catch((err) => {
+        if (!gone) body.innerHTML = `<div class="card empty"><p role="alert">${esc(errorText(err))}</p></div>`
+      })
   },
 }

@@ -450,3 +450,35 @@
     animation: none !important;
   }
 }
+
+/* Error en la zona de la respuesta (conversación real) */
+.talk__err {
+  max-width: 34rem;
+  padding: 0.8rem 1.1rem;
+  border-radius: 16px;
+  background: #fff6e0;
+  color: var(--red);
+  font-weight: 700;
+  line-height: 1.35;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Lo que el usuario dijo (transcripción), encima de la respuesta */
+.talk__said {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+.talk__said small {
+  font-weight: 800;
+  color: var(--yellow);
+}
+
+/* Papel de Guako en la cabecera: puede ser largo */
+.talk__role {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

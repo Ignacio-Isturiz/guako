@@ -74,3 +74,16 @@ def test_silence_stops_the_graph_before_the_llm(tmp_path: Path) -> None:
         _run(graph, _state())
 
     assert calls == ["stt"]
+
+
+def test_role_goes_into_the_system_prompt_and_defaults_to_a_plain_tutor(tmp_path: Path) -> None:
+    calls: list[str] = []
+    llm = FakeLLM(calls)
+    graph = build_graph(FakeSTT(calls), llm, FakeTTS(calls), checkpointer=InMemorySaver(), audio_dir=str(tmp_path))
+
+    _run(graph, _state(role="my mother, and I am asking her for money"))
+    _run(graph, _state(role=""))
+
+    assert "my mother, and I am asking her for money" in llm.systems[0]
+    assert "friendly English tutor" in llm.systems[1]
+    assert "{role}" not in llm.systems[0] and "{role}" not in llm.systems[1]

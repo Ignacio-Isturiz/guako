@@ -12,10 +12,21 @@ import { esc } from '@/features/app/utils/html.js'
 import { toast } from '@/features/app/components/toast/toast.js'
 import { registerActivity } from '@/features/app/data/streak.js'
 import { explain, gloss } from '@/features/app/utils/explain.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
+import { errorText } from '@/features/app/data/sessions-api.js'
+import { createLiveSession } from './live-session.js'
+import { clearSession } from '@/features/auth/index.js'
+import en from '@/features/app/i18n/en.js'
 
 // El icono que acompaña a cada expresión de Guako
 const MOOD = { idle: 'mic', listening: 'ear', thinking: 'bulb', speaking: 'volume', correcting: 'pencil', celebrating: 'star' }
 const MIN_HOLD = 450 // ms mínimos manteniendo la barra para que cuente como "hablé"
+
+// Errores tras los que no tiene sentido seguir intentando hablar en esta sesión
+const FATAL = new Set(['unauthorized', 'session_not_found', 'session_ended', 'daily_limit_reached', 'micDenied', 'noMic', 'micUnsupported'])
+
+// El tutor trabaja en inglés: el tema se manda en inglés aunque la interfaz esté en español
+const apiTopic = (s) => (s.topicId === 'custom' ? s.custom.trim() : en.topics[s.topicId].name).slice(0, 200)
 
 const topicText = (s) => (s.topicId === 'custom' ? s.custom.trim() : t(`app.topics.${s.topicId}.name`))
 
@@ -32,6 +43,7 @@ export default {
         <div class="talk__chips">
           <span class="chip chip--glass">${esc(topicText(s))}</span>
           <span class="chip chip--glass">${esc(s.level)}</span>
+          ${!DEMO_MODE && s.role?.trim() ? `<span class="chip chip--glass talk__role" title="${t('app.talk.role')}">${esc(s.role.trim())}</span>` : ''}
           <span class="chip chip--glass" title="${t('app.talk.timer')}">${icon('clock', 16)}<span id="timer">0:00</span></span>
         </div>
         <button class="talk__sound" type="button" id="soundBtn"></button>
@@ -51,7 +63,7 @@ export default {
         </div>
         <aside class="talk__log" aria-label="${t('app.review.title')}">
           <ol id="log"></ol>
-          <p class="talk__demo">${icon('shield', 14)}<span>${t('app.talk.demo')}</span></p>
+          ${DEMO_MODE ? `<p class="talk__demo">${icon('shield', 14)}<span>${t('app.talk.demo')}</span></p>` : ''}
         </aside>
       </div>
 
@@ -96,6 +108,9 @@ export default {
     let userTurns = 0
     let lastGuako = ''
     let heldAt = 0
+    let dead = false // error sin remedio en esta sesión: la barra se desactiva
+    // Conversación real (con backend); en modo demo es null y todo sigue como antes
+    const live = DEMO_MODE ? null : createLiveSession({ level: setup.level, topic: apiTopic(setup), role: (setup.role || '').trim().slice(0, 200) })
 
     const setState = (s) => {
       state = s
@@ -105,7 +120,7 @@ export default {
     }
     const setKey = (down = false) => {
       keyBtn.classList.toggle('is-down', down)
-      keyBtn.disabled = busy && !down
+      keyBtn.disabled = dead || (busy && !down)
       keyText.textContent = down ? t('app.talk.releasing') : touch ? t('app.talk.holdTouch') : t('app.talk.hold')
     }
     const addLog = (who, turn) => {
@@ -135,6 +150,42 @@ export default {
       lastGuako = turn.text
       await speak(turn.text)
       if (!finished) setState('idle')
+    }
+
+    const showError = (err) => {
+      line.innerHTML = `<p class="talk__err" role="alert">${esc(errorText(err))}</p>`
+      toast(errorText(err))
+      if (err.code === 'unauthorized') clearSession() // la cookie venció: la app vuelve a pedir el ingreso
+      if (FATAL.has(err.code)) dead = true
+    }
+
+    // Conversación real: envía el audio, espera la respuesta del tutor y la reproduce
+    const processLive = async () => {
+      busy = true
+      setKey()
+      setState('thinking')
+      try {
+        const turn = await live.sendRecording()
+        if (finished) return
+        if (turn) {
+          userTurns++
+          addLog('user', { text: turn.userText })
+          addLog('guako', turn)
+          line.innerHTML = `<p class="talk__said"><small>${t('app.talk.youSaid')}</small> ${esc(turn.userText)}</p><p class="talk__en">${esc(turn.text)}</p>`
+          lastGuako = turn.text
+          if (settings().sound) {
+            setState('speaking')
+            await live.play()
+          }
+        }
+        if (!finished) setState('idle')
+      } catch (err) {
+        if (finished) return
+        setState('idle')
+        showError(err)
+      }
+      busy = false
+      setKey()
     }
 
     // Después de que el usuario suelta la barra: Guako "piensa", responde y sigue
@@ -177,6 +228,7 @@ export default {
     const start = () => {
       if (busy || finished || state === 'listening') return
       heldAt = Date.now()
+      live?.startRecording()
       setState('listening')
       setKey(true)
     }
@@ -184,17 +236,36 @@ export default {
       if (state !== 'listening') return
       setKey(false)
       if (Date.now() - heldAt < MIN_HOLD) {
+        live?.cancelRecording()
         setState('idle')
         toast(t('app.talk.tooShort'))
         return
       }
-      processUser()
+      live ? processLive() : processUser()
     }
 
     const finish = async () => {
       if (finished) return
       finished = true
       stopSpeaking()
+      if (live) {
+        live.stopPlayback()
+        $('#finishing').hidden = false
+        try {
+          await live.end()
+        } catch (err) {
+          // No se pudo cerrar la sesión: se puede reintentar
+          finished = false
+          $('#finishing').hidden = true
+          return showError(err)
+        }
+        clearSetup()
+        if (userTurns === 0) return navigate('/app/inicio') // sin turnos no hay informe
+        const s = await registerActivity()
+        navigate(`/app/informe/${live.id}`)
+        if (s.recoveredToday) toast(t('app.home.streakSaved', { n: s.recoveriesLeft }))
+        return
+      }
       if (userTurns === 0) {
         clearSetup()
         return navigate('/app/inicio')
@@ -239,6 +310,7 @@ export default {
     })
     scope.listen(window, 'blur', () => {
       if (state === 'listening') {
+        live?.cancelRecording()
         setKey(false)
         setState('idle')
       }
@@ -257,7 +329,7 @@ export default {
       busy = true
       setKey()
       setState('speaking')
-      await speak(lastGuako, { rate: 0.85 })
+      await (live ? live.play() : speak(lastGuako, { rate: 0.85 }))
       setState('idle')
       busy = false
       setKey()
@@ -288,7 +360,60 @@ export default {
       timer.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
     }, 1000)
 
-    // Empieza Guako
+    // Conversación real: el micrófono y la sesión se abren al entrar y Guako abre la escena
+    if (live) {
+      // Al salir (otra pantalla, cambio de idioma) la sesión se termina; al cerrar la pestaña también
+      scope.onCleanup(() => {
+        live.dispose()
+        live.end().catch(() => {})
+      })
+      scope.listen(window, 'pagehide', () => live.end({ keepalive: true }).catch(() => {}))
+      setState('idle')
+      setKey()
+      line.innerHTML = `<p class="talk__en">${t('app.talk.liveHint')}</p>`
+      // Guako abre la escena en el papel elegido. Si falla, se puede reintentar o hablar primero.
+      const runOpening = async () => {
+        busy = true
+        setKey()
+        setState('thinking')
+        try {
+          const first = await live.opening()
+          if (finished) return
+          addLog('guako', first)
+          line.innerHTML = `<p class="talk__en">${esc(first.text)}</p>`
+          lastGuako = first.text
+          if (settings().sound) {
+            setState('speaking')
+            await live.play()
+          }
+        } catch (err) {
+          if (finished) return
+          showError(err)
+          if (!FATAL.has(err.code)) {
+            line.insertAdjacentHTML('beforeend', `<button class="btn btn--glass" type="button" id="retryOpening">${t('app.report.live.retry')}</button>`)
+          }
+        }
+        if (finished) return
+        setState('idle')
+        busy = false
+        setKey()
+      }
+      scope.listen(line, 'click', (e) => {
+        if (busy || !e.target.closest('#retryOpening')) return
+        runOpening()
+      })
+      live
+        .open()
+        .then(runOpening)
+        .catch((err) => {
+          setState('idle')
+          showError(err)
+          setKey()
+        })
+      return
+    }
+
+    // Empieza Guako (modo demo)
     ;(async () => {
       setState('idle')
       setKey()

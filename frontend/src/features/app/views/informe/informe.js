@@ -10,6 +10,8 @@ import { explain } from '@/features/app/utils/explain.js'
 import { topicName, fmtDate } from '@/features/app/utils/format.js'
 import { aspectName, ASPECT_COLOR, tone, toneText } from '@/features/app/utils/scores.js'
 import { toast } from '@/features/app/components/toast/toast.js'
+import { DEMO_MODE } from '@/features/app/data/config.js'
+import { liveHead, renderLiveReport, initLiveReport } from './informe-live.js'
 
 const RING_COLOR = { high: '#1aa05a', mid: '#f0a500', low: '#e8201a' }
 const STATUS_ICON = { waiting: 'clock', processing: 'spinner', ready: 'check' }
@@ -119,13 +121,18 @@ function body(c, st) {
     }`
 }
 
+// Con backend, el informe es el de la sesión real; los ids de ejemplo ("c_seed_1") siguen siendo locales
+const isLive = (p) => !DEMO_MODE && !getConversation(p.id)
+
 // 5. Informe: estado del análisis, puntajes, errores, frases corregidas y palabras con audio
 export default {
   head: (p) => {
+    if (isLive(p)) return liveHead()
     const c = getConversation(p.id)
     return { eyebrow: t('app.report.eyebrow'), title: c ? topicName(c) : t('app.report.title') }
   },
   render(p) {
+    if (isLive(p)) return renderLiveReport(p)
     const c = getConversation(p.id)
     if (!c) return notFound()
     return `
@@ -143,6 +150,7 @@ export default {
       <div id="reportBody"></div>`
   },
   init(root, p, scope) {
+    if (isLive(p)) return initLiveReport(root, p, scope)
     const c = getConversation(p.id)
     if (!c) return
     const host = root.querySelector('#reportBody')

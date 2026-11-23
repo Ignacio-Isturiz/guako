@@ -1,32 +1,51 @@
 """Conversation endpoints.
 
 POST /api/sessions                                    → create a session (level, topic)
+GET  /api/sessions                                    → my conversations (sessions with at least one turn), newest first
+POST /api/sessions/{id}/opening                      → Guako's first line, in the learner's chosen part (turn 0)
+PATCH /api/sessions/{id}  {"ended"?: true, "audio_consent"?: bool} → end the session (idempotent) / change consent
 POST /api/sessions/{id}/turns                         → one audio turn: audio in, tutor reply out
+GET  /api/sessions/{id}/turns                         → the saved turns (transcripts) of the session
 GET  /api/sessions/{id}/turns/{n}/reply-audio         → the tutor's audio for turn n
+GET  /api/sessions/{id}/report                        → end-of-session report (409 until the session ends)
 """
 
 import logging
 import uuid
-from datetime import datetime
+from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, ConfigDict, StringConstraints
-from sqlalchemy import select
+from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.conversation.deps import get_stt_provider, get_tts_provider
 from app.conversation.graph import build_graph
+from app.conversation.opening import OPENING_TURN, generate_opening
 from app.conversation.state import ConversationState, Message
 from app.db import ConversationSession, Turn, User, get_async_session
 from app.llm.base import LLMProvider
+from app.llm.errors import LLMError
 from app.llm.factory import get_llm_provider
-from app.stt import STTProvider
+from app.llm.schemas import GrammarAnalysis
+from app.prompts import load_prompt
+from app.reports import (
+    FluencyReport,
+    GrammarReport,
+    ReportGrammarError,
+    SessionReport,
+    compute_fluency,
+    count_words,
+    grammar_score,
+)
+from app.stt import STTProvider, WordTiming
 from app.stt.groq import SUPPORTED_EXTENSIONS
 from app.tts import TTSProvider
 from app.usage import seconds_used_today
@@ -40,9 +59,14 @@ Level = Literal["A1", "A2", "B1", "B2", "C1"]
 Topic = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 
+Role = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
+
+
 class SessionCreate(BaseModel):
     level: Level
     topic: Topic
+    # The part Guako plays, in the learner's own words. Optional; blank counts as none.
+    role: Role | None = None
 
 
 class SessionRead(BaseModel):
@@ -51,14 +75,49 @@ class SessionRead(BaseModel):
     id: int
     level: str
     topic: str
+    role: str | None
     audio_consent: bool
     created_at: datetime
+    ended_at: datetime | None
+
+
+class SessionUpdate(BaseModel):
+    """Partial update; at least one field is required.
+
+    ``ended`` only accepts ``true``: sessions are never reopened (``false`` is a 422).
+    ``audio_consent`` can go both ways.
+    """
+
+    ended: Literal[True] | None = None
+    audio_consent: bool | None = None
+
+    @model_validator(mode="after")
+    def _at_least_one_field(self) -> "SessionUpdate":
+        if self.ended is None and self.audio_consent is None:
+            raise ValueError("Provide 'ended' or 'audio_consent'.")
+        return self
+
+
+class SessionSummary(SessionRead):
+    """A conversation as listed in the history: the session plus how much was said."""
+
+    turns: int
+    # Scores from the saved report; None until the report has been built (opening it builds it).
+    grammar_score: int | None = None
+    fluency_score: int | None = None
+    # Learner + tutor audio, the same measure the daily limit uses.
+    duration_seconds: float
 
 
 class TurnRead(BaseModel):
     turn_number: int
+    user_transcript: str
     reply_text: str
     reply_audio_url: str
+
+
+class TurnSummary(TurnRead):
+    """A saved turn, as listed for the review screen."""
 
 
 def _reply_audio_url(session_id: int, turn_number: int) -> str:
@@ -79,11 +138,81 @@ async def create_session(
     user: Annotated[User, Depends(current_active_user)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ConversationSession:
-    session = ConversationSession(user_id=user.id, level=body.level, topic=body.topic)
+    session = ConversationSession(user_id=user.id, level=body.level, topic=body.topic, role=body.role or None)
     db.add(session)
     await db.commit()
     await db.refresh(session)
     return session
+
+
+@router.patch("/{session_id}", response_model=SessionRead)
+async def end_session(
+    session_id: int,
+    body: SessionUpdate,
+    user: Annotated[User, Depends(current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> ConversationSession:
+    session = await _own_session(db, session_id, user)
+
+    if body.audio_consent is not None and body.audio_consent != session.audio_consent:
+        # Granting consent after the end would retroactively legitimise nothing (no more
+        # turns can be recorded), so it is refused. Withdrawing is always allowed.
+        if body.audio_consent and session.ended_at is not None:
+            raise HTTPException(status_code=409, detail={"code": "session_ended", "message": "Esta sesión ya terminó."})
+        session.audio_consent = body.audio_consent
+        if not body.audio_consent:
+            await _discard_stored_audio(db, session_id)
+
+    # Idempotent on purpose: the client may call this twice (the "finish" button and the
+    # unmount/unload cleanup). A repeat call returns the session as is and keeps the
+    # original ``ended_at``, so the end time is never overwritten.
+    if body.ended and session.ended_at is None:
+        session.ended_at = datetime.now(UTC)
+
+    await db.commit()
+    await db.refresh(session)
+    return session
+
+
+async def _discard_stored_audio(db: AsyncSession, session_id: int) -> None:
+    """Withdrawn consent: delete the learner's stored audio files and forget their paths."""
+    turns = (await db.scalars(select(Turn).where(Turn.session_id == session_id, Turn.user_audio_path.is_not(None)))).all()
+    for turn in turns:
+        await run_in_threadpool(_remove, turn.user_audio_path)
+        turn.user_audio_path = None
+
+
+def _saved_score(session: ConversationSession, dimension: str) -> int | None:
+    return ((session.report or {}).get(dimension) or {}).get("score")
+
+
+@router.get("", response_model=list[SessionSummary])
+async def list_sessions(
+    user: Annotated[User, Depends(current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> list[SessionSummary]:
+    # Sessions without turns (opened and abandoned, or whose first turn failed) are not conversations.
+    rows = await db.execute(
+        select(
+            ConversationSession,
+            func.count(Turn.id),
+            func.coalesce(func.sum(Turn.user_audio_seconds + Turn.reply_audio_seconds), 0.0),
+        )
+        .join(Turn, (Turn.session_id == ConversationSession.id) & (Turn.turn_number != OPENING_TURN))
+        .where(ConversationSession.user_id == user.id)
+        .group_by(ConversationSession.id)
+        .order_by(ConversationSession.created_at.desc(), ConversationSession.id.desc())
+    )
+    return [
+        SessionSummary(
+            **SessionRead.model_validate(s).model_dump(),
+            turns=turns,
+            duration_seconds=float(seconds),
+            grammar_score=_saved_score(s, "grammar"),
+            fluency_score=_saved_score(s, "fluency"),
+        )
+        for s, turns, seconds in rows.all()
+    ]
 
 
 async def _read_audio(upload: UploadFile) -> tuple[bytes, str]:
@@ -105,6 +234,79 @@ async def _read_audio(upload: UploadFile) -> tuple[bytes, str]:
 def _remove(path: Path | str | None) -> None:
     if path:
         Path(path).unlink(missing_ok=True)
+
+
+def _turn_read(turn: Turn) -> TurnRead:
+    return TurnRead(
+        turn_number=turn.turn_number,
+        user_transcript=turn.user_transcript,
+        reply_text=turn.reply_text,
+        reply_audio_url=_reply_audio_url(turn.session_id, turn.turn_number),
+    )
+
+
+@router.post("/{session_id}/opening", status_code=201, response_model=TurnRead)
+async def create_opening(
+    session_id: int,
+    response: Response,
+    user: Annotated[User, Depends(current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    llm: Annotated[LLMProvider, Depends(get_llm_provider)],
+    tts: Annotated[TTSProvider, Depends(get_tts_provider)],
+) -> TurnRead:
+    """Guako speaks first. Safe to call twice: the saved opening is returned (200) instead of a new one."""
+    session = await _own_session(db, session_id, user)
+    if session.ended_at is not None:
+        raise HTTPException(status_code=409, detail={"code": "session_ended", "message": "Esta sesión ya terminó."})
+
+    existing = await db.scalar(select(Turn).where(Turn.session_id == session_id, Turn.turn_number == OPENING_TURN))
+    if existing is not None:
+        response.status_code = 200
+        return _turn_read(existing)
+    if await db.scalar(select(func.count(Turn.id)).where(Turn.session_id == session_id)):
+        # The learner already spoke first: an opening now would come out of order.
+        raise HTTPException(status_code=409, detail={"code": "session_started", "message": "La conversación ya empezó."})
+
+    if await seconds_used_today(db, user.id) >= settings.daily_limit_minutes * 60:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "code": "daily_limit_reached",
+                "message": f"Alcanzaste tu límite de {settings.daily_limit_minutes} minutos de hoy. Vuelve mañana.",
+            },
+        )
+
+    opening = await run_in_threadpool(
+        lambda: generate_opening(
+            llm,
+            tts,
+            session_id=session_id,
+            level=session.level,
+            topic=session.topic,
+            role=session.role,
+            audio_dir=settings.sessions_audio_dir,
+        )
+    )
+    turn = Turn(
+        session_id=session_id,
+        turn_number=OPENING_TURN,
+        user_transcript="",
+        reply_text=opening.reply_text,
+        reply_audio_path=opening.reply_audio_path,
+        reply_audio_seconds=opening.reply_audio_seconds,
+    )
+    db.add(turn)
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Two requests opened the same session at once: keep the one that got saved first.
+        await db.rollback()
+        saved = await db.scalar(select(Turn).where(Turn.session_id == session_id, Turn.turn_number == OPENING_TURN))
+        if saved is None:
+            raise
+        response.status_code = 200
+        return _turn_read(saved)
+    return _turn_read(turn)
 
 
 @router.post("/{session_id}/turns", status_code=201, response_model=TurnRead)
@@ -140,7 +342,8 @@ async def create_turn(
     previous = (await db.scalars(select(Turn).where(Turn.session_id == session_id).order_by(Turn.turn_number))).all()
     messages: list[Message] = []
     for turn in previous:
-        messages.append({"role": "user", "content": turn.user_transcript})
+        if turn.turn_number != OPENING_TURN:  # Guako's opening has no learner message
+            messages.append({"role": "user", "content": turn.user_transcript})
         messages.append({"role": "assistant", "content": turn.reply_text})
     completed = previous[-1].turn_number if previous else 0
 
@@ -156,6 +359,7 @@ async def create_turn(
         "session_id": session_id,
         "level": session.level,
         "topic": session.topic,
+        "role": session.role or "",
         "turn_number": completed,
         "messages": messages,
         "user_audio_path": str(user_audio),
@@ -198,9 +402,29 @@ async def create_turn(
 
     return TurnRead(
         turn_number=turn.turn_number,
+        user_transcript=turn.user_transcript,
         reply_text=turn.reply_text,
         reply_audio_url=_reply_audio_url(session_id, turn.turn_number),
     )
+
+
+@router.get("/{session_id}/turns", response_model=list[TurnSummary])
+async def list_turns(
+    session_id: int,
+    user: Annotated[User, Depends(current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> list[TurnSummary]:
+    await _own_session(db, session_id, user)
+    turns = (await db.scalars(select(Turn).where(Turn.session_id == session_id).order_by(Turn.turn_number))).all()
+    return [
+        TurnSummary(
+            turn_number=t.turn_number,
+            user_transcript=t.user_transcript,
+            reply_text=t.reply_text,
+            reply_audio_url=_reply_audio_url(session_id, t.turn_number),
+        )
+        for t in turns
+    ]
 
 
 @router.get("/{session_id}/turns/{turn_number}/reply-audio")
@@ -215,3 +439,72 @@ async def get_reply_audio(
     if turn is None or not Path(turn.reply_audio_path).is_file():
         raise HTTPException(status_code=404, detail={"code": "audio_not_found", "message": "Audio no encontrado."})
     return FileResponse(turn.reply_audio_path, media_type="audio/wav")
+
+
+@router.get("/{session_id}/report", response_model=SessionReport)
+async def get_report(
+    session_id: int,
+    user: Annotated[User, Depends(current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    llm: Annotated[LLMProvider, Depends(get_llm_provider)],
+) -> SessionReport:
+    session = await _own_session(db, session_id, user)
+    if session.ended_at is None:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "session_not_ended", "message": "El informe estará listo cuando termines la sesión."},
+        )
+
+    if session.report is not None:
+        return SessionReport.model_validate(session.report)
+
+    turns = (
+        await db.scalars(
+            select(Turn).where(Turn.session_id == session_id, Turn.turn_number != OPENING_TURN).order_by(Turn.turn_number)
+        )
+    ).all()
+    if not turns:
+        return SessionReport(
+            session_id=session_id,
+            user_turns=0,
+            grammar=GrammarReport(status="empty", score=None, errors=[], turns_analyzed=0, turns_failed=0),
+            fluency=FluencyReport(
+                status="empty", score=None, words_per_minute=None, long_pauses=0, filler_words=0, total_words=0
+            ),
+        )
+
+    grammar = await _grammar_report(turns, llm)
+    fluency = compute_fluency([[WordTiming.model_validate(w) for w in (t.word_timestamps or [])] for t in turns])
+    report = SessionReport(session_id=session_id, user_turns=len(turns), grammar=grammar, fluency=fluency)
+    # Only a complete report is saved: an "incomplete" one is rebuilt on the next request.
+    if grammar.status == "ok":
+        session.report = report.model_dump(mode="json")
+        await db.commit()
+    return report
+
+
+async def _grammar_report(turns: Sequence[Turn], llm: LLMProvider) -> GrammarReport:
+    """Analyse each user turn on its own; a turn whose analysis fails marks the result "incomplete"."""
+    errors: list[ReportGrammarError] = []
+    analyzed_words = analyzed = failed = 0
+    for turn in turns:
+        prompt = load_prompt("grammar_analysis", 1, text=turn.user_transcript)
+        try:
+            # Sequential on purpose: parallel calls would trip the provider's rate limit sooner.
+            analysis = await run_in_threadpool(llm.generate, prompt, GrammarAnalysis)
+        except LLMError as exc:  # 429 / 5xx / bad output: the rest of the report is still useful
+            logger.warning("report_grammar_failed session=%s turn=%s error=%s", turn.session_id, turn.turn_number, type(exc).__name__)
+            failed += 1
+            continue
+        assert isinstance(analysis, GrammarAnalysis)
+        analyzed += 1
+        analyzed_words += count_words(turn.user_transcript)
+        errors.extend(ReportGrammarError(turn_number=turn.turn_number, **e.model_dump()) for e in analysis.errors)
+
+    return GrammarReport(
+        status="incomplete" if failed else "ok",
+        score=grammar_score(len(errors), analyzed_words) if analyzed else None,
+        errors=errors,
+        turns_analyzed=analyzed,
+        turns_failed=failed,
+    )
