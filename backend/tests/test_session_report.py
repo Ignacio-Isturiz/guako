@@ -7,32 +7,13 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
 
 from app.llm.errors import LLMProviderError, LLMRateLimitError
 from app.llm.factory import get_llm_provider
 from app.main import app
 from app.reports import LONG_PAUSE_SECONDS, compute_fluency
 from app.stt import WordTiming
-
-
-class ScriptedGrammarLLM:
-    """Answers each grammar call with the next scripted item: a list of errors or an exception."""
-
-    def __init__(self) -> None:
-        self.script: list[object] = []
-        self.prompts: list[str] = []
-
-    def generate(self, prompt: str, response_model: type[BaseModel], *, system: str | None = None) -> BaseModel:
-        self.prompts.append(prompt)
-        item = self.script.pop(0)
-        if isinstance(item, Exception):
-            raise item
-        return response_model(errors=item)
-
-
-def err(original: str, correction: str) -> dict:
-    return {"original": original, "correction": correction, "error_type": "verb tense", "explanation": "Use the past."}
+from tests.analysis_helpers import ScriptedGrammarLLM, err, rate_limited, run_analyses
 
 
 @pytest.fixture
@@ -126,7 +107,8 @@ def test_full_report(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path)
     )
     # Turn 2: 3 words in 1.0 s.
     _add_turn(db_path, session_id, 2, "It was fun", _words(("It", 0.0, 0.3), ("was", 0.4, 0.7), ("fun", 0.8, 1.0)))
-    llm.script = [[err("goed", "went")], []]
+    llm.script = [[err("goed", "went"), err("beach", "the beach", confidence=0.4)], []]  # 0.4 is below the threshold
+    run_analyses(db_path, llm)
     _end(client, session_id)
 
     res = client.get(f"/api/sessions/{session_id}/report")
@@ -143,12 +125,13 @@ def test_full_report(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path)
                 "turn_number": 1,
                 "original": "goed",
                 "correction": "went",
-                "error_type": "verb tense",
+                "error_type": "verb_tense",
                 "explanation": "Use the past.",
             }
         ],
         "turns_analyzed": 2,
         "turns_failed": 0,
+        "turns_pending": 0,
     }
     fluency = body["fluency"]
     assert fluency["status"] == "ok"
@@ -167,7 +150,8 @@ def test_failed_grammar_analysis_makes_grammar_incomplete_not_the_whole_report(
     session_id = _new_session(client)
     _add_turn(db_path, session_id, 1, "I goed home", _words(("I", 0.0, 0.3), ("goed", 0.4, 0.8), ("home", 0.9, 1.2)))
     _add_turn(db_path, session_id, 2, "It was fun", _words(("It", 0.0, 0.3), ("was", 0.4, 0.7), ("fun", 0.8, 1.0)))
-    llm.script = [failure, []]
+    llm.script = [failure] * 4 + [[]]  # turn 1 fails on the first try and on the 3 retries
+    run_analyses(db_path, llm)
     _end(client, session_id)
 
     res = client.get(f"/api/sessions/{session_id}/report")
@@ -184,13 +168,16 @@ def test_every_analysis_failing_leaves_no_grammar_score(client: TestClient, llm:
     _login(client, "ana")
     session_id = _new_session(client)
     _add_turn(db_path, session_id, 1, "I goed home", None)
-    llm.script = [LLMRateLimitError("429")]
+    llm.script = rate_limited()
+    run_analyses(db_path, llm)
     _end(client, session_id)
 
     body = client.get(f"/api/sessions/{session_id}/report").json()
 
     assert body["grammar"]["status"] == "incomplete" and body["grammar"]["score"] is None
     assert body["fluency"]["status"] == "empty"  # no word timings stored for that turn
+    assert body["fluency"]["unavailable"] == ["words_per_minute", "long_pauses", "filler_words"]
+    assert body["fluency"]["turns_without_timings"] == 1
 
 
 def _w(word: str, start: float, end: float) -> WordTiming:
@@ -228,34 +215,49 @@ def test_a_complete_report_is_saved_and_not_rebuilt(client: TestClient, llm: Scr
     _login(client, "ana")
     session_id = _two_turn_session(client, db_path)
     llm.script = [[err("goed", "went")], []]
+    run_analyses(db_path, llm)
 
     first = client.get(f"/api/sessions/{session_id}/report")
     second = client.get(f"/api/sessions/{session_id}/report")  # the script is empty: a rebuild would crash
 
     assert first.status_code == second.status_code == 200
     assert first.json() == second.json()
-    assert len(llm.prompts) == 2  # one call per turn, only the first time
+    assert len(llm.prompts) == 2  # one call per turn; building the report never calls the LLM
     assert sqlite3.connect(db_path).execute("select report is not null from sessions").fetchone() == (1,)
 
 
-def test_an_incomplete_report_is_not_saved_so_it_can_be_retried(
-    client: TestClient, llm: ScriptedGrammarLLM, db_path: Path
-) -> None:
+def test_an_incomplete_report_is_not_saved(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path) -> None:
     _login(client, "ana")
     session_id = _two_turn_session(client, db_path)
-    llm.script = [LLMRateLimitError("429"), [], [err("goed", "went")], []]
+    llm.script = [*rate_limited(), []]
+    run_analyses(db_path, llm)
 
-    first = client.get(f"/api/sessions/{session_id}/report").json()
+    body = client.get(f"/api/sessions/{session_id}/report").json()
+
+    assert body["grammar"]["status"] == "incomplete" and body["grammar"]["turns_failed"] == 1
+    assert sqlite3.connect(db_path).execute("select report is null from sessions").fetchone() == (1,)
+
+
+def test_turns_without_analysis_are_queued_and_the_report_is_pending_until_they_finish(
+    client: TestClient, llm: ScriptedGrammarLLM, db_path: Path
+) -> None:
+    """Sessions saved before the analysis existed: the first read queues them, the next one is complete."""
+    _login(client, "ana")
+    session_id = _two_turn_session(client, db_path)
+    llm.script = [[err("goed", "went")], []]
+
+    first = client.get(f"/api/sessions/{session_id}/report").json()  # the background task runs after this answer
     second = client.get(f"/api/sessions/{session_id}/report").json()
 
-    assert first["grammar"]["status"] == "incomplete"
-    assert second["grammar"]["status"] == "ok" and second["grammar"]["turns_failed"] == 0
+    assert first["grammar"]["status"] == "incomplete" and first["grammar"]["turns_pending"] == 2
+    assert second["grammar"]["status"] == "ok" and second["grammar"]["turns_analyzed"] == 2
 
 
 def test_sessions_list_shows_saved_scores_only(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path) -> None:
     _login(client, "ana")
     analysed = _two_turn_session(client, db_path)
     llm.script = [[err("goed", "went")], []]
+    run_analyses(db_path, llm)
     report = client.get(f"/api/sessions/{analysed}/report").json()
     other = _new_session(client)
     _add_turn(db_path, other, 1, "Hello there", None)
@@ -272,7 +274,8 @@ def test_the_report_ignores_gukos_opening(client: TestClient, llm: ScriptedGramm
     session_id = _new_session(client)
     _add_turn(db_path, session_id, 0, "", None)  # Guako's opening: no learner part
     _add_turn(db_path, session_id, 1, "I goed home", _words(("I", 0.0, 0.3), ("goed", 0.4, 0.8), ("home", 0.9, 1.2)))
-    llm.script = [[err("goed", "went")]]  # one analysis only: the opening is not analysed
+    llm.script = [[err("goed", "went")]]  # one LLM call only: the opening has no learner text
+    run_analyses(db_path, llm)
     _end(client, session_id)
 
     body = client.get(f"/api/sessions/{session_id}/report").json()

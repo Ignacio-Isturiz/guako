@@ -7,45 +7,35 @@ PATCH /api/sessions/{id}  {"ended"?: true, "audio_consent"?: bool} → end the s
 POST /api/sessions/{id}/turns                         → one audio turn: audio in, tutor reply out
 GET  /api/sessions/{id}/turns                         → the saved turns (transcripts) of the session
 GET  /api/sessions/{id}/turns/{n}/reply-audio         → the tutor's audio for turn n
-GET  /api/sessions/{id}/report                        → end-of-session report (409 until the session ends)
+GET  /api/sessions/{id}/report                  → end-of-session report from the background analyses (409 until the session ends)
 """
 
 import logging
 import uuid
-from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.analysis.runner import ensure_pending_rows, run_turn_analysis
 from app.config import settings
 from app.conversation.deps import get_stt_provider, get_tts_provider
 from app.conversation.graph import build_graph
 from app.conversation.opening import OPENING_TURN, generate_opening
 from app.conversation.state import ConversationState, Message
-from app.db import ConversationSession, Turn, User, get_async_session
+from app.db import ConversationSession, Turn, TurnAnalysis, User, get_async_session
+from app.enums import AnalysisDimension, AnalysisStatus
 from app.llm.base import LLMProvider
-from app.llm.errors import LLMError
 from app.llm.factory import get_llm_provider
-from app.llm.schemas import GrammarAnalysis
-from app.prompts import load_prompt
-from app.reports import (
-    FluencyReport,
-    GrammarReport,
-    ReportGrammarError,
-    SessionReport,
-    compute_fluency,
-    count_words,
-    grammar_score,
-)
-from app.stt import STTProvider, WordTiming
+from app.reports import FluencyReport, GrammarReport, SessionReport, build_fluency_report, build_grammar_report
+from app.stt import STTProvider
 from app.stt.groq import SUPPORTED_EXTENSIONS
 from app.tts import TTSProvider
 from app.usage import seconds_used_today
@@ -313,6 +303,7 @@ async def create_opening(
 async def create_turn(
     session_id: int,
     audio: UploadFile,
+    background: BackgroundTasks,
     user: Annotated[User, Depends(current_active_user)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     stt: Annotated[STTProvider, Depends(get_stt_provider)],
@@ -389,6 +380,9 @@ async def create_turn(
     )
     db.add(turn)
     try:
+        # The analysis rows are saved with the turn, so a saved turn is always queued for analysis.
+        await db.flush()
+        await ensure_pending_rows(db, [turn.id])
         await db.commit()
     except IntegrityError as exc:
         # Two turns of the same session arrived at once and both got the same number.
@@ -400,6 +394,8 @@ async def create_turn(
             detail={"code": "turn_in_progress", "message": "Ya hay un turno en curso. Espera la respuesta e inténtalo de nuevo."},
         ) from exc
 
+    # Runs after the response (and its voice reply) has been sent: the analysis adds no latency.
+    background.add_task(run_turn_analysis, turn.id, llm, async_sessionmaker(db.bind, expire_on_commit=False))
     return TurnRead(
         turn_number=turn.turn_number,
         user_transcript=turn.user_transcript,
@@ -444,10 +440,12 @@ async def get_reply_audio(
 @router.get("/{session_id}/report", response_model=SessionReport)
 async def get_report(
     session_id: int,
+    background: BackgroundTasks,
     user: Annotated[User, Depends(current_active_user)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
 ) -> SessionReport:
+    """Built from the per-turn analyses (``turn_analyses``); it never calls the LLM while answering."""
     session = await _own_session(db, session_id, user)
     if session.ended_at is None:
         raise HTTPException(
@@ -473,38 +471,29 @@ async def get_report(
             ),
         )
 
-    grammar = await _grammar_report(turns, llm)
-    fluency = compute_fluency([[WordTiming.model_validate(w) for w in (t.word_timestamps or [])] for t in turns])
+    # Turns saved before the analysis existed have no rows: queue them now (they show as pending until done).
+    queued = await ensure_pending_rows(db, [t.id for t in turns])
+    if queued:
+        await db.commit()
+        maker = async_sessionmaker(db.bind, expire_on_commit=False)
+        for turn_id in queued:
+            background.add_task(run_turn_analysis, turn_id, llm, maker)
+
+    rows = (await db.scalars(select(TurnAnalysis).where(TurnAnalysis.turn_id.in_([t.id for t in turns])))).all()
+    by_key = {(r.turn_id, r.dimension): r for r in rows}
+    grammar_rows = {t.turn_number: by_key.get((t.id, AnalysisDimension.GRAMMAR.value)) for t in turns}
+    fluency_results = []
+    for t in turns:
+        row = by_key.get((t.id, AnalysisDimension.FLUENCY.value))
+        fluency_results.append(row.result if row is not None and row.status == AnalysisStatus.DONE.value else None)
+
+    grammar = build_grammar_report(
+        [(t.turn_number, t.user_transcript) for t in turns], grammar_rows
+    )
+    fluency = build_fluency_report(fluency_results)
     report = SessionReport(session_id=session_id, user_turns=len(turns), grammar=grammar, fluency=fluency)
     # Only a complete report is saved: an "incomplete" one is rebuilt on the next request.
-    if grammar.status == "ok":
+    if grammar.status == "ok" and fluency.status in ("ok", "empty"):
         session.report = report.model_dump(mode="json")
         await db.commit()
     return report
-
-
-async def _grammar_report(turns: Sequence[Turn], llm: LLMProvider) -> GrammarReport:
-    """Analyse each user turn on its own; a turn whose analysis fails marks the result "incomplete"."""
-    errors: list[ReportGrammarError] = []
-    analyzed_words = analyzed = failed = 0
-    for turn in turns:
-        prompt = load_prompt("grammar_analysis", 1, text=turn.user_transcript)
-        try:
-            # Sequential on purpose: parallel calls would trip the provider's rate limit sooner.
-            analysis = await run_in_threadpool(llm.generate, prompt, GrammarAnalysis)
-        except LLMError as exc:  # 429 / 5xx / bad output: the rest of the report is still useful
-            logger.warning("report_grammar_failed session=%s turn=%s error=%s", turn.session_id, turn.turn_number, type(exc).__name__)
-            failed += 1
-            continue
-        assert isinstance(analysis, GrammarAnalysis)
-        analyzed += 1
-        analyzed_words += count_words(turn.user_transcript)
-        errors.extend(ReportGrammarError(turn_number=turn.turn_number, **e.model_dump()) for e in analysis.errors)
-
-    return GrammarReport(
-        status="incomplete" if failed else "ok",
-        score=grammar_score(len(errors), analyzed_words) if analyzed else None,
-        errors=errors,
-        turns_analyzed=analyzed,
-        turns_failed=failed,
-    )

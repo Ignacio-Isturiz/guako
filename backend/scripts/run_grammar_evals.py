@@ -15,7 +15,7 @@ from pathlib import Path
 from app.config import settings
 from app.llm.errors import LLMProviderError, LLMRateLimitError
 from app.llm.factory import get_llm_provider
-from app.llm.schemas import GrammarAnalysis, GrammarError
+from app.analysis.grammar import MIN_CONFIDENCE, TurnGrammarAnalysis, TurnGrammarError
 from app.prompts import load_prompt
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -33,7 +33,7 @@ def fragments_match(expected: str, predicted: str) -> bool:
     return bool(a) and bool(b) and (a in b or b in a)
 
 
-def score_case(expected: list[dict], predicted: list[GrammarError]) -> dict:
+def score_case(expected: list[dict], predicted: list[TurnGrammarError]) -> dict:
     """Detected = expected error whose location was flagged; correct = flagged AND same fix."""
     detected = 0
     correct_fix = 0
@@ -63,6 +63,8 @@ def summarize(rows: list[dict]) -> dict:
     return {
         "cases": len(rows),
         "failed_calls": sum(1 for r in rows if r.get("error")),
+        "failed_by_quota": sum(1 for r in rows if r.get("error_kind") == "quota"),
+        "min_confidence": MIN_CONFIDENCE,
         "recall": sum(r["score"]["detected"] for r in with_errors) / expected if expected else None,
         "fix_accuracy": sum(r["score"]["correct_fix"] for r in with_errors) / expected if expected else None,
         "extra_errors_in_error_cases": sum(r["score"]["extra"] for r in with_errors),
@@ -77,14 +79,14 @@ def _pct(value: float | None) -> str:
 TRANSIENT_WAITS_S = (5, 15, 30)
 
 
-def generate_with_retry(provider, prompt: str) -> GrammarAnalysis:
+def generate_with_retry(provider, prompt: str) -> TurnGrammarAnalysis:
     """Retry transient provider failures (503 overload, rate limit) with growing waits."""
     for wait in TRANSIENT_WAITS_S:
         try:
-            return provider.generate(prompt, GrammarAnalysis)
+            return provider.generate(prompt, TurnGrammarAnalysis)
         except (LLMProviderError, LLMRateLimitError):
             time.sleep(wait)
-    return provider.generate(prompt, GrammarAnalysis)
+    return provider.generate(prompt, TurnGrammarAnalysis)
 
 
 def main() -> None:
@@ -109,15 +111,20 @@ def main() -> None:
         for case in cases:
             row: dict = {"run_id": run_id, "id": case["id"], "text": case["text"], "model": provider.model}
             try:
-                prompt = load_prompt("grammar_analysis", 1, text=case["text"])
+                prompt = load_prompt("grammar", 1, text=case["text"])
                 analysis = generate_with_retry(provider, prompt)
-                row["predicted"] = [e.model_dump() for e in analysis.errors]
-                row["score"] = score_case(case["expected_errors"], analysis.errors)
+                # Same rule as production: only errors at or above MIN_CONFIDENCE are shown (and scored).
+                shown = [e for e in analysis.errors if e.confidence >= MIN_CONFIDENCE]
+                row["predicted"] = [e.model_dump(mode="json") for e in analysis.errors]
+                row["shown"] = len(shown)
+                row["score"] = score_case(case["expected_errors"], shown)
                 row["error"] = None
+                row["error_kind"] = None
             except Exception as exc:  # keep going: one failed call must not lose the run
                 row["predicted"] = []
                 row["score"] = {"expected": len(case["expected_errors"]), "detected": 0, "correct_fix": 0, "extra": 0}
                 row["error"] = f"{type(exc).__name__}: {exc}"
+                row["error_kind"] = "quota" if isinstance(exc, LLMRateLimitError) else "other"
             rows.append(row)
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
             status = "ERR" if row["error"] else f"{row['score']['detected']}/{row['score']['expected']}"
@@ -125,10 +132,19 @@ def main() -> None:
             time.sleep(args.pause_s)
 
     s = summarize(rows)
-    print(f"\nmodel={provider.model} cases={s['cases']} failed_calls={s['failed_calls']}")
-    print(f"recall={_pct(s['recall'])} fix_accuracy={_pct(s['fix_accuracy'])}")
-    print(f"false_positive_rate(correct sentences)={_pct(s['false_positive_rate'])} extra_errors={s['extra_errors_in_error_cases']}")
-    print(f"saved: {out_path}")
+    print(f"\nmodel={provider.model} cases={s['cases']} failed_calls={s['failed_calls']} failed_by_quota={s['failed_by_quota']}")
+    if s["failed_calls"] == s["cases"]:
+        # No call went through (no quota, bad key...): there is nothing to measure, so no numbers are reported.
+        s.update(recall=None, fix_accuracy=None, false_positive_rate=None, extra_errors_in_error_cases=None)
+        print("No case could be analysed: no metrics reported.")
+    else:
+        print(f"recall={_pct(s['recall'])} fix_accuracy={_pct(s['fix_accuracy'])}")
+        print(f"false_positive_rate(correct sentences)={_pct(s['false_positive_rate'])} extra_errors={s['extra_errors_in_error_cases']}")
+        if s["failed_calls"]:
+            print("Metrics cover only the cases that got an answer.")
+    summary_path = out_path.with_suffix(".summary.json")
+    summary_path.write_text(json.dumps({"run_id": run_id, "model": provider.model, **s}, indent=2), encoding="utf-8")
+    print(f"saved: {out_path}\n       {summary_path}")
 
 
 if __name__ == "__main__":
