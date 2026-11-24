@@ -148,7 +148,7 @@ export const LEGAL = {
         {
           h: 'Tratamiento de la voz y el audio',
           p: [
-            `Solo capturamos audio cuando tú activas una práctica de voz. Para transcribirlo y evaluarlo, el audio puede enviarse a proveedores de reconocimiento de voz que actúan como encargados del tratamiento bajo nuestras instrucciones.`,
+            `De forma predeterminada guardamos tu audio para medir tu pronunciación; puedes desactivar "Guardar mi audio" en Ajustes cuando quieras y entonces se descarta después de transcribirlo. Solo capturamos audio cuando tú activas una práctica de voz. Para transcribirlo y evaluarlo, el audio puede enviarse a proveedores de reconocimiento de voz que actúan como encargados del tratamiento bajo nuestras instrucciones.`,
             `Conservamos las grabaciones únicamente el tiempo necesario para darte la retroalimentación y, si lo autorizaste, para mejorar el Servicio. Puedes pedir en cualquier momento que las eliminemos.`,
           ],
         },
@@ -159,7 +159,7 @@ export const LEGAL = {
           ],
           ul: [
             `Servicios de alojamiento e infraestructura en la nube.`,
-            `Proveedores de reconocimiento de voz e inteligencia artificial.`,
+            `Proveedores de reconocimiento de voz e inteligencia artificial (por ejemplo, Microsoft Azure Speech, que evalúa tu pronunciación).`,
             `Servicios de envío de correo electrónico (por ejemplo, para los códigos OTP).`,
             `Proveedores de pagos y de analítica, si aplican.`,
             `Autoridades competentes, cuando la ley lo exija.`,
@@ -355,7 +355,7 @@ export const LEGAL = {
         {
           h: 'How we handle voice and audio',
           p: [
-            `We only capture audio when you start a voice practice. To transcribe and assess it, the audio may be sent to speech-recognition providers that act as processors on our instructions.`,
+            `By default we keep your audio to measure your pronunciation; you can turn off "Save my audio" in Settings at any time, and then it is discarded after it is transcribed. We only capture audio when you start a voice practice. To transcribe and assess it, the audio may be sent to speech-recognition providers that act as processors on our instructions.`,
             `We keep recordings only for as long as needed to give you feedback and, if you allowed it, to improve the Service. You can ask us to delete them at any time.`,
           ],
         },
@@ -366,7 +366,7 @@ export const LEGAL = {
           ],
           ul: [
             `Hosting and cloud infrastructure services.`,
-            `Speech-recognition and artificial-intelligence providers.`,
+            `Speech-recognition and artificial-intelligence providers (for example, Microsoft Azure Speech, which assesses your pronunciation).`,
             `Email delivery services (for example, for OTP codes).`,
             `Payment and analytics providers, if applicable.`,
             `Competent authorities, when required by law.`,

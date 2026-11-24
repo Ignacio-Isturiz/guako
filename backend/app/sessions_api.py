@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.analysis.runner import ensure_pending_rows, run_turn_analysis
 from app.config import settings
-from app.conversation.deps import get_stt_provider, get_tts_provider
+from app.conversation.deps import get_pronunciation_provider, get_stt_provider, get_tts_provider
 from app.conversation.graph import build_graph
 from app.conversation.opening import OPENING_TURN, generate_opening
 from app.conversation.state import ConversationState, Message
@@ -34,7 +34,17 @@ from app.db import ConversationSession, Turn, TurnAnalysis, User, get_async_sess
 from app.enums import AnalysisDimension, AnalysisStatus
 from app.llm.base import LLMProvider
 from app.llm.factory import get_llm_provider
-from app.reports import FluencyReport, GrammarReport, SessionReport, build_fluency_report, build_grammar_report
+from app.practice import attach_practice
+from app.pronunciation import PronunciationProvider
+from app.reports import (
+    FluencyReport,
+    GrammarReport,
+    PronunciationReport,
+    SessionReport,
+    build_fluency_report,
+    build_grammar_report,
+    build_pronunciation_report,
+)
 from app.stt import STTProvider
 from app.stt.groq import SUPPORTED_EXTENSIONS
 from app.tts import TTSProvider
@@ -309,6 +319,7 @@ async def create_turn(
     stt: Annotated[STTProvider, Depends(get_stt_provider)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
     tts: Annotated[TTSProvider, Depends(get_tts_provider)],
+    pronunciation: Annotated[PronunciationProvider | None, Depends(get_pronunciation_provider)],
 ) -> TurnRead:
     session = await _own_session(db, session_id, user)
     if session.ended_at is not None:
@@ -395,7 +406,9 @@ async def create_turn(
         ) from exc
 
     # Runs after the response (and its voice reply) has been sent: the analysis adds no latency.
-    background.add_task(run_turn_analysis, turn.id, llm, async_sessionmaker(db.bind, expire_on_commit=False))
+    background.add_task(
+        run_turn_analysis, turn.id, llm, async_sessionmaker(db.bind, expire_on_commit=False), pronunciation
+    )
     return TurnRead(
         turn_number=turn.turn_number,
         user_transcript=turn.user_transcript,
@@ -444,6 +457,21 @@ async def get_report(
     user: Annotated[User, Depends(current_active_user)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
+    pronunciation: Annotated[PronunciationProvider | None, Depends(get_pronunciation_provider)],
+) -> SessionReport:
+    """The report plus, on each hard word, where the learner is in "now you say it" (not saved with it)."""
+    report = await _build_report(session_id, background, user, db, llm, pronunciation)
+    await attach_practice(db, report)
+    return report
+
+
+async def _build_report(
+    session_id: int,
+    background: BackgroundTasks,
+    user: User,
+    db: AsyncSession,
+    llm: LLMProvider,
+    pronunciation: PronunciationProvider | None,
 ) -> SessionReport:
     """Built from the per-turn analyses (``turn_analyses``); it never calls the LLM while answering."""
     session = await _own_session(db, session_id, user)
@@ -453,7 +481,9 @@ async def get_report(
             detail={"code": "session_not_ended", "message": "El informe estará listo cuando termines la sesión."},
         )
 
-    if session.report is not None:
+    # A report saved before pronunciation existed still says "pending" for it: rebuild it once.
+    saved_pronunciation = ((session.report or {}).get("pronunciation") or {}).get("status")
+    if session.report is not None and saved_pronunciation != "pending":
         return SessionReport.model_validate(session.report)
 
     turns = (
@@ -469,6 +499,7 @@ async def get_report(
             fluency=FluencyReport(
                 status="empty", score=None, words_per_minute=None, long_pauses=0, filler_words=0, total_words=0
             ),
+            pronunciation=PronunciationReport(status="empty"),
         )
 
     # Turns saved before the analysis existed have no rows: queue them now (they show as pending until done).
@@ -477,7 +508,7 @@ async def get_report(
         await db.commit()
         maker = async_sessionmaker(db.bind, expire_on_commit=False)
         for turn_id in queued:
-            background.add_task(run_turn_analysis, turn_id, llm, maker)
+            background.add_task(run_turn_analysis, turn_id, llm, maker, pronunciation)
 
     rows = (await db.scalars(select(TurnAnalysis).where(TurnAnalysis.turn_id.in_([t.id for t in turns])))).all()
     by_key = {(r.turn_id, r.dimension): r for r in rows}
@@ -491,9 +522,15 @@ async def get_report(
         [(t.turn_number, t.user_transcript) for t in turns], grammar_rows
     )
     fluency = build_fluency_report(fluency_results)
-    report = SessionReport(session_id=session_id, user_turns=len(turns), grammar=grammar, fluency=fluency)
-    # Only a complete report is saved: an "incomplete" one is rebuilt on the next request.
-    if grammar.status == "ok" and fluency.status in ("ok", "empty"):
+    pronunciation_report = build_pronunciation_report(
+        [(t.turn_number, by_key.get((t.id, AnalysisDimension.PRONUNCIATION.value))) for t in turns]
+    )
+    report = SessionReport(
+        session_id=session_id, user_turns=len(turns), grammar=grammar, fluency=fluency, pronunciation=pronunciation_report
+    )
+    # Only a complete report is saved: an "incomplete" one is rebuilt on the next request. Pronunciation
+    # only has to be settled (nothing pending): a skipped or failed turn will not change by waiting.
+    if grammar.status == "ok" and fluency.status in ("ok", "empty") and pronunciation_report.turns_pending == 0:
         session.report = report.model_dump(mode="json")
         await db.commit()
     return report

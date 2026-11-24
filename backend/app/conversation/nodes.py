@@ -20,7 +20,9 @@ DEFAULT_ROLE = "a friendly English tutor who chats with the learner."
 
 def make_transcribe(stt: STTProvider) -> Node:
     def transcribe(state: ConversationState) -> dict:
-        result = stt.transcribe(state["user_audio_path"])
+        # What Guako just said is the context that tells the recognizer which words are likely.
+        last_tutor = next((m["content"] for m in reversed(state.get("messages", [])) if m["role"] == "assistant"), None)
+        result = stt.transcribe(state["user_audio_path"], last_tutor)
         if not result.text.strip():
             raise NoSpeechError("No speech was detected in the audio")
         # Prefer the provider's duration; otherwise the end of the last word.

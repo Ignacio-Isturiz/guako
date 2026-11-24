@@ -1,0 +1,295 @@
+{
+  "RecognitionStatus": "Success",
+  "Offset": 9400000,
+  "Duration": 43700000,
+  "DisplayText": "I think the weather is nice today.",
+  "SNR": 30.05079,
+  "NBest": [
+    {
+      "Confidence": 0.952196,
+      "Lexical": "I think the weather is nice today",
+      "ITN": "I think the weather is nice today",
+      "MaskedITN": "i think the weather is nice today",
+      "Display": "I think the weather is nice today.",
+      "AccuracyScore": 94.0,
+      "FluencyScore": 67.0,
+      "CompletenessScore": 100.0,
+      "PronScore": 79.0,
+      "Words": [
+        {
+          "Word": "I",
+          "Offset": 9400000,
+          "Duration": 2700000,
+          "Confidence": 0.0,
+          "AccuracyScore": 100.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "ay",
+              "Grapheme": "i",
+              "Offset": 9400000,
+              "Duration": 2700000,
+              "AccuracyScore": 100.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "ay",
+              "Offset": 9400000,
+              "Duration": 2700000,
+              "AccuracyScore": 100.0
+            }
+          ]
+        },
+        {
+          "Word": "think",
+          "Offset": 12200000,
+          "Duration": 5900000,
+          "Confidence": 0.0,
+          "AccuracyScore": 97.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "thihngk",
+              "Grapheme": "think",
+              "Offset": 12200000,
+              "Duration": 5900000,
+              "AccuracyScore": 95.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "th",
+              "Offset": 12200000,
+              "Duration": 1300000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "ih",
+              "Offset": 13600000,
+              "Duration": 1400000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "ng",
+              "Offset": 15100000,
+              "Duration": 1400000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "k",
+              "Offset": 16600000,
+              "Duration": 1500000,
+              "AccuracyScore": 81.0
+            }
+          ]
+        },
+        {
+          "Word": "the",
+          "Offset": 32400000,
+          "Duration": 2800000,
+          "Confidence": 0.0,
+          "AccuracyScore": 94.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "dhax",
+              "Grapheme": "the",
+              "Offset": 32400000,
+              "Duration": 2800000,
+              "AccuracyScore": 90.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "dh",
+              "Offset": 32400000,
+              "Duration": 1500000,
+              "AccuracyScore": 85.0
+            },
+            {
+              "Phoneme": "ax",
+              "Offset": 34000000,
+              "Duration": 1200000,
+              "AccuracyScore": 97.0
+            }
+          ]
+        },
+        {
+          "Word": "weather",
+          "Offset": 35300000,
+          "Duration": 6200000,
+          "Confidence": 0.0,
+          "AccuracyScore": 91.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "wehdh",
+              "Grapheme": "weath",
+              "Offset": 35300000,
+              "Duration": 2800000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Syllable": "axr",
+              "Grapheme": "er",
+              "Offset": 38200000,
+              "Duration": 3300000,
+              "AccuracyScore": 74.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "w",
+              "Offset": 35300000,
+              "Duration": 600000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "eh",
+              "Offset": 36000000,
+              "Duration": 1100000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "dh",
+              "Offset": 37200000,
+              "Duration": 900000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "ax",
+              "Offset": 38200000,
+              "Duration": 1300000,
+              "AccuracyScore": 87.0
+            },
+            {
+              "Phoneme": "r",
+              "Offset": 39600000,
+              "Duration": 1900000,
+              "AccuracyScore": 65.0
+            }
+          ]
+        },
+        {
+          "Word": "is",
+          "Offset": 41800000,
+          "Duration": 2900000,
+          "Confidence": 0.0,
+          "AccuracyScore": 97.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "ihz",
+              "Grapheme": "is",
+              "Offset": 41800000,
+              "Duration": 2900000,
+              "AccuracyScore": 97.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "ih",
+              "Offset": 41800000,
+              "Duration": 1900000,
+              "AccuracyScore": 97.0
+            },
+            {
+              "Phoneme": "z",
+              "Offset": 43800000,
+              "Duration": 900000,
+              "AccuracyScore": 97.0
+            }
+          ]
+        },
+        {
+          "Word": "nice",
+          "Offset": 44800000,
+          "Duration": 3100000,
+          "Confidence": 0.0,
+          "AccuracyScore": 100.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "nays",
+              "Grapheme": "nice",
+              "Offset": 44800000,
+              "Duration": 3100000,
+              "AccuracyScore": 100.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "n",
+              "Offset": 44800000,
+              "Duration": 900000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "ay",
+              "Offset": 45800000,
+              "Duration": 1300000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "s",
+              "Offset": 47200000,
+              "Duration": 700000,
+              "AccuracyScore": 100.0
+            }
+          ]
+        },
+        {
+          "Word": "today",
+          "Offset": 48000000,
+          "Duration": 5100000,
+          "Confidence": 0.0,
+          "AccuracyScore": 82.0,
+          "ErrorType": "None",
+          "Syllables": [
+            {
+              "Syllable": "tax",
+              "Grapheme": "to",
+              "Offset": 48000000,
+              "Duration": 1500000,
+              "AccuracyScore": 84.0
+            },
+            {
+              "Syllable": "dey",
+              "Grapheme": "day",
+              "Offset": 49600000,
+              "Duration": 3500000,
+              "AccuracyScore": 66.0
+            }
+          ],
+          "Phonemes": [
+            {
+              "Phoneme": "t",
+              "Offset": 48000000,
+              "Duration": 700000,
+              "AccuracyScore": 100.0
+            },
+            {
+              "Phoneme": "ax",
+              "Offset": 48800000,
+              "Duration": 700000,
+              "AccuracyScore": 69.0
+            },
+            {
+              "Phoneme": "d",
+              "Offset": 49600000,
+              "Duration": 900000,
+              "AccuracyScore": 73.0
+            },
+            {
+              "Phoneme": "ey",
+              "Offset": 50600000,
+              "Duration": 2500000,
+              "AccuracyScore": 63.0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

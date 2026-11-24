@@ -36,3 +36,12 @@ Thumbs.db
 *.local
 tmp/
 *.db
+
+# Audio (grabaciones de voz: nunca se suben). Los de tests/fixtures son datos de prueba y sí van.
+*.m4a
+*.wav
+*.ogg
+*.mp3
+*.webm
+*.flac
+!backend/tests/fixtures/**

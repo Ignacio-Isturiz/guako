@@ -14,8 +14,10 @@ class FakeSTT(STTProvider):
         self.calls = calls
         self.text = text
         self.error = error
+        self.contexts: list[str | None] = []
 
-    def transcribe(self, audio_path: str) -> TranscriptionResult:
+    def transcribe(self, audio_path: str, context: str | None = None) -> TranscriptionResult:
+        self.contexts.append(context)
         self.calls.append("stt")
         if self.error:
             raise self.error

@@ -7,6 +7,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# ffmpeg converts the browser's webm/opus recordings to the WAV 16 kHz mono that Azure Speech
+# (pronunciation assessment) accepts. No recommended packages, apt lists removed: keeps the layer small.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 # Unprivileged user: a compromised process can't act as root inside the container
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 

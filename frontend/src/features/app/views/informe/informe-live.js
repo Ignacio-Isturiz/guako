@@ -2,6 +2,9 @@
 // Solo se pintan puntajes que el backend calculó: lo que aún no existe sale como "pendiente".
 import { t } from '@/core/i18n.js'
 import { getReport, errorText } from '@/features/app/data/sessions-api.js'
+import { speak, canSpeak } from '@/features/app/services/tts.js'
+import { toast } from '@/features/app/components/toast/toast.js'
+import { createWordPractice } from './word-practice.js'
 import { ring } from '@/features/app/components/ring/ring.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
@@ -26,7 +29,7 @@ const failed = (err) => `
 function scoreCard(a, dim) {
   const score = dim.score
   const pending = dim.status === 'pending'
-  const sub = score != null ? toneText(score) : t(pending ? 'app.report.live.pending' : 'app.report.live.noData')
+  const sub = score != null ? toneText(score, a) : t(pending ? 'app.report.live.pending' : 'app.report.live.noData')
   const visual =
     score != null
       ? ring(score, { size: 84, stroke: 9, color: ASPECT_COLOR[a] })
@@ -71,6 +74,65 @@ const fluencyCard = (f) =>
       </ul>
     </section>`
 
+// Pronunciación. El texto sale de claves del frontend (ES/EN) a partir de `status`, `reason` y los
+// contadores del backend, no de sus notas (solo vienen en español).
+// REGLA DE JUSTICIA: nunca se habla de "acento incorrecto" ni "pronunciaste mal": solo "palabras que
+// costaron", y siempre con la nota de que el puntaje usa un modelo de inglés estándar.
+// Una palabra que costó: botón para escucharla, cómo se dice (IPA) y el sonido donde más costó.
+const hardWord = (w) => `
+  <li class="hard__word">
+    <button type="button" class="hard__say" data-say="${esc(w.word)}" aria-label="${esc(t('app.report.live.pron.listen', { word: w.word }))}">${icon('volume', 20)}</button>
+    <div class="hard__body">
+      <p class="hard__head">
+        <strong>${esc(w.word)}</strong>
+        ${w.ipa ? `<span class="hard__ipa">/${esc(w.ipa)}/</span>` : ''}
+        <span class="hard__score">${w.score}${w.times > 1 ? ` · ×${w.times}` : ''}</span>
+      </p>
+      ${
+        w.sounds?.length
+          ? `<p class="hard__sounds" aria-label="${esc(t('app.report.live.pron.sounds'))}">${w.sounds
+              .map((s, i) => `<span class="hard__sound ${i === w.weakest_sound ? 'is-weak' : ''}">/${esc(s.ipa)}/ <b>${s.score}</b></span>`)
+              .join('')}</p>`
+          : ''
+      }
+      <div class="practice" data-practice-box="${esc(w.word)}" aria-live="polite"></div>
+    </div>
+  </li>`
+
+const pronunciationCard = (p) => {
+  const note = (text) => `<p class="pron__note">${esc(text)}</p>`
+  if (p.status === 'pending') return `<div class="card is-pending"><p role="status">${t('app.report.live.pron.pending')}</p></div>`
+  if (p.status === 'unavailable') {
+    return `<section class="card"><h2 class="card__title">${t('app.report.live.pron.title')}</h2>${note(t(`app.report.live.pron.${p.reason}`))}</section>`
+  }
+  if (p.score == null) return ''
+  const notes = [t('app.report.live.pron.fairness')]
+  if (p.turns_partial) notes.push(t('app.report.live.pron.partial', { n: p.turns_partial }))
+  if (p.turns_without_audio) notes.push(t('app.report.live.pron.someNoAudio', { n: p.turns_without_audio }))
+  if (p.turns_over_quota) notes.push(t('app.report.live.pron.someQuota', { n: p.turns_over_quota }))
+  if (p.turns_failed) notes.push(t('app.report.live.pron.someFailed', { n: p.turns_failed }))
+  const words = p.hard_words.length
+    ? `<p class="card__sub">${t('app.report.live.pron.hardText')}</p>
+       <ul class="hard">${p.hard_words.map(hardWord).join('')}</ul>
+       <p class="pron__note">${t('app.report.live.pron.ipaNote')}</p>`
+    : `<p class="card__sub">${t('app.report.live.pron.noHard')}</p>`
+  // Palabras que el reconocimiento de voz escribió distinto y se evaluaron como la palabra que se quiso decir
+  const fixes = p.heard_fixes?.length
+    ? `<div class="pron__fixes">
+         <h3>${t('app.report.live.pron.fixesTitle')}</h3>
+         <p class="card__sub">${t('app.report.live.pron.fixesText')}</p>
+         <ul>${p.heard_fixes.map((f) => `<li>«${esc(f.heard)}» → <strong>«${esc(f.intended)}»</strong></li>`).join('')}</ul>
+       </div>`
+    : ''
+  return `
+    <section class="card">
+      <h2 class="card__title">${t('app.report.live.pron.hardTitle')}</h2>
+      ${words}
+      ${fixes}
+      ${notes.map(note).join('')}
+    </section>`
+}
+
 function reportBody(r) {
   const notes = []
   if (r.user_turns === 0) notes.push(t('app.report.live.empty'))
@@ -81,6 +143,7 @@ function reportBody(r) {
       <h2 class="card__title">${t('app.report.scoresTitle')}</h2>
       <div class="scores">${ASPECT_ORDER.map((a) => scoreCard(a, r[ASPECT_FIELD[a]])).join('')}</div>
     </section>
+    ${pronunciationCard(r.pronunciation)}
     ${fluencyCard(r.fluency)}
     ${errorsCard(r.grammar)}`
 }
@@ -111,17 +174,29 @@ export function initLiveReport(root, p, scope) {
   let gone = false
   scope.onCleanup(() => (gone = true))
 
+  const practice = createWordPractice(root, p.id, scope)
+
   const load = async ({ force = false } = {}) => {
     host.innerHTML = loading()
     try {
       const report = await getReport(p.id, { force })
-      if (!gone) host.innerHTML = reportBody(report)
+      if (!gone) {
+        host.innerHTML = reportBody(report)
+        practice.mount(report.pronunciation.hard_words || [])
+      }
     } catch (err) {
       if (!gone) host.innerHTML = failed(err)
     }
   }
   scope.listen(root, 'click', (e) => {
     if (e.target.closest('[data-retry]')) load({ force: true })
+    const now = e.target.closest('[data-practice]')
+    if (now) practice.toggle(now.dataset.practice)
+    const say = e.target.closest('[data-say]')
+    if (say) {
+      if (!canSpeak) toast(t('app.practice.noSpeech'))
+      else speak(say.dataset.say, { force: true, rate: 0.8 })
+    }
   })
   load()
 }

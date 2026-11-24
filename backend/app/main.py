@@ -5,6 +5,7 @@ from app.config import settings
 from app.conversation.errors import register_speech_error_handlers
 from app.grammar_api import router as grammar_router
 from app.llm.handlers import register_llm_error_handlers
+from app.practice_api import router as practice_router
 from app.sessions_api import router as sessions_router
 from app.streak_api import router as streak_router
 from app.users import UserCreate, UserRead, UserUpdate, auth_backend, fastapi_users
@@ -47,3 +48,4 @@ app.include_router(grammar_router)
 
 # POST /api/sessions · POST /api/sessions/{id}/turns (audio) · GET /api/sessions/{id}/turns/{n}/reply-audio
 app.include_router(sessions_router)
+app.include_router(practice_router)

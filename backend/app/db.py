@@ -127,11 +127,47 @@ class TurnAnalysis(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     turn_id: Mapped[int] = mapped_column(ForeignKey("turns.id", ondelete="CASCADE"), index=True)
-    dimension: Mapped[str] = mapped_column(String(10))  # AnalysisDimension value
-    status: Mapped[str] = mapped_column(String(10), default=AnalysisStatus.PENDING.value)  # AnalysisStatus value
+    # Enum values stored as plain strings; 32 leaves room for the longest ("skipped_no_audio" = 16).
+    dimension: Mapped[str] = mapped_column(String(32))  # AnalysisDimension value
+    status: Mapped[str] = mapped_column(String(32), default=AnalysisStatus.PENDING.value)  # AnalysisStatus value
     result: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB(), "postgresql"), default=None)
     error: Mapped[str | None] = mapped_column(String(200), default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class WordPractice(Base):
+    """"Now you say it" exercise on a hard word: one row per (session, word), enforced by the server.
+
+    ``attempts`` = scored tries (limit in app/practice.py), ``calls`` = every Azure call (silence too),
+    ``passed`` = reached the pass score, after which the word is locked.
+    """
+
+    __tablename__ = "word_practice"
+    __table_args__ = (UniqueConstraint("session_id", "word"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), index=True)
+    word: Mapped[str] = mapped_column(String(64))  # normalised (lowercase, no punctuation)
+    attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+    calls: Mapped[int] = mapped_column(default=0, server_default="0")
+    passed: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    best_score: Mapped[float | None] = mapped_column(Float, default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class AzureSpeechUsage(Base):
+    """Seconds of audio sent to Azure Speech per calendar month (UTC), for the whole app.
+
+    The free F0 plan gives a fixed number of audio seconds per month, shared by every user, so
+    this is one counter per month (``month`` = "YYYY-MM"), not one per user.
+    """
+
+    __tablename__ = "azure_speech_usage"
+
+    month: Mapped[str] = mapped_column(String(7), primary_key=True)
+    seconds: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
