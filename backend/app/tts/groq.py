@@ -6,6 +6,7 @@ import groq
 from pydantic import SecretStr
 
 from app.config import settings
+from app.providers.util import retry_after_seconds
 from app.tts.base import TTSProvider
 from app.tts.errors import TTSError
 from app.tts.schemas import TTSResult
@@ -43,7 +44,7 @@ class GroqOrpheusTTSProvider(TTSProvider):
 
     def synthesize(self, text: str, output_path: str) -> TTSResult:
         if not text.strip():
-            raise TTSError("Cannot synthesize empty text")
+            raise TTSError("Cannot synthesize empty text", kind="invalid_input")
 
         started = time.perf_counter()
         try:
@@ -57,7 +58,7 @@ class GroqOrpheusTTSProvider(TTSProvider):
             out.parent.mkdir(parents=True, exist_ok=True)
             response.write_to_file(out)
         except groq.APITimeoutError as exc:
-            raise TTSError(f"Groq speech request timed out after {self._timeout_seconds}s") from exc
+            raise TTSError(f"Groq speech request timed out after {self._timeout_seconds}s", kind="timeout") from exc
         except groq.AuthenticationError as exc:
             raise TTSError("Groq rejected the API key", status_code=401) from exc
         except groq.APIStatusError as exc:
@@ -68,7 +69,11 @@ class GroqOrpheusTTSProvider(TTSProvider):
                     "(console.groq.com/playground?model=canopylabs%2Forpheus-v1-english)",
                     status_code=exc.status_code,
                 ) from exc
-            raise TTSError(f"Groq speech API error (HTTP {exc.status_code})", status_code=exc.status_code) from exc
+            raise TTSError(
+                f"Groq speech API error (HTTP {exc.status_code})",
+                status_code=exc.status_code,
+                retry_after=retry_after_seconds(exc),
+            ) from exc
         except groq.APIError as exc:
             raise TTSError(f"Groq speech request failed: {type(exc).__name__}") from exc
         except OSError as exc:

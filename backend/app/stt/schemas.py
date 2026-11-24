@@ -21,3 +21,7 @@ class TranscriptionResult(BaseModel):
     # Length of the audio in seconds, when the provider reports it.
     duration: float | None = None
     words: list[WordTiming]
+    # How much to trust the text, from the recognizer's own numbers (None when it did not send them):
+    # exp of the average log-probability of the words, and the highest probability that there is no speech.
+    confidence: float | None = None
+    no_speech_prob: float | None = None

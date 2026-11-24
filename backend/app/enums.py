@@ -17,6 +17,8 @@ class AnalysisDimension(str, Enum):
     GRAMMAR = "grammar"
     FLUENCY = "fluency"
     PRONUNCIATION = "pronunciation"
+    COMMUNICATION = "communication"  # "darse a entender": did the message achieve its purpose
+    LISTENING = "listening"  # did the answer have to do with what the tutor said
 
 
 class AnalysisStatus(str, Enum):
@@ -34,3 +36,7 @@ class AnalysisStatus(str, Enum):
     SKIPPED_QUOTA = "skipped_quota"
     # No stored audio (the session has no audio consent, or it was withdrawn): nothing to assess.
     SKIPPED_NO_AUDIO = "skipped_no_audio"
+    # Too short to judge ("yes", "me too"): no LLM call, and it does not count for or against the learner.
+    SKIPPED_TRIVIAL = "skipped_trivial"
+    # Listening needs the tutor's previous message and there is none.
+    SKIPPED_NO_CONTEXT = "skipped_no_context"

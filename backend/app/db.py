@@ -103,10 +103,14 @@ class Turn(Base):
     reply_text: Mapped[str] = mapped_column(Text)
     # None when the session has no audio consent (the upload is deleted after transcribing).
     user_audio_path: Mapped[str | None] = mapped_column(String(500), default=None)
-    reply_audio_path: Mapped[str] = mapped_column(String(500))
+    # None when every voice provider was out: the browser reads the reply aloud (see providers/).
+    reply_audio_path: Mapped[str | None] = mapped_column(String(500), default=None)
     # Audio length in seconds; learner + tutor seconds count toward the daily limit.
     user_audio_seconds: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
     reply_audio_seconds: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
+    # How much to trust the transcription (None for old turns or if the provider sent nothing): the judges use it.
+    stt_confidence: Mapped[float | None] = mapped_column(Float, default=None)
+    stt_no_speech_prob: Mapped[float | None] = mapped_column(Float, default=None)
     # JSONB on Postgres, plain JSON on SQLite (development and tests).
     word_timestamps: Mapped[list[dict] | None] = mapped_column(
         JSON().with_variant(JSONB(), "postgresql"), default=None
@@ -169,6 +173,56 @@ class AzureSpeechUsage(Base):
     month: Mapped[str] = mapped_column(String(7), primary_key=True)
     seconds: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class ProviderUsage(Base):
+    """Calls to one provider for one capability and use on one UTC day, with what they consumed and cost.
+
+    ``cost_usd`` is our estimate (see app/providers/pricing.py), not an invoice.
+    """
+
+    __tablename__ = "provider_usage"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    provider: Mapped[str] = mapped_column(String(16), primary_key=True)  # groq, gemini, openai
+    capability: Mapped[str] = mapped_column(String(8), primary_key=True)  # llm, stt, tts
+    use: Mapped[str] = mapped_column(String(16), primary_key=True)  # conversation, analysis
+    requests: Mapped[int] = mapped_column(default=0, server_default="0")
+    successes: Mapped[int] = mapped_column(default=0, server_default="0")
+    failures: Mapped[int] = mapped_column(default=0, server_default="0")
+    rate_limited: Mapped[int] = mapped_column(default=0, server_default="0")
+    as_fallback: Mapped[int] = mapped_column(default=0, server_default="0")  # answered after another one failed
+    prompt_tokens: Mapped[int] = mapped_column(default=0, server_default="0")
+    completion_tokens: Mapped[int] = mapped_column(default=0, server_default="0")
+    audio_seconds_in: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
+    audio_seconds_out: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
+    chars: Mapped[int] = mapped_column(default=0, server_default="0")
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class ProviderCall(Base):
+    """One call that reached a provider (never its prompt, text or audio), kept 30 days to explain what served what."""
+
+    __tablename__ = "provider_calls"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    capability: Mapped[str] = mapped_column(String(8))
+    use: Mapped[str] = mapped_column(String(16))
+    provider: Mapped[str] = mapped_column(String(16))
+    model: Mapped[str] = mapped_column(String(64))
+    outcome: Mapped[str] = mapped_column(String(24))  # ok, rate_limited, unavailable, timeout, auth, bad_output
+    latency_ms: Mapped[int]
+    prompt_tokens: Mapped[int | None] = mapped_column(default=None)
+    completion_tokens: Mapped[int | None] = mapped_column(default=None)
+    audio_seconds: Mapped[float | None] = mapped_column(Float, default=None)
+    chars: Mapped[int | None] = mapped_column(default=None)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0, server_default="0")
+    fallback_from: Mapped[str | None] = mapped_column(String(16), default=None)  # the provider that failed first
+    # Plain ids, not foreign keys: the log outlives a deleted session.
+    session_id: Mapped[int | None] = mapped_column(default=None)
+    turn_id: Mapped[int | None] = mapped_column(default=None, index=True)
 
 
 engine = create_async_engine(settings.database_url)

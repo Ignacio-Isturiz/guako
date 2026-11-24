@@ -37,3 +37,16 @@ Audios por grabar: `backend/evals/grammar/audio/pr_01.m4a` … `pr_08.m4a` (el `
 - El REST de audio corto **sí devuelve fonemas** (`Phonemes` por palabra) en la región `brazilsouth`; no hace falta `azure-cognitiveservices-speech`.
 - Los fonemas vienen en el alfabeto SAPI de Azure (`th`, `ax`, `dh`...), no en IPA.
 - Corrección pendiente en la documentación del proyecto: la ruta real de los casos es `backend/evals/grammar/pronunciation_cases.jsonl`, no `evals/pronunciation/`.
+
+## Evals de los jueces ("darse a entender" y "listening")
+
+`judges/cases.jsonl` tiene 15 casos: el mensaje de Guako, la respuesta del usuario, el nivel y el puntaje de 1 a 5 que **una persona** esperaría en cada dimensión. Cubren toda la escala y las dos dimensiones por separado (claro pero fuera de tema; fuera de tema pero relacionado; pedir repetir, que no se puntúa).
+
+**Las expectativas son borradores** (`"reviewed": false`): un juez medido contra expectativas que no revisó una persona solo mide el parecido con quien las escribió. Cambia `reviewed` a `true` caso por caso cuando confirmes o corrijas cada puntaje.
+
+```powershell
+python -m scripts.run_judge_evals        # lista los casos y el costo estimado; no envía nada
+python -m scripts.run_judge_evals --yes  # llama al LLM por el router (uso "análisis"; puede gastar saldo de OpenAI)
+```
+
+Guarda `results/evals/judges-<fecha>.jsonl` y muestra, por dimensión, cuántas veces el juez coincide exacto y a ±1 punto, el error medio, el sesgo (positivo = más generoso que la persona) y la confianza cuando acierta frente a cuando falla. **No inventa cifras**: un caso sin cuota o con fallo se anota aparte y no entra en las estadísticas; si ninguno se pudo juzgar, no imprime ninguna cifra.

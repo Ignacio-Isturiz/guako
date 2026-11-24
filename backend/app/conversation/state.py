@@ -29,6 +29,9 @@ class ConversationState(TypedDict, total=False):
     user_words: list[dict]
     # Seconds of audio, counted against the daily limit.
     user_audio_seconds: float
+    # Confidence of the transcription (None when the provider sent none); kept for the judges.
+    user_stt_confidence: float | None
+    user_no_speech_prob: float | None
     reply_text: str
     reply_audio_path: str
     reply_audio_seconds: float

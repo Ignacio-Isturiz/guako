@@ -17,6 +17,10 @@ class CachedTTSProvider(TTSProvider):
         self.name = provider.name
         self.voice = provider.voice
 
+    def has_cached(self, text: str) -> bool:
+        """True if ``text`` is in the cache: serving it costs nothing and uses no provider quota."""
+        return self._cache.path_for(text, self.voice).is_file()
+
     def synthesize(self, text: str, output_path: str) -> TTSResult:
         if self._cache.fetch(text, self.voice, output_path):
             return TTSResult(audio_path=output_path, provider=self.name, from_cache=True)

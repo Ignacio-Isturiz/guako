@@ -11,6 +11,7 @@ from app.conversation.nodes import DEFAULT_ROLE, TUTOR_PROMPT_VERSION
 from app.llm.base import LLMProvider
 from app.llm.schemas import TutorReply
 from app.prompts import load_prompt
+from app.providers.errors import TTSExhausted
 from app.tts import TTSProvider
 from app.tts.audio import wav_duration_seconds
 
@@ -46,5 +47,9 @@ def generate_opening(
     reply = llm.generate(_OPENING_PROMPT, TutorReply, system=system).reply
     output = Path(audio_dir) / str(session_id) / f"turn_{OPENING_TURN:03d}_reply.wav"
     output.parent.mkdir(parents=True, exist_ok=True)
-    result = tts.synthesize(reply, str(output))
+    try:
+        result = tts.synthesize(reply, str(output))
+    except TTSExhausted:
+        # Every voice provider is out: the opening is saved without audio and the browser reads it aloud.
+        return Opening(reply, "", 0.0)
     return Opening(reply, result.audio_path, wav_duration_seconds(result.audio_path))

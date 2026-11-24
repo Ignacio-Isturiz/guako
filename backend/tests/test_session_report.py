@@ -141,8 +141,11 @@ def test_full_report(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path)
     # These turns have no stored audio: pronunciation is explained, not left "pending" forever.
     assert body["pronunciation"]["status"] == "unavailable" and body["pronunciation"]["reason"] == "no_audio_consent"
     assert body["pronunciation"]["score"] is None and body["pronunciation"]["turns_without_audio"] == 2
-    for dimension in ("communication", "listening"):
-        assert body[dimension] == {"status": "pending", "score": None}
+    # The judge scores both from 1 to 5; the report shows 0-100 = (score - 1) / 4 * 100.
+    assert (body["communication"]["status"], body["communication"]["score"], body["communication"]["turns_judged"]) == ("ok", 75, 2)
+    # Listening needs Guako's previous message: turn 1 has none (no opening here), so only turn 2 is judged.
+    assert (body["listening"]["status"], body["listening"]["score"], body["listening"]["turns_judged"]) == ("ok", 100, 1)
+    assert body["listening"]["turns_without_context"] == 1
 
 
 @pytest.mark.parametrize("failure", [LLMRateLimitError("429"), LLMProviderError("503")])

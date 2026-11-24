@@ -3,6 +3,7 @@
 import { openMic } from '@/features/app/services/recorder.js'
 import { createSession, setAudioConsent, startOpening, sendTurn, fetchReplyAudio, endSession } from '@/features/app/data/sessions-api.js'
 import { readAudioConsent } from '@/features/app/data/consent.js'
+import { speak, stopSpeaking } from '@/features/app/services/tts.js'
 
 export function createLiveSession({ level, topic, role }) {
   let mic = null
@@ -14,6 +15,7 @@ export function createLiveSession({ level, topic, role }) {
   const stopPlayback = () => {
     audio?.pause()
     audio = null
+    stopSpeaking()
   }
   const forgetAudio = () => {
     stopPlayback()
@@ -21,9 +23,15 @@ export function createLiveSession({ level, topic, role }) {
     audioUrl = null
   }
 
+  // Texto de la última respuesta cuando no hay audio (todas las voces del servidor estaban agotadas):
+  // se lee en voz alta con la voz del navegador.
+  let spokenText = ''
+
   // Descarga el audio de una respuesta y lo deja listo; sin audio igual se muestra el texto
-  const loadAudio = async (url) => {
+  const loadAudio = async (url, text = '') => {
     forgetAudio()
+    spokenText = url ? '' : text
+    if (!url) return
     try {
       audioUrl = URL.createObjectURL(await fetchReplyAudio(url))
     } catch {
@@ -54,7 +62,7 @@ export function createLiveSession({ level, topic, role }) {
     // Guako habla primero: pide su frase de apertura y deja lista su voz. Devuelve { text }.
     async opening() {
       const turn = await startOpening(sessionId)
-      await loadAudio(turn.reply_audio_url)
+      await loadAudio(turn.reply_audio_url, turn.reply_text)
       return { text: turn.reply_text }
     },
 
@@ -66,14 +74,19 @@ export function createLiveSession({ level, topic, role }) {
       const rec = await mic.stop()
       if (!rec) return null
       const turn = await sendTurn(sessionId, rec.blob, `turn.${rec.ext}`)
-      await loadAudio(turn.reply_audio_url)
+      await loadAudio(turn.reply_audio_url, turn.reply_text)
       return { turnNumber: turn.turn_number, userText: turn.user_transcript, text: turn.reply_text }
     },
 
     // Reproduce la última respuesta; se resuelve cuando termina (o enseguida si no hay audio)
     play() {
       return new Promise((resolve) => {
-        if (!audioUrl) return resolve()
+        if (!audioUrl) {
+          if (!spokenText) return resolve()
+          // Sin audio del servidor: la voz del navegador lee la respuesta (respeta el ajuste de voz de Guako)
+          stopPlayback()
+          return speak(spokenText).then(resolve, resolve)
+        }
         stopPlayback()
         audio = new Audio(audioUrl)
         audio.onended = audio.onerror = () => resolve()
@@ -81,7 +94,7 @@ export function createLiveSession({ level, topic, role }) {
       })
     },
     stopPlayback,
-    hasAudio: () => !!audioUrl,
+    hasAudio: () => !!audioUrl || !!spokenText,
 
     // Termina la sesión en el backend (una sola vez; si falla, se puede reintentar)
     async end({ keepalive = false } = {}) {

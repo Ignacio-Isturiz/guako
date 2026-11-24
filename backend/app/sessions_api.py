@@ -33,16 +33,19 @@ from app.conversation.state import ConversationState, Message
 from app.db import ConversationSession, Turn, TurnAnalysis, User, get_async_session
 from app.enums import AnalysisDimension, AnalysisStatus
 from app.llm.base import LLMProvider
-from app.llm.factory import get_llm_provider
+from app.llm.factory import get_analysis_llm_provider, get_llm_provider
 from app.practice import attach_practice
+from app.providers.context import set_call_context
 from app.pronunciation import PronunciationProvider
 from app.reports import (
     FluencyReport,
     GrammarReport,
+    JudgeReport,
     PronunciationReport,
     SessionReport,
     build_fluency_report,
     build_grammar_report,
+    build_judge_report,
     build_pronunciation_report,
 )
 from app.stt import STTProvider
@@ -113,15 +116,17 @@ class TurnRead(BaseModel):
     turn_number: int
     user_transcript: str
     reply_text: str
-    reply_audio_url: str
+    reply_audio_url: str | None  # None: no audio (every voice provider was out): read reply_text aloud
 
 
 class TurnSummary(TurnRead):
     """A saved turn, as listed for the review screen."""
 
 
-def _reply_audio_url(session_id: int, turn_number: int) -> str:
-    return f"/api/sessions/{session_id}/turns/{turn_number}/reply-audio"
+def _reply_url(turn: Turn) -> str | None:
+    if not turn.reply_audio_path:
+        return None
+    return f"/api/sessions/{turn.session_id}/turns/{turn.turn_number}/reply-audio"
 
 
 async def _own_session(db: AsyncSession, session_id: int, user: User) -> ConversationSession:
@@ -241,7 +246,7 @@ def _turn_read(turn: Turn) -> TurnRead:
         turn_number=turn.turn_number,
         user_transcript=turn.user_transcript,
         reply_text=turn.reply_text,
-        reply_audio_url=_reply_audio_url(turn.session_id, turn.turn_number),
+        reply_audio_url=_reply_url(turn),
     )
 
 
@@ -259,6 +264,7 @@ async def create_opening(
     if session.ended_at is not None:
         raise HTTPException(status_code=409, detail={"code": "session_ended", "message": "Esta sesión ya terminó."})
 
+    set_call_context(session_id=session_id)
     existing = await db.scalar(select(Turn).where(Turn.session_id == session_id, Turn.turn_number == OPENING_TURN))
     if existing is not None:
         response.status_code = 200
@@ -292,7 +298,7 @@ async def create_opening(
         turn_number=OPENING_TURN,
         user_transcript="",
         reply_text=opening.reply_text,
-        reply_audio_path=opening.reply_audio_path,
+        reply_audio_path=opening.reply_audio_path or None,
         reply_audio_seconds=opening.reply_audio_seconds,
     )
     db.add(turn)
@@ -319,11 +325,14 @@ async def create_turn(
     stt: Annotated[STTProvider, Depends(get_stt_provider)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
     tts: Annotated[TTSProvider, Depends(get_tts_provider)],
+    analysis_llm: Annotated[LLMProvider, Depends(get_analysis_llm_provider)],
     pronunciation: Annotated[PronunciationProvider | None, Depends(get_pronunciation_provider)],
 ) -> TurnRead:
     session = await _own_session(db, session_id, user)
     if session.ended_at is not None:
         raise HTTPException(status_code=409, detail={"code": "session_ended", "message": "Esta sesión ya terminó."})
+
+    set_call_context(session_id=session_id)
 
     # Soft limit: checked before spending any STT/LLM/TTS call. The turn that crosses
     # the limit is still allowed to finish; the next one is refused.
@@ -384,10 +393,12 @@ async def create_turn(
         user_transcript=result["user_transcript"],
         reply_text=result["reply_text"],
         user_audio_path=kept_audio,
-        reply_audio_path=result["reply_audio_path"],
+        reply_audio_path=result["reply_audio_path"] or None,
         user_audio_seconds=result["user_audio_seconds"],
         reply_audio_seconds=result["reply_audio_seconds"],
         word_timestamps=result.get("user_words"),
+        stt_confidence=result.get("user_stt_confidence"),
+        stt_no_speech_prob=result.get("user_no_speech_prob"),
     )
     db.add(turn)
     try:
@@ -407,13 +418,13 @@ async def create_turn(
 
     # Runs after the response (and its voice reply) has been sent: the analysis adds no latency.
     background.add_task(
-        run_turn_analysis, turn.id, llm, async_sessionmaker(db.bind, expire_on_commit=False), pronunciation
+        run_turn_analysis, turn.id, analysis_llm, async_sessionmaker(db.bind, expire_on_commit=False), pronunciation
     )
     return TurnRead(
         turn_number=turn.turn_number,
         user_transcript=turn.user_transcript,
         reply_text=turn.reply_text,
-        reply_audio_url=_reply_audio_url(session_id, turn.turn_number),
+        reply_audio_url=_reply_url(turn),
     )
 
 
@@ -430,7 +441,7 @@ async def list_turns(
             turn_number=t.turn_number,
             user_transcript=t.user_transcript,
             reply_text=t.reply_text,
-            reply_audio_url=_reply_audio_url(session_id, t.turn_number),
+            reply_audio_url=_reply_url(t),
         )
         for t in turns
     ]
@@ -445,7 +456,7 @@ async def get_reply_audio(
 ) -> FileResponse:
     await _own_session(db, session_id, user)
     turn = await db.scalar(select(Turn).where(Turn.session_id == session_id, Turn.turn_number == turn_number))
-    if turn is None or not Path(turn.reply_audio_path).is_file():
+    if turn is None or not turn.reply_audio_path or not Path(turn.reply_audio_path).is_file():
         raise HTTPException(status_code=404, detail={"code": "audio_not_found", "message": "Audio no encontrado."})
     return FileResponse(turn.reply_audio_path, media_type="audio/wav")
 
@@ -456,7 +467,7 @@ async def get_report(
     background: BackgroundTasks,
     user: Annotated[User, Depends(current_active_user)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
-    llm: Annotated[LLMProvider, Depends(get_llm_provider)],
+    llm: Annotated[LLMProvider, Depends(get_analysis_llm_provider)],
     pronunciation: Annotated[PronunciationProvider | None, Depends(get_pronunciation_provider)],
 ) -> SessionReport:
     """The report plus, on each hard word, where the learner is in "now you say it" (not saved with it)."""
@@ -481,9 +492,10 @@ async def _build_report(
             detail={"code": "session_not_ended", "message": "El informe estará listo cuando termines la sesión."},
         )
 
-    # A report saved before pronunciation existed still says "pending" for it: rebuild it once.
-    saved_pronunciation = ((session.report or {}).get("pronunciation") or {}).get("status")
-    if session.report is not None and saved_pronunciation != "pending":
+    # A report saved before a dimension existed still says "pending" for it: rebuild it once.
+    saved = session.report or {}
+    placeholder = any((saved.get(d) or {}).get("status") == "pending" for d in ("pronunciation", "communication", "listening"))
+    if session.report is not None and not placeholder:
         return SessionReport.model_validate(session.report)
 
     turns = (
@@ -500,6 +512,8 @@ async def _build_report(
                 status="empty", score=None, words_per_minute=None, long_pauses=0, filler_words=0, total_words=0
             ),
             pronunciation=PronunciationReport(status="empty"),
+            communication=JudgeReport(status="empty"),
+            listening=JudgeReport(status="empty"),
         )
 
     # Turns saved before the analysis existed have no rows: queue them now (they show as pending until done).
@@ -525,12 +539,23 @@ async def _build_report(
     pronunciation_report = build_pronunciation_report(
         [(t.turn_number, by_key.get((t.id, AnalysisDimension.PRONUNCIATION.value))) for t in turns]
     )
+    communication, listening = (
+        build_judge_report([(t.turn_number, by_key.get((t.id, dimension.value))) for t in turns])
+        for dimension in (AnalysisDimension.COMMUNICATION, AnalysisDimension.LISTENING)
+    )
     report = SessionReport(
-        session_id=session_id, user_turns=len(turns), grammar=grammar, fluency=fluency, pronunciation=pronunciation_report
+        session_id=session_id,
+        user_turns=len(turns),
+        grammar=grammar,
+        fluency=fluency,
+        pronunciation=pronunciation_report,
+        communication=communication,
+        listening=listening,
     )
     # Only a complete report is saved: an "incomplete" one is rebuilt on the next request. Pronunciation
     # only has to be settled (nothing pending): a skipped or failed turn will not change by waiting.
-    if grammar.status == "ok" and fluency.status in ("ok", "empty") and pronunciation_report.turns_pending == 0:
+    settled = pronunciation_report.turns_pending == 0 and communication.turns_pending == 0 and listening.turns_pending == 0
+    if grammar.status == "ok" and fluency.status in ("ok", "empty") and settled:
         session.report = report.model_dump(mode="json")
         await db.commit()
     return report

@@ -22,7 +22,10 @@ say or imply "wrong accent", "bad accent" or that someone "mispronounces": it on
 that "costaron" (were hard) and always carries the note FAIRNESS_NOTE. Do not rename ``hard_words``
 into anything that judges the accent. A test enforces the forbidden phrases.
 
-Communication and listening are not measured yet: status "pending", score null.
+Communication ("darse a entender") and listening: one LLM judge per turn scores both from 1 to 5 (see
+app/analysis/judge.py); the report shows 0-100 = (score - 1) / 4 * 100, averaged over the turns that were judged.
+HONESTY RULE: a score the judge was not confident about (JUDGE confidence below MIN_JUDGE_CONFIDENCE, after the cap
+for an unreliable transcript) is never shown: that turn counts as "not measured" and the dimension is incomplete.
 """
 
 import re
@@ -153,9 +156,29 @@ class PronunciationReport(BaseModel):
     notes: list[str] = []
 
 
-class PendingDimension(BaseModel):
-    status: Literal["pending"] = "pending"
-    score: None = None
+JudgeStatus = Literal["ok", "incomplete", "empty", "pending"]
+
+
+class JudgedTurn(BaseModel):
+    turn_number: int
+    score: int  # 1-5, as the judge gave it
+    rationale: str
+
+
+class JudgeReport(BaseModel):
+    """A dimension scored by the LLM judge. The defaults match the old placeholder, so saved reports still load."""
+
+    status: JudgeStatus = "pending"
+    score: int | None = None  # 0-100
+    turns_judged: int = 0
+    turns_hidden: int = 0  # the judge was not confident enough: not shown (honesty rule)
+    turns_failed: int = 0
+    turns_pending: int = 0
+    turns_trivial: int = 0  # too short to judge ("yes", "me too")
+    turns_without_context: int = 0  # listening: no previous message from the tutor
+    turns_asked_to_repeat: int = 0  # listening: the learner asked to repeat or explain (a request, not scored)
+    turns: list[JudgedTurn] = []
+    notes: list[str] = []
 
 
 class SessionReport(BaseModel):
@@ -164,8 +187,8 @@ class SessionReport(BaseModel):
     grammar: GrammarReport
     fluency: FluencyReport
     pronunciation: PronunciationReport = PronunciationReport()
-    communication: PendingDimension = PendingDimension()
-    listening: PendingDimension = PendingDimension()
+    communication: JudgeReport = JudgeReport()
+    listening: JudgeReport = JudgeReport()
 
 
 def count_words(text: str) -> int:
@@ -336,6 +359,56 @@ def build_pronunciation_report(rows: Sequence[tuple[int, object | None]]) -> Pro
         notes=notes,
         **common,
     )
+
+
+def build_judge_report(rows: Sequence[tuple[int, object | None]]) -> JudgeReport:
+    """``rows`` = (turn_number, the analysis row of one judge dimension, or None if never queued), one per user turn."""
+    counts = {"judged": 0, "hidden": 0, "failed": 0, "pending": 0, "trivial": 0, "no_context": 0, "repeat": 0}
+    shown: list[JudgedTurn] = []
+    for turn_number, row in rows:
+        status = _turn_status(row)
+        result = getattr(row, "result", None) or {}
+        if status == AnalysisStatus.DONE.value:
+            if result.get("asked_to_repeat"):
+                counts["repeat"] += 1
+            elif result.get("hidden"):
+                counts["hidden"] += 1
+            elif result.get("score") is not None:
+                counts["judged"] += 1
+                shown.append(JudgedTurn(turn_number=turn_number, score=int(result["score"]), rationale=str(result.get("rationale", ""))))
+        elif status == AnalysisStatus.FAILED.value:
+            counts["failed"] += 1
+        elif status == AnalysisStatus.SKIPPED_TRIVIAL.value:
+            counts["trivial"] += 1
+        elif status == AnalysisStatus.SKIPPED_NO_CONTEXT.value:
+            counts["no_context"] += 1
+        else:
+            counts["pending"] += 1
+
+    notes: list[str] = []
+    if counts["hidden"]:
+        notes.append(f"{counts['hidden']} turno(s) no se cuentan: la evaluación no tuvo suficiente confianza para mostrarte un puntaje.")
+    if counts["repeat"]:
+        notes.append(f"Pediste repetir o aclarar {counts['repeat']} vez/veces: eso no baja tu puntaje.")
+    if counts["trivial"]:
+        notes.append(f"{counts['trivial']} respuesta(s) muy corta(s) no se evaluaron.")
+    common = {
+        "turns_judged": counts["judged"],
+        "turns_hidden": counts["hidden"],
+        "turns_failed": counts["failed"],
+        "turns_pending": counts["pending"],
+        "turns_trivial": counts["trivial"],
+        "turns_without_context": counts["no_context"],
+        "turns_asked_to_repeat": counts["repeat"],
+        "turns": shown,
+        "notes": notes,
+    }
+    unmeasured = counts["hidden"] or counts["failed"] or counts["pending"]
+    if not counts["judged"]:
+        status = "pending" if counts["pending"] else ("incomplete" if unmeasured else "empty")
+        return JudgeReport(status=status, **common)
+    score = round(sum((t.score - 1) / 4 * 100 for t in shown) / len(shown))
+    return JudgeReport(status="incomplete" if unmeasured else "ok", score=score, **common)
 
 
 def compute_fluency(turns_words: Sequence[Sequence[WordTiming]]) -> FluencyReport:

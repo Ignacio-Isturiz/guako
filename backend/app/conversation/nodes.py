@@ -1,5 +1,6 @@
 """Graph nodes. Each one returns only the state fields it changes."""
 
+import logging
 from collections.abc import Callable
 from pathlib import Path
 
@@ -7,10 +8,13 @@ from app.conversation.state import ConversationState, Message
 from app.llm.base import LLMProvider
 from app.llm.schemas import TutorReply
 from app.prompts import load_prompt
+from app.providers.errors import TTSExhausted
 from app.stt import STTProvider
 from app.stt.errors import NoSpeechError
 from app.tts import TTSProvider
 from app.tts.audio import wav_duration_seconds
+
+logger = logging.getLogger("app.conversation")
 
 Node = Callable[[ConversationState], dict]
 
@@ -31,6 +35,8 @@ def make_transcribe(stt: STTProvider) -> Node:
             "user_transcript": result.text.strip(),
             "user_words": [word.model_dump() for word in result.words],
             "user_audio_seconds": seconds,
+            "user_stt_confidence": result.confidence,
+            "user_no_speech_prob": result.no_speech_prob,
         }
 
     return transcribe
@@ -73,7 +79,12 @@ def make_synthesize(tts: TTSProvider, audio_dir: str) -> Node:
         # turn_number was already incremented by tutor_reply, so it names this turn.
         output = Path(audio_dir) / str(state["session_id"]) / f"turn_{state['turn_number']:03d}_reply.wav"
         output.parent.mkdir(parents=True, exist_ok=True)
-        result = tts.synthesize(state["reply_text"], str(output))
+        try:
+            result = tts.synthesize(state["reply_text"], str(output))
+        except TTSExhausted:
+            # Every voice provider is out: keep the turn without audio; the browser reads the text aloud.
+            logger.warning("tts_degraded session=%s turn=%s voice=browser", state["session_id"], state["turn_number"])
+            return {"reply_audio_path": "", "reply_audio_seconds": 0.0}
         return {
             "reply_audio_path": result.audio_path,
             "reply_audio_seconds": wav_duration_seconds(result.audio_path),

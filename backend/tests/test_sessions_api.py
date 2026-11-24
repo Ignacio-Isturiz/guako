@@ -85,7 +85,7 @@ def test_turn_returns_201_and_stores_the_turn(client: TestClient, providers: Pro
     assert body["reply_text"] == "That sounds fun! Where do you go?"
     assert body["reply_audio_url"] == f"/api/sessions/{session_id}/turns/1/reply-audio"
     # The pipeline order, then the grammar analysis, which runs after the reply is built.
-    assert providers.calls == ["stt", "llm", "tts", "llm"]
+    assert providers.calls == ["stt", "llm", "tts", "llm", "llm"]  # reply, then grammar and judge in the background
 
     rows = _query(db_path, "select turn_number, user_transcript, user_audio_path, word_timestamps from turns")
     assert len(rows) == 1

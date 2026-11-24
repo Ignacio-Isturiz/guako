@@ -4,6 +4,7 @@ import groq
 from pydantic import BaseModel, SecretStr
 
 from app.llm.base import BaseLLMProvider, RawCompletion
+from app.providers.util import retry_after_seconds
 from app.llm.errors import (
     LLMAuthError,
     LLMProviderError,
@@ -53,7 +54,7 @@ class GroqProvider(BaseLLMProvider):
         except groq.PermissionDeniedError as exc:
             raise LLMAuthError("Groq denied access") from exc
         except groq.RateLimitError as exc:
-            raise LLMRateLimitError("Groq quota or rate limit exceeded") from exc
+            raise LLMRateLimitError("Groq quota or rate limit exceeded", retry_after=retry_after_seconds(exc)) from exc
         except groq.APITimeoutError as exc:
             raise LLMTimeoutError("Groq timed out") from exc
         except groq.APIError as exc:

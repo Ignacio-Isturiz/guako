@@ -14,14 +14,42 @@ from app.pronunciation import PronunciationProvider, PronunciationResult
 from app.pronunciation.errors import PronunciationRateLimitError
 
 
+def judgement(*, communication: int = 4, listening: int | None = 5, confidence: float = 0.9, asked_to_repeat: bool = False) -> dict:
+    """A judge answer as the model would write it."""
+    return {
+        "communication": {"score": communication, "rationale": "Clear enough.", "confidence": confidence},
+        "listening": None if listening is None else {"score": listening, "rationale": "On topic.", "confidence": confidence},
+        "asked_to_repeat": asked_to_repeat,
+    }
+
+
+DEFAULT_JUDGEMENT = judgement()
+
+
+def is_judge(response_model: type) -> bool:
+    return "communication" in response_model.model_fields
+
+
 class ScriptedGrammarLLM:
-    """Answers each grammar call with the next scripted item: a list of errors or an exception."""
+    """Answers each grammar call with the next scripted item: a list of errors or an exception.
+
+    The judge has its own script (``judgements``: dicts or exceptions) and its own prompt list; by default it
+    answers with a clear, confident judgement. Grammar tests never see the judge's calls.
+    """
 
     def __init__(self) -> None:
         self.script: list[object] = []
         self.prompts: list[str] = []
+        self.judgements: list[object] = []
+        self.judge_prompts: list[str] = []
 
     def generate(self, prompt: str, response_model: type[BaseModel], *, system: str | None = None) -> BaseModel:
+        if is_judge(response_model):
+            self.judge_prompts.append(prompt)
+            item = self.judgements.pop(0) if self.judgements else DEFAULT_JUDGEMENT
+            if isinstance(item, Exception):
+                raise item
+            return response_model.model_validate(item)
         self.prompts.append(prompt)
         item = self.script.pop(0)
         if isinstance(item, Exception):

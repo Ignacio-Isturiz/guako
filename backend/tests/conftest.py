@@ -15,6 +15,10 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test-unused.db"
 # accident. An empty key means "not configured"; the network guard below is a second barrier.
 os.environ["AZURE_SPEECH_KEY"] = ""
 os.environ["AZURE_SPEECH_REGION"] = ""
+# OpenAI is paid: no test may use it, even by accident. No key = the paid provider is simply not in any chain.
+os.environ["OPENAI_API_KEY"] = ""
+# No flusher or retrier in the API process while testing (the tests call those functions directly).
+os.environ["BACKGROUND_TASKS_ENABLED"] = "false"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -23,8 +27,24 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine  # no
 import httpx  # noqa: E402
 
 from app.conversation.deps import get_pronunciation_provider  # noqa: E402
+from app.llm.factory import get_analysis_llm_provider, get_llm_provider  # noqa: E402
+from app.providers import chains  # noqa: E402
+from app.providers.state import reset_state  # noqa: E402
 from app.db import Base, get_async_session  # noqa: E402
 from app.main import app  # noqa: E402
+
+
+class _NoLLM:
+    """The test gave no LLM: using it is a mistake (it would be a real, maybe paid, call)."""
+
+    def generate(self, *args: object, **kwargs: object) -> object:
+        raise RuntimeError("this test did not provide an LLM")
+
+
+def _analysis_follows_conversation() -> object:
+    """In tests the analysis uses the same simulated LLM the test gave for the conversation."""
+    override = app.dependency_overrides.get(get_llm_provider)
+    return override() if override else _NoLLM()
 
 
 async def _create_tables(url: str) -> None:
@@ -54,6 +74,7 @@ def client(db_path: Path) -> Iterator[TestClient]:
 
     app.dependency_overrides[get_async_session] = override_session
     app.dependency_overrides[get_pronunciation_provider] = lambda: None  # tests that need Azure pass a fake
+    app.dependency_overrides[get_analysis_llm_provider] = _analysis_follows_conversation
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
@@ -72,7 +93,7 @@ def backoff_waits(monkeypatch: pytest.MonkeyPatch) -> list[float]:
 
 @pytest.fixture(autouse=True)
 def no_real_network(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A real HTTP request to Microsoft/Azure fails the test (their free quota is not recovered).
+    """A real HTTP request to Microsoft/Azure/OpenAI fails the test (a quota that is not recovered, or money).
 
     Clients with a mock transport (httpx.MockTransport) are not affected. Other hosts are left
     alone: a few opt-in tests call Groq for real.
@@ -80,8 +101,18 @@ def no_real_network(monkeypatch: pytest.MonkeyPatch) -> None:
     real_handle = httpx.HTTPTransport.handle_request
 
     def guarded(self: httpx.HTTPTransport, request: httpx.Request) -> httpx.Response:
-        if request.url.host.endswith(("microsoft.com", "azure.com")):
-            raise RuntimeError(f"Real Azure call blocked in tests: {request.url.host}")
+        if request.url.host.endswith(("microsoft.com", "azure.com", "openai.com")):
+            raise RuntimeError(f"Real paid-API call blocked in tests: {request.url.host}")
         return real_handle(self, request)
 
     monkeypatch.setattr(httpx.HTTPTransport, "handle_request", guarded)
+
+
+@pytest.fixture(autouse=True)
+def fresh_provider_state() -> Iterator[None]:
+    """Every test starts with new breakers, counters, budget and provider chains."""
+    reset_state()
+    chains.clear_chain_cache()
+    yield
+    reset_state()
+    chains.clear_chain_cache()
