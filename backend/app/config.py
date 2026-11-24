@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     openai_tts_model: str = "gpt-4o-mini-tts"
     openai_tts_voice: str = "alloy"
 
+    # --- Azure Speech (Pronunciation Assessment; free F0 plan) ----
+    azure_speech_key: SecretStr | None = None
+    azure_speech_region: str = ""  # e.g. "brazilsouth"; the REST hosts are built from it
+    azure_speech_timeout_seconds: float = Field(default=20.0, gt=0)
+
     # --- Conversation ----
     # Where uploaded user audio (with consent) and tutor reply audio are written.
     sessions_audio_dir: str = "output/sessions"

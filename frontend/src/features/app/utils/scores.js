@@ -9,5 +9,11 @@ export const ASPECT_COLOR = {
   listening: '#1aa05a',
 }
 export const aspectName = (a) => t(`app.aspects.${a}`)
-export const tone = (v) => (v >= 80 ? 'high' : v >= 65 ? 'mid' : 'low')
-export const toneText = (v) => t(`app.score.${tone(v)}`)
+// Pronunciación: Azure puntúa alto a quien se hace entender (la mediana real es 94), así que sus
+// etiquetas son más exigentes para no dar una impresión demasiado optimista.
+const BANDS = { pron: [92, 80] }
+export const tone = (v, aspect) => {
+  const [high, mid] = BANDS[aspect] || [80, 65]
+  return v >= high ? 'high' : v >= mid ? 'mid' : 'low'
+}
+export const toneText = (v, aspect) => t(`app.score.${tone(v, aspect)}`)

@@ -138,7 +138,10 @@ def test_full_report(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path)
     assert (fluency["total_words"], fluency["long_pauses"], fluency["filler_words"]) == (9, 1, 1)
     assert fluency["words_per_minute"] == pytest.approx(108.0)  # 9 words in 5 s of speech
     assert 0 <= fluency["score"] <= 100
-    for dimension in ("pronunciation", "communication", "listening"):
+    # These turns have no stored audio: pronunciation is explained, not left "pending" forever.
+    assert body["pronunciation"]["status"] == "unavailable" and body["pronunciation"]["reason"] == "no_audio_consent"
+    assert body["pronunciation"]["score"] is None and body["pronunciation"]["turns_without_audio"] == 2
+    for dimension in ("communication", "listening"):
         assert body[dimension] == {"status": "pending", "score": None}
 
 

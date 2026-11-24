@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.analysis.runner import ensure_pending_rows, run_turn_analysis
 from app.db import Turn
 from app.llm.errors import LLMRateLimitError
+from app.pronunciation import PronunciationProvider, PronunciationResult
+from app.pronunciation.errors import PronunciationRateLimitError
 
 
 class ScriptedGrammarLLM:
@@ -42,7 +44,29 @@ def rate_limited(times: int = 4) -> list[Exception]:
     return [LLMRateLimitError("429") for _ in range(times)]
 
 
-def run_analyses(db_path: Path, llm: ScriptedGrammarLLM) -> None:
+class ScriptedPronunciation(PronunciationProvider):
+    """Answers each call with the next scripted item (a result or an exception). Never touches Azure."""
+
+    max_audio_seconds = 28.0
+
+    def __init__(self, script: list[object] | None = None) -> None:
+        self.script: list[object] = script or []
+        self.calls: list[tuple[str, str]] = []  # (audio_path, reference_text)
+
+    def score_turn(self, audio_path: str, reference_text: str) -> PronunciationResult:
+        self.calls.append((audio_path, reference_text))
+        item = self.script.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item  # type: ignore[return-value]
+
+
+def busy(times: int = 4) -> list[Exception]:
+    """A 429 on every attempt of one analysis (the first try plus the three retries)."""
+    return [PronunciationRateLimitError("429") for _ in range(times)]
+
+
+def run_analyses(db_path: Path, llm: ScriptedGrammarLLM, pronunciation: PronunciationProvider | None = None) -> None:
     """Queue and run the analysis of every saved turn, as the background task would."""
 
     async def _run() -> None:
@@ -53,7 +77,7 @@ def run_analyses(db_path: Path, llm: ScriptedGrammarLLM) -> None:
             await ensure_pending_rows(db, ids)
             await db.commit()
         for turn_id in ids:
-            await run_turn_analysis(turn_id, llm, maker)
+            await run_turn_analysis(turn_id, llm, maker, pronunciation)
         await engine.dispose()
 
     asyncio.run(_run())

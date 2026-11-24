@@ -2,6 +2,7 @@ import './ajustes.css'
 import { t, getLang } from '@/core/i18n.js'
 import { navigate } from '@/core/router.js'
 import { settings, setSetting, exportData, deleteAccount } from '@/features/app/data/store.js'
+import { readAudioConsent, writeAudioConsent } from '@/features/app/data/consent.js'
 import { confirmDialog } from '@/features/app/components/confirm-dialog/confirm-dialog.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { toast } from '@/features/app/components/toast/toast.js'
@@ -28,6 +29,19 @@ export default {
           <div class="opts opts--3">
             ${['es', 'en', 'mix'].map((k) => radio('explain', k, s.explain, t(`app.settings.explain.${k}.name`), esc(t(`app.settings.explain.${k}.ex`)))).join('')}
           </div>
+        </section>
+
+        <section class="card row">
+          <div>
+            <h2 class="card__title">${t('app.settings.consentTitle')}</h2>
+            <p class="card__sub">${t('app.settings.consentText')}</p>
+            <p class="card__sub"><button type="button" class="link" data-legal="privacy">${t('app.settings.consentMore')}</button></p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="audioConsent" ${readAudioConsent() ? 'checked' : ''} />
+            <span class="switch__track" aria-hidden="true"></span>
+            <span class="switch__text" id="consentState">${t(readAudioConsent() ? 'app.settings.consentOn' : 'app.settings.consentOff')}</span>
+          </label>
         </section>
 
         <section class="card">
@@ -95,6 +109,10 @@ export default {
       if (el.matches('input[type=radio]')) {
         setSetting(el.name, el.value)
         root.querySelectorAll(`input[name="${el.name}"]`).forEach((r) => r.closest('.opt').classList.toggle('is-on', r.checked))
+        toast(t('app.settings.saved'))
+      } else if (el.id === 'audioConsent') {
+        writeAudioConsent(el.checked)
+        root.querySelector('#consentState').textContent = t(el.checked ? 'app.settings.consentOn' : 'app.settings.consentOff')
         toast(t('app.settings.saved'))
       } else if (el.id === 'sound') {
         setSetting('sound', el.checked)

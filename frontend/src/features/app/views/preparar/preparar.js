@@ -4,6 +4,7 @@ import { navigate } from '@/core/router.js'
 import { TOPICS, LEVELS } from '@/features/app/data/seed.js'
 import { level as savedLevel } from '@/features/app/data/store.js'
 import { readSetup, writeSetup } from '@/features/app/data/setup.js'
+import { readAudioConsent } from '@/features/app/data/consent.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
 import { roleArt as art } from '@/shared/assets/illustrations/index.js'
@@ -79,6 +80,7 @@ export default {
             <div><dt>${t('app.prepare.summaryTopic')}</dt><dd id="sumTopic"></dd></div>
             <div><dt>${t('app.prepare.summaryRole')}</dt><dd id="sumRole"></dd></div>
             <div><dt>${t('app.prepare.summaryLevel')}</dt><dd id="sumLevel"></dd></div>
+            <div><dt>${t('app.prepare.summaryAudio')}</dt><dd><span id="sumAudio"></span> · <button type="button" class="link" data-nav="/app/ajustes">${t('app.prepare.consentChange')}</button></dd></div>
           </dl>
           <button class="btn btn--primary btn--block btn--lg" type="button" id="startBtn">${icon('mic', 22)}${t('app.prepare.start')}</button>
           <p class="summary__note" id="startNote">${t('app.prepare.missing')}</p>
@@ -116,6 +118,7 @@ export default {
         : t('app.prepare.summaryEmpty')
       root.querySelector('#sumRole').textContent = state.role.trim() || t('app.prepare.roleNone')
       root.querySelector('#sumLevel').textContent = state.level ? `${state.level} · ${t(`app.levels.${state.level}.name`)}` : t('app.prepare.summaryEmpty')
+      root.querySelector('#sumAudio').textContent = t(readAudioConsent() ? 'app.prepare.consentOn' : 'app.prepare.consentOff')
       const ok = !!ready()
       root.querySelector('#startBtn').disabled = !ok
       root.querySelector('#startNote').hidden = ok
