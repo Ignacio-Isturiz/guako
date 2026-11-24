@@ -4,12 +4,14 @@ from pathlib import Path
 from typing import Any
 
 import groq
-from pydantic import SecretStr, ValidationError
+from pydantic import SecretStr
 
 from app.config import settings
+from app.providers.util import retry_after_seconds
 from app.stt.base import STTProvider
 from app.stt.errors import STTError
-from app.stt.schemas import TranscriptionResult, WordTiming
+from app.stt.schemas import TranscriptionResult
+from app.stt.verbose_json import to_result
 
 logger = logging.getLogger("app.stt")
 
@@ -49,7 +51,8 @@ class GroqWhisperSTTProvider(STTProvider):
         path = Path(audio_path)
         if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
             raise STTError(
-                f"Unsupported audio format '{path.suffix}'. Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
+                f"Unsupported audio format '{path.suffix}'. Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}",
+                kind="invalid_input",
             )
 
         started = time.perf_counter()
@@ -62,19 +65,21 @@ class GroqWhisperSTTProvider(STTProvider):
                     # as Spanish, Romanian, etc. and returns the wrong language.
                     **({"language": settings.stt_language} if settings.stt_language else {}),
                     response_format="verbose_json",
-                    timestamp_granularities=["word"],
+                    timestamp_granularities=["word", "segment"],  # segments carry the confidence
                     # Whisper's prompt is "the text before": it biases it toward words that fit there
                     # ("today" after "did you do anything special this morning?" instead of "to die").
                     **({"prompt": context.strip()[-PROMPT_MAX_CHARS:]} if context and context.strip() else {}),
                 )
         except OSError as exc:
-            raise STTError(f"Cannot read audio file '{path.name}': {exc.strerror or type(exc).__name__}") from exc
+            raise STTError(f"Cannot read audio file '{path.name}': {exc.strerror or type(exc).__name__}", kind="invalid_input") from exc
         except groq.APITimeoutError as exc:
-            raise STTError(f"Groq transcription timed out after {self._timeout_seconds}s") from exc
+            raise STTError(f"Groq transcription timed out after {self._timeout_seconds}s", kind="timeout") from exc
         except groq.AuthenticationError as exc:
-            raise STTError("Groq rejected the API key") from exc
+            raise STTError("Groq rejected the API key", status_code=401, kind="auth") from exc
         except groq.APIStatusError as exc:
-            raise STTError(f"Groq API error (HTTP {exc.status_code})") from exc
+            raise STTError(
+                f"Groq API error (HTTP {exc.status_code})", status_code=exc.status_code, retry_after=retry_after_seconds(exc)
+            ) from exc
         except groq.APIError as exc:
             raise STTError(f"Groq request failed: {type(exc).__name__}") from exc
         finally:
@@ -86,21 +91,4 @@ class GroqWhisperSTTProvider(STTProvider):
     @staticmethod
     def _to_result(payload: dict[str, Any]) -> TranscriptionResult:
         """Map Groq's verbose_json payload to our own model."""
-        try:
-            words = [
-                WordTiming(
-                    word=str(item["word"]),
-                    start=float(item["start"]),
-                    end=float(item["end"]),
-                    confidence=None,  # Groq does not return per-word confidence.
-                )
-                for item in payload.get("words") or []
-            ]
-            return TranscriptionResult(
-                text=str(payload.get("text", "")).strip(),
-                language=payload.get("language"),
-                duration=float(payload["duration"]) if payload.get("duration") is not None else None,
-                words=words,
-            )
-        except (KeyError, TypeError, ValueError, ValidationError) as exc:
-            raise STTError("Groq returned an unexpected transcription format") from exc
+        return to_result(payload, "Groq")

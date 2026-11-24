@@ -3,13 +3,15 @@
 import logging
 
 from app.pronunciation import AzurePronunciationProvider, PronunciationError, PronunciationProvider
-from app.stt import GroqWhisperSTTProvider, STTProvider
+from app.config import settings
+from app.providers import chains
+from app.stt import STTProvider
 from app.tts import TTSProvider
 from app.tts.factory import get_tts_provider as build_tts_provider
 
 
 def get_stt_provider() -> STTProvider:
-    return GroqWhisperSTTProvider()
+    return chains.speech_to_text(settings)
 
 
 def get_tts_provider() -> TTSProvider:

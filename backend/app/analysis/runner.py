@@ -1,4 +1,4 @@
-"""Background analysis of saved turns (grammar with the LLM, fluency with code).
+"""Building blocks of the background analysis of saved turns, and the entry point that runs it.
 
 Runs after the turn is saved and the voice reply has been sent, so it adds no latency to the reply.
 It never raises: a failed analysis is stored as ``failed`` and the session carries on.
@@ -14,13 +14,14 @@ from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.analysis.fluency import analyze_fluency
 from app.analysis.grammar import analyze_grammar
+from app.analysis.judge import judge_turn
 from app.analysis.pronunciation import empty_result, plan_assessment, stored_result
 from app.db import Turn, TurnAnalysis
 from app.enums import AnalysisDimension, AnalysisStatus
 from app.llm.base import LLMProvider
-from app.llm.errors import LLMError, LLMProviderError, LLMRateLimitError, LLMTimeoutError
+from app.llm.errors import LLMProviderError, LLMRateLimitError, LLMTimeoutError
+from app.providers.errors import LLMExhausted
 from app.pronunciation import PronunciationError, PronunciationProvider, PronunciationResult
 from app.pronunciation.errors import (
     PronunciationNotConfiguredError,
@@ -29,7 +30,6 @@ from app.pronunciation.errors import (
     PronunciationTimeoutError,
 )
 from app.pronunciation.quota import can_spend, record_usage
-from app.stt import WordTiming
 
 logger = logging.getLogger("app.analysis")
 
@@ -62,9 +62,25 @@ def _generate_with_backoff(llm: LLMProvider, transcript: str, context: str = "")
             with _LLM_SLOT:
                 return analyze_grammar(llm, transcript, context)
         except RETRYABLE as exc:
-            if wait is None:
+            # Every provider is out (the router already tried them all and its breakers are open): waiting
+            # a few seconds here would not help. The row stays pending and the retrier picks it up later.
+            if wait is None or isinstance(exc, LLMExhausted):
                 raise
             logger.warning("analysis_retry attempt=%d wait_s=%.0f error=%s", attempt, wait, type(exc).__name__)
+            _sleep(wait)
+    raise AssertionError("unreachable")
+
+
+def _judge_with_backoff(llm: LLMProvider, ctx: dict, want_listening: bool, intended: dict | None) -> dict:
+    """Runs in a worker thread. Same policy as the grammar: growing waits, and no waiting when every provider is out."""
+    for attempt, wait in enumerate((*RETRY_WAITS_SECONDS, None), start=1):
+        try:
+            with _LLM_SLOT:
+                return judge_turn(llm, ctx, want_listening, intended)
+        except RETRYABLE as exc:
+            if wait is None or isinstance(exc, LLMExhausted):
+                raise
+            logger.warning("judge_retry attempt=%d wait_s=%.0f error=%s", attempt, wait, type(exc).__name__)
             _sleep(wait)
     raise AssertionError("unreachable")
 
@@ -122,56 +138,21 @@ async def run_turn_analysis(
 ) -> None:
     """Analyse one turn: every ``pending`` row is finished (done, failed or skipped); others are left alone.
 
+    The work itself is the graph in ``app.analysis.graph`` (what runs, in what order, what in parallel);
+    this module keeps the building blocks it calls (retries, quota, pronunciation) and the in-flight guard.
     ``pronunciation`` is None when Azure is not configured: that dimension then fails with ``not_configured``.
     """
+    from app.analysis.graph import build_analysis_graph  # imported here: graph.py uses this module's blocks
+
     if turn_id in _IN_FLIGHT:
         return
     _IN_FLIGHT.add(turn_id)
     try:
-        async with maker() as db:
-            turn = await db.get(Turn, turn_id)
-            rows = (
-                await db.scalars(
-                    select(TurnAnalysis).where(
-                        TurnAnalysis.turn_id == turn_id, TurnAnalysis.status == AnalysisStatus.PENDING.value
-                    )
-                )
-            ).all()
-            if turn is None:
-                return
-            # Fluency first (instant), then grammar, then pronunciation: the grammar analysis also says what the
-            # learner meant, and pronunciation is scored against that.
-            order = {AnalysisDimension.FLUENCY.value: 0, AnalysisDimension.GRAMMAR.value: 1}
-            for row in sorted(rows, key=lambda r: order.get(r.dimension, 2)):
-                await _finish(db, row, turn, llm, pronunciation)
+        await build_analysis_graph(maker, llm, pronunciation).ainvoke({"turn_id": turn_id})
     except Exception:  # background task: nothing may escape
         logger.exception("analysis_crashed turn=%s", turn_id)
     finally:
         _IN_FLIGHT.discard(turn_id)
-
-
-async def _finish(
-    db: AsyncSession, row: TurnAnalysis, turn: Turn, llm: LLMProvider, pronunciation: PronunciationProvider | None
-) -> None:
-    try:
-        if row.dimension == AnalysisDimension.PRONUNCIATION.value:
-            row.status, row.result, row.error = await _assess_pronunciation(db, turn, pronunciation, await _intended(db, turn))
-        else:
-            if row.dimension == AnalysisDimension.FLUENCY.value:
-                words = [WordTiming.model_validate(w) for w in (turn.word_timestamps or [])]
-                row.result = analyze_fluency(words)
-            elif not turn.user_transcript.strip():
-                row.result = {"errors": [], "discarded_low_confidence": 0}  # nothing said, nothing to ask the LLM
-            else:
-                row.result = await run_in_threadpool(
-                    _generate_with_backoff, llm, turn.user_transcript, await _previous_tutor_text(db, turn)
-                )
-            row.status, row.error = AnalysisStatus.DONE.value, None
-    except Exception as exc:
-        code = exc.code if isinstance(exc, (LLMError, PronunciationError)) else type(exc).__name__
-        logger.warning("analysis_failed turn=%s dimension=%s error=%s", turn.id, row.dimension, code)
-        row.status, row.result, row.error = AnalysisStatus.FAILED.value, None, str(code)[:200]
-    await db.commit()
 
 
 async def _previous_tutor_text(db: AsyncSession, turn: Turn) -> str:

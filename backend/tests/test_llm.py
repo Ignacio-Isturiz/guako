@@ -74,28 +74,31 @@ def _make(**kwargs: Any) -> Settings:
     return Settings(_env_file=None, **kwargs)  # type: ignore[call-arg]
 
 
-def _settings(provider: str) -> Settings:
+def _settings(order: str) -> Settings:
     return _make(
-        llm_provider=provider,
-        llm_fallback_provider="none",  # selection is tested without the backup wrapper
+        llm_conversation_order=order,
         gemini_api_key=SecretStr("dummy-a"),
         groq_api_key=SecretStr("dummy-b"),
     )
 
 
+def _first_provider(order: str) -> object:
+    return get_llm_provider(_settings(order))._router.routes[0].provider  # type: ignore[attr-defined]
+
+
 def test_factory_returns_provider_for_setting() -> None:
-    assert isinstance(get_llm_provider(_settings("gemini")), GeminiProvider)
-    assert isinstance(get_llm_provider(_settings("groq")), GroqProvider)
+    assert isinstance(_first_provider("gemini"), GeminiProvider)
+    assert isinstance(_first_provider("groq"), GroqProvider)
 
 
 def test_factory_without_key_raises_auth_error() -> None:
     with pytest.raises(LLMAuthError):
-        get_llm_provider(_make(llm_provider="groq"))
+        get_llm_provider(_make(llm_conversation_order="groq"))
 
 
 def test_settings_reject_unknown_provider() -> None:
     with pytest.raises(ValueError):
-        _make(llm_provider="openai")
+        _make(llm_conversation_order="nope")
 
 
 def test_secret_not_in_repr() -> None:

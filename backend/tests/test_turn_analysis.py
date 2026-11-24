@@ -149,7 +149,7 @@ def test_a_turn_is_never_analysed_twice(client: TestClient, db_path: Path) -> No
     run_analyses(db_path, llm)  # same turn again: its rows are done, nothing is queued or called
 
     assert len(llm.prompts) == 1
-    assert _query(db_path, "select count(*) from turn_analyses") == [(3,)]  # unique (turn, dimension)
+    assert _query(db_path, "select count(*) from turn_analyses") == [(5,)]  # unique (turn, dimension)
 
 
 def test_the_llm_slot_is_free_after_a_run(client: TestClient, db_path: Path) -> None:
@@ -175,7 +175,7 @@ class _TutorAndAnalyst:
         self._grammar = grammar
 
     def generate(self, prompt: str, response_model: type, *, system: str | None = None):  # type: ignore[no-untyped-def]
-        if "errors" in response_model.model_fields:
+        if "errors" in response_model.model_fields or "communication" in response_model.model_fields:
             return self._grammar.generate(prompt, response_model)
         return response_model(reply="That sounds fun!")
 

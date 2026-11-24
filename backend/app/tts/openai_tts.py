@@ -6,6 +6,7 @@ import openai
 from pydantic import SecretStr
 
 from app.config import settings
+from app.providers.util import retry_after_seconds
 from app.tts.base import TTSProvider
 from app.tts.errors import TTSError
 from app.tts.schemas import TTSResult
@@ -37,7 +38,7 @@ class OpenAITTSProvider(TTSProvider):
 
     def synthesize(self, text: str, output_path: str) -> TTSResult:
         if not text.strip():
-            raise TTSError("Cannot synthesize empty text")
+            raise TTSError("Cannot synthesize empty text", kind="invalid_input")
 
         started = time.perf_counter()
         try:
@@ -51,11 +52,15 @@ class OpenAITTSProvider(TTSProvider):
             ) as response:
                 response.stream_to_file(out)
         except openai.APITimeoutError as exc:
-            raise TTSError(f"OpenAI speech request timed out after {self._timeout_seconds}s") from exc
+            raise TTSError(f"OpenAI speech request timed out after {self._timeout_seconds}s", kind="timeout") from exc
         except openai.AuthenticationError as exc:
             raise TTSError("OpenAI rejected the API key", status_code=401) from exc
         except openai.APIStatusError as exc:
-            raise TTSError(f"OpenAI speech API error (HTTP {exc.status_code})", status_code=exc.status_code) from exc
+            raise TTSError(
+                f"OpenAI speech API error (HTTP {exc.status_code})",
+                status_code=exc.status_code,
+                retry_after=retry_after_seconds(exc),
+            ) from exc
         except openai.APIError as exc:
             raise TTSError(f"OpenAI speech request failed: {type(exc).__name__}") from exc
         except OSError as exc:

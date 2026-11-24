@@ -366,6 +366,8 @@ def test_a_long_turn_sends_only_the_words_that_fit_and_counts_only_that_audio(se
 
 class _Tutor:
     def generate(self, prompt: str, response_model: type, *, system: str | None = None):  # type: ignore[no-untyped-def]
+        if "communication" in response_model.model_fields:
+            return response_model.model_validate(__import__("tests.analysis_helpers", fromlist=["x"]).DEFAULT_JUDGEMENT)
         if "errors" in response_model.model_fields:
             return response_model(errors=[])
         return response_model(reply="Nice!")

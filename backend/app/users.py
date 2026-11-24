@@ -76,3 +76,5 @@ auth_backend = AuthenticationBackend(name="cookie", transport=cookie_transport, 
 
 fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
 current_active_user = fastapi_users.current_user(active=True)
+# Only users with is_superuser (set by hand: see docs of the admin endpoint). Registration cannot set it.
+current_superuser = fastapi_users.current_user(active=True, superuser=True)
