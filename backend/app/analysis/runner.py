@@ -55,12 +55,12 @@ _IN_FLIGHT: set[int] = set()
 _sleep: Callable[[float], None] = time.sleep
 
 
-def _generate_with_backoff(llm: LLMProvider, transcript: str) -> dict:
+def _generate_with_backoff(llm: LLMProvider, transcript: str, context: str = "") -> dict:
     """Runs in a worker thread (the providers are blocking)."""
     for attempt, wait in enumerate((*RETRY_WAITS_SECONDS, None), start=1):
         try:
             with _LLM_SLOT:
-                return analyze_grammar(llm, transcript)
+                return analyze_grammar(llm, transcript, context)
         except RETRYABLE as exc:
             if wait is None:
                 raise
@@ -139,8 +139,9 @@ async def run_turn_analysis(
             ).all()
             if turn is None:
                 return
-            # Fluency first: it is instant and does not depend on any service.
-            order = {AnalysisDimension.FLUENCY.value: 0, AnalysisDimension.PRONUNCIATION.value: 1}
+            # Fluency first (instant), then grammar, then pronunciation: the grammar analysis also says what the
+            # learner meant, and pronunciation is scored against that.
+            order = {AnalysisDimension.FLUENCY.value: 0, AnalysisDimension.GRAMMAR.value: 1}
             for row in sorted(rows, key=lambda r: order.get(r.dimension, 2)):
                 await _finish(db, row, turn, llm, pronunciation)
     except Exception:  # background task: nothing may escape
@@ -154,7 +155,7 @@ async def _finish(
 ) -> None:
     try:
         if row.dimension == AnalysisDimension.PRONUNCIATION.value:
-            row.status, row.result, row.error = await _assess_pronunciation(db, turn, pronunciation)
+            row.status, row.result, row.error = await _assess_pronunciation(db, turn, pronunciation, await _intended(db, turn))
         else:
             if row.dimension == AnalysisDimension.FLUENCY.value:
                 words = [WordTiming.model_validate(w) for w in (turn.word_timestamps or [])]
@@ -162,7 +163,9 @@ async def _finish(
             elif not turn.user_transcript.strip():
                 row.result = {"errors": [], "discarded_low_confidence": 0}  # nothing said, nothing to ask the LLM
             else:
-                row.result = await run_in_threadpool(_generate_with_backoff, llm, turn.user_transcript)
+                row.result = await run_in_threadpool(
+                    _generate_with_backoff, llm, turn.user_transcript, await _previous_tutor_text(db, turn)
+                )
             row.status, row.error = AnalysisStatus.DONE.value, None
     except Exception as exc:
         code = exc.code if isinstance(exc, (LLMError, PronunciationError)) else type(exc).__name__
@@ -171,8 +174,30 @@ async def _finish(
     await db.commit()
 
 
+async def _previous_tutor_text(db: AsyncSession, turn: Turn) -> str:
+    """What Guako said right before this turn (context for telling which words were misrecognised)."""
+    reply = await db.scalar(
+        select(Turn.reply_text).where(Turn.session_id == turn.session_id, Turn.turn_number == turn.turn_number - 1)
+    )
+    return reply or ""
+
+
+async def _intended(db: AsyncSession, turn: Turn) -> dict | None:
+    """What the learner meant, from the grammar analysis, if it is done and found a recognition fix."""
+    result = await db.scalar(
+        select(TurnAnalysis.result).where(
+            TurnAnalysis.turn_id == turn.id,
+            TurnAnalysis.dimension == AnalysisDimension.GRAMMAR.value,
+            TurnAnalysis.status == AnalysisStatus.DONE.value,
+        )
+    )
+    if not result or not result.get("intended_text"):
+        return None
+    return {"text": result["intended_text"], "fixes": result.get("heard_fixes", [])}
+
+
 async def _assess_pronunciation(
-    db: AsyncSession, turn: Turn, provider: PronunciationProvider | None
+    db: AsyncSession, turn: Turn, provider: PronunciationProvider | None, intended: dict | None = None
 ) -> tuple[str, dict | None, str | None]:
     """(status, result, error) of the pronunciation analysis of one turn."""
     if not turn.user_audio_path or not Path(turn.user_audio_path).is_file():
@@ -182,7 +207,9 @@ async def _assess_pronunciation(
     if provider is None:
         raise PronunciationNotConfiguredError("Azure Speech is not configured")
 
-    plan = plan_assessment(turn.user_transcript, turn.word_timestamps, turn.user_audio_seconds, provider.max_audio_seconds)
+    plan = plan_assessment(
+        turn.user_transcript, turn.word_timestamps, turn.user_audio_seconds, provider.max_audio_seconds, intended
+    )
     if plan is None:
         raise PronunciationError("turn is too long and has no word timings to cut it", code="audio_too_long")
     if not await can_spend(db, plan.audio_seconds):

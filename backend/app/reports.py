@@ -129,11 +129,20 @@ class HardWord(BaseModel):
     practice: PracticeState | None = None  # filled in when the report is served, never saved with it
 
 
+class HeardFix(BaseModel):
+    """A word the recognizer wrote that was scored as another word that sounds alike ("to die" -> "today")."""
+
+    turn_number: int
+    heard: str
+    intended: str
+
+
 class PronunciationReport(BaseModel):
     # Defaults match the old placeholder, so reports saved before this dimension existed still load.
     status: PronunciationStatus = "pending"
     score: int | None = None
     hard_words: list[HardWord] = []
+    heard_fixes: list[HeardFix] = []
     turns_analyzed: int = 0
     turns_pending: int = 0
     turns_failed: int = 0
@@ -257,6 +266,7 @@ def build_pronunciation_report(rows: Sequence[tuple[int, object | None]]) -> Pro
     partial = 0
     words_seen = 0
     total = 0.0
+    fixes: list[HeardFix] = []
     worst: dict[str, tuple[float, int, list]] = {}  # lowercased word -> (lowest score, turn, its phonemes)
     times: dict[str, int] = {}
     shown: dict[str, str] = {}
@@ -269,6 +279,7 @@ def build_pronunciation_report(rows: Sequence[tuple[int, object | None]]) -> Pro
                 continue  # said nothing: not a turn to measure
             counts["done"] += 1
             partial += bool(result.get("truncated"))
+            fixes.extend(HeardFix(turn_number=turn_number, **f) for f in result.get("heard_fixes", []))
             for w in words:
                 score = float(w["accuracy"])
                 words_seen += 1
@@ -321,6 +332,7 @@ def build_pronunciation_report(rows: Sequence[tuple[int, object | None]]) -> Pro
         status="incomplete" if incomplete else "ok",
         score=round(total / words_seen),
         hard_words=[_hard_word(shown[k], *worst[k], times[k]) for k in hard],
+        heard_fixes=fixes,
         notes=notes,
         **common,
     )

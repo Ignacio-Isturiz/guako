@@ -26,6 +26,8 @@ class ScriptedGrammarLLM:
         item = self.script.pop(0)
         if isinstance(item, Exception):
             raise item
+        if isinstance(item, dict):  # a full answer: {"errors": [...], "intended_text": "..."}
+            return response_model(**item)
         return response_model(errors=item)
 
 

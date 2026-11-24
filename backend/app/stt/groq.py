@@ -13,6 +13,9 @@ from app.stt.schemas import TranscriptionResult, WordTiming
 
 logger = logging.getLogger("app.stt")
 
+# Whisper reads at most 224 tokens of prompt; the end of the context is the part that matters.
+PROMPT_MAX_CHARS = 600
+
 # Formats accepted by the Groq transcription endpoint.
 SUPPORTED_EXTENSIONS: frozenset[str] = frozenset(
     {".flac", ".mp3", ".mp4", ".mpeg", ".mpga", ".m4a", ".ogg", ".wav", ".webm"}
@@ -42,7 +45,7 @@ class GroqWhisperSTTProvider(STTProvider):
             max_retries=0,
         )
 
-    def transcribe(self, audio_path: str) -> TranscriptionResult:
+    def transcribe(self, audio_path: str, context: str | None = None) -> TranscriptionResult:
         path = Path(audio_path)
         if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
             raise STTError(
@@ -60,6 +63,9 @@ class GroqWhisperSTTProvider(STTProvider):
                     **({"language": settings.stt_language} if settings.stt_language else {}),
                     response_format="verbose_json",
                     timestamp_granularities=["word"],
+                    # Whisper's prompt is "the text before": it biases it toward words that fit there
+                    # ("today" after "did you do anything special this morning?" instead of "to die").
+                    **({"prompt": context.strip()[-PROMPT_MAX_CHARS:]} if context and context.strip() else {}),
                 )
         except OSError as exc:
             raise STTError(f"Cannot read audio file '{path.name}': {exc.strerror or type(exc).__name__}") from exc

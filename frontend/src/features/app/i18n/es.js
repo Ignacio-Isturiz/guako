@@ -235,6 +235,8 @@ export default {
         failed: 'No pudimos medir la pronunciación de esta conversación por un problema del servicio.',
         hardTitle: 'Palabras que costaron',
         hardText: 'Estas palabras sacaron el puntaje más bajo. Toca el altavoz para escuchar cómo se dicen y practícalas con calma. El sonido resaltado fue el que más costó.',
+        fixesTitle: 'Lo que entendimos distinto',
+        fixesText: 'El reconocimiento de voz escribió la palabra de la izquierda, pero por el contexto creemos que quisiste decir la de la derecha, así que evaluamos tu pronunciación de esa. Si no era eso, ignora esa palabra.',
         listen: 'Escuchar «{word}»',
         practice: {
           start: 'Ahora tú: di «{word}»',

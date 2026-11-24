@@ -25,17 +25,29 @@ class AssessmentPlan:
     reference_text: str
     audio_seconds: float  # seconds of audio that will be sent (and counted against the quota)
     truncated: bool
+    fixes: tuple[dict, ...] = ()  # recognition fixes applied to the reference: {"heard", "intended"}
 
 
 def plan_assessment(
-    transcript: str, word_timestamps: list[dict] | None, audio_seconds: float, max_seconds: float
+    transcript: str,
+    word_timestamps: list[dict] | None,
+    audio_seconds: float,
+    max_seconds: float,
+    intended: dict | None = None,
 ) -> AssessmentPlan | None:
-    """None when a long turn cannot be cut consistently (no word timings): the caller fails it."""
+    """None when a long turn cannot be cut consistently (no word timings): the caller fails it.
+
+    ``intended`` = {"text", "fixes"} from the grammar analysis: what the learner meant when the recognizer
+    wrote another word that sounds alike. It is used as the reference only for turns sent whole; a long turn
+    is cut by the recognizer's word timings, which the fixed text no longer lines up with.
+    """
     timings = word_timestamps or []
     if audio_seconds <= 0:
         # Unknown length: take the end of the last word, or assume the most that could be sent.
         audio_seconds = max((float(w["end"]) for w in timings), default=max_seconds)
     if audio_seconds <= max_seconds:
+        if intended and intended.get("text"):
+            return AssessmentPlan(intended["text"], audio_seconds, truncated=False, fixes=tuple(intended["fixes"]))
         return AssessmentPlan(" ".join(transcript.split()), audio_seconds, truncated=False)
 
     kept = [str(w["word"]).strip() for w in timings if float(w["end"]) <= max_seconds]
@@ -54,6 +66,8 @@ def stored_result(result: PronunciationResult, plan: AssessmentPlan) -> dict[str
         "words": [w.model_dump() for w in result.words],
         "assessed_seconds": round(plan.audio_seconds, 2),
         "truncated": plan.truncated,
+        "reference_text": plan.reference_text,
+        "heard_fixes": list(plan.fixes),  # words the recognizer wrote that we scored as something else
     }
 
 

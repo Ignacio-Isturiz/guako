@@ -371,6 +371,22 @@
   background: var(--yellow);
   color: var(--navy);
 }
+.pron__fixes {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 2px dashed rgba(11, 42, 107, 0.15);
+}
+.pron__fixes h3 {
+  margin: 0 0 0.2rem;
+  font: 800 1rem var(--font-display);
+  color: var(--navy);
+}
+.pron__fixes ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+  font: 600 0.95rem/1.6 var(--font-body);
+  color: var(--ink);
+}
 .pron__note {
   margin: 0.8rem 0 0;
   font: 600 0.88rem/1.45 var(--font-body);

@@ -4,6 +4,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from app.analysis.intent import validated_fixes
 from app.llm.base import LLMProvider
 from app.prompts import load_prompt
 
@@ -38,15 +39,27 @@ class TurnGrammarError(BaseModel):
 
 class TurnGrammarAnalysis(BaseModel):
     errors: list[TurnGrammarError]
+    # The sentence the learner meant (only misrecognised words changed); checked by analysis/intent.py.
+    intended_text: str = ""
 
 
-def analyze_grammar(llm: LLMProvider, transcript: str) -> dict:
-    """One LLM call (may raise LLMError). Returns the JSON stored in ``turn_analyses.result``."""
-    prompt = load_prompt("grammar", 1, text=transcript)
+def analyze_grammar(llm: LLMProvider, transcript: str, context: str = "") -> dict:
+    """One LLM call (may raise LLMError). Returns the JSON stored in ``turn_analyses.result``.
+
+    ``context`` is the tutor's previous message; it helps tell which words were misrecognised.
+    """
+    prompt = load_prompt("grammar", 2, text=transcript, context=context.strip() or "(none: this is the first answer)")
     analysis = llm.generate(prompt, TurnGrammarAnalysis)
     assert isinstance(analysis, TurnGrammarAnalysis)
     shown = [e for e in analysis.errors if e.confidence >= MIN_CONFIDENCE]
+    # All the errors count here, even the low-confidence ones that are not shown: a fix that is really a
+    # grammar correction must not become the pronunciation reference.
+    intended_text, heard_fixes = validated_fixes(
+        transcript, analysis.intended_text, [(e.original, e.correction) for e in analysis.errors]
+    )
     return {
+        "intended_text": intended_text,  # "" = no fix: the transcript is what was meant
+        "heard_fixes": heard_fixes,
         "errors": [e.model_dump(mode="json") for e in shown],
         "discarded_low_confidence": len(analysis.errors) - len(shown),
         "min_confidence": MIN_CONFIDENCE,

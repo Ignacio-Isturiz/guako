@@ -116,10 +116,19 @@ const pronunciationCard = (p) => {
        <ul class="hard">${p.hard_words.map(hardWord).join('')}</ul>
        <p class="pron__note">${t('app.report.live.pron.ipaNote')}</p>`
     : `<p class="card__sub">${t('app.report.live.pron.noHard')}</p>`
+  // Palabras que el reconocimiento de voz escribió distinto y se evaluaron como la palabra que se quiso decir
+  const fixes = p.heard_fixes?.length
+    ? `<div class="pron__fixes">
+         <h3>${t('app.report.live.pron.fixesTitle')}</h3>
+         <p class="card__sub">${t('app.report.live.pron.fixesText')}</p>
+         <ul>${p.heard_fixes.map((f) => `<li>«${esc(f.heard)}» → <strong>«${esc(f.intended)}»</strong></li>`).join('')}</ul>
+       </div>`
+    : ''
   return `
     <section class="card">
       <h2 class="card__title">${t('app.report.live.pron.hardTitle')}</h2>
       ${words}
+      ${fixes}
       ${notes.map(note).join('')}
     </section>`
 }

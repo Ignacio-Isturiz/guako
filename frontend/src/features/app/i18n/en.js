@@ -235,6 +235,8 @@ export default {
         failed: "We couldn't measure the pronunciation of this conversation because of a service problem.",
         hardTitle: 'Words that were hard',
         hardText: 'These words got the lowest scores. Tap the speaker to hear how they sound and practice them slowly. The highlighted sound was the hardest one.',
+        fixesTitle: 'What we understood differently',
+        fixesText: 'Speech recognition wrote the word on the left, but from the context we think you meant the one on the right, so we assessed your pronunciation of that one. If that was not it, ignore that word.',
         listen: 'Listen to "{word}"',
         practice: {
           start: 'Your turn: say "{word}"',
