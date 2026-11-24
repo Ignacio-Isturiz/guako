@@ -33,12 +33,19 @@ class FakeLLM:
         self.prompts: list[str] = []
         self.systems: list[str | None] = []
 
+    @property
+    def tutor_prompts(self) -> list[str]:
+        """The prompts of the conversation itself, without the background grammar analyses."""
+        return [p for p in self.prompts if "Learner text:" not in p]
+
     def generate(self, prompt: str, response_model: type[BaseModel], *, system: str | None = None) -> BaseModel:
         self.calls.append("llm")
         self.prompts.append(prompt)
         self.systems.append(system)
         if self.error:
             raise self.error
+        if "errors" in response_model.model_fields:  # the background grammar analysis: no errors found
+            return response_model(errors=[])
         return response_model(reply=self.reply)
 
 

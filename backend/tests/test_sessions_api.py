@@ -84,7 +84,8 @@ def test_turn_returns_201_and_stores_the_turn(client: TestClient, providers: Pro
     assert body["user_transcript"] == "I like to travel by train"
     assert body["reply_text"] == "That sounds fun! Where do you go?"
     assert body["reply_audio_url"] == f"/api/sessions/{session_id}/turns/1/reply-audio"
-    assert providers.calls == ["stt", "llm", "tts"]
+    # The pipeline order, then the grammar analysis, which runs after the reply is built.
+    assert providers.calls == ["stt", "llm", "tts", "llm"]
 
     rows = _query(db_path, "select turn_number, user_transcript, user_audio_path, word_timestamps from turns")
     assert len(rows) == 1
@@ -104,7 +105,7 @@ def test_second_turn_continues_the_conversation(client: TestClient, providers: P
     second = client.post(f"/api/sessions/{session_id}/turns", files=AUDIO)
 
     assert second.json()["turn_number"] == 2
-    assert "That sounds fun! Where do you go?" in providers.llm.prompts[1]
+    assert "That sounds fun! Where do you go?" in providers.llm.tutor_prompts[1]
 
 
 def test_turn_of_someone_elses_session_is_404(client: TestClient, providers: Providers, db_path: Path) -> None:
@@ -527,7 +528,7 @@ def test_first_learner_turn_after_the_opening_is_turn_1_and_sees_the_opening(
     turn = client.post(f"/api/sessions/{session_id}/turns", files=AUDIO)
 
     assert turn.status_code == 201 and turn.json()["turn_number"] == 1
-    history_prompt = providers.llm.prompts[-1]
+    history_prompt = providers.llm.tutor_prompts[-1]
     assert "Guako: That sounds fun! Where do you go?" in history_prompt  # the opening is in the history
     assert "Learner: " not in history_prompt  # ...and the learner has no line before it
 

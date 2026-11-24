@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.config import settings
-from app.enums import FeedbackLanguage
+from app.enums import AnalysisStatus, FeedbackLanguage
 
 
 class Base(DeclarativeBase):
@@ -112,6 +112,27 @@ class Turn(Base):
         JSON().with_variant(JSONB(), "postgresql"), default=None
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TurnAnalysis(Base):
+    """Background analysis of one turn: one row per (turn, dimension), written after the turn is saved.
+
+    ``result`` holds the finished analysis (``status == "done"``); ``error`` is a short code when the
+    analysis was given up (``status == "failed"``). A turn is never analysed twice: only ``pending``
+    rows are picked up.
+    """
+
+    __tablename__ = "turn_analyses"
+    __table_args__ = (UniqueConstraint("turn_id", "dimension"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    turn_id: Mapped[int] = mapped_column(ForeignKey("turns.id", ondelete="CASCADE"), index=True)
+    dimension: Mapped[str] = mapped_column(String(10))  # AnalysisDimension value
+    status: Mapped[str] = mapped_column(String(10), default=AnalysisStatus.PENDING.value)  # AnalysisStatus value
+    result: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB(), "postgresql"), default=None)
+    error: Mapped[str | None] = mapped_column(String(200), default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 engine = create_async_engine(settings.database_url)

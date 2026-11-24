@@ -50,3 +50,13 @@ def client(db_path: Path) -> Iterator[TestClient]:
         yield test_client
     app.dependency_overrides.clear()
     asyncio.run(engine.dispose())
+
+
+@pytest.fixture(autouse=True)
+def backoff_waits(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """The retry waits of the background analysis are recorded instead of slept."""
+    from app.analysis import runner
+
+    waits: list[float] = []
+    monkeypatch.setattr(runner, "_sleep", waits.append)
+    return waits
