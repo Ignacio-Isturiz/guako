@@ -1,0 +1,86 @@
+id: vocabulary.false_friends_common
+error_type: vocabulary
+level: B1
+title: False friends between Spanish and English
+rule: Some English words look like Spanish words but mean something different: actually means "in fact" (not "currently"), assist means "help" (not "attend"), attend means "go to", library is a place for books (not a bookshop), embarrassed is "avergonzado" (not "embarazada"), sensible means "reasonable" (not "sensitive"), realize is "darse cuenta", parents are "padres" (not "parientes").
+rule_es: Falsos amigos: actually = "en realidad" (no "actualmente"), attend = "asistir", library = "biblioteca", embarrassed = "avergonzado", sensible = "sensato", parents = "padres".
+examples:
+- Actually I am living in Bogotá. -> Currently I am living in Bogotá.
+- I assisted the meeting yesterday. -> I attended the meeting yesterday.
+- My sister is embarrassed, she will have a baby in May. -> My sister is pregnant, she will have a baby in May.
+spanish_note: These are among the most common vocabulary errors for Spanish speakers.
+===
+id: vocabulary.borrowed_collocations
+error_type: vocabulary
+level: B1
+title: Fixed collocations (do/make/take/have)
+rule: English verbs combine with nouns in fixed ways that cannot be translated word by word: take a photo, take a shower, take a break, have a shower, have breakfast, have a good time, make friends, make a decision, do homework, do the shopping. Learn these as chunks.
+rule_es: En inglés cada verbo se combina con ciertos sustantivos de forma fija: take a photo, have breakfast, make friends, make a decision, do homework.
+examples:
+- I did a photo of the sunset. -> I took a photo of the sunset.
+- We made a party last night. -> We had a party last night.
+- She did a decision. -> She made a decision.
+spanish_note: Spanish "hacer" covers many of these, so learners use do or make everywhere.
+===
+id: vocabulary.say_tell_speak_talk
+error_type: vocabulary
+level: A2
+title: Say, tell, speak and talk
+rule: "Say" is followed by the words said (say hello, say that...). "Tell" needs a person (tell me, tell him a story). "Speak" is for languages and one-way or formal talk (speak English). "Talk" is for conversation and needs "to/with" (talk to him).
+rule_es: "Say" va con lo que se dice; "tell" necesita una persona; "speak" con idiomas; "talk" para conversar y lleva to/with.
+examples:
+- She said me the truth. -> She told me the truth.
+- I tell English a little. -> I speak English a little.
+- We talked him yesterday. -> We talked to him yesterday.
+spanish_note: Spanish "decir" and "hablar" do not split like say/tell and speak/talk.
+===
+id: vocabulary.borrow_lend_bring_take
+error_type: vocabulary
+level: A2
+title: Bring vs. take and borrow vs. lend
+rule: "Bring" moves something towards the speaker or listener, "take" moves it away. "Borrow" is to receive something temporarily and "lend" is to give something temporarily: "Can I borrow your pen?" and "Can you lend me your pen?".
+rule_es: "Bring" = traer (hacia mí o hacia ti); "take" = llevar (lejos). "Borrow" = pedir prestado; "lend" = prestar.
+examples:
+- Can you borrow me your pen? -> Can you lend me your pen?
+- Please take me a glass of water. -> Please bring me a glass of water.
+- I will borrow you my car. -> I will lend you my car.
+spanish_note: Spanish "prestar" and "traer/llevar" depend on direction in the same way, but the two English verbs are swapped often.
+===
+id: vocabulary.much_many_few_little
+error_type: vocabulary
+level: A2
+title: Much, many, little, few
+rule: Use "many" and "few" with countable nouns (many people, few books) and "much" and "little" with uncountable nouns (much time, little money). In affirmative sentences, "a lot of" is more natural than "much".
+rule_es: "Many" y "few" con contables; "much" y "little" con incontables. En afirmativas, "a lot of" suena más natural que "much".
+examples:
+- I don't have many time. -> I don't have much time.
+- There are much people here. -> There are many people here.
+- She has a lot few friends. -> She has few friends.
+spanish_note: Spanish "mucho" works for both, so learners choose a single English word.
+
+===
+id: vocabulary.adjectives_ed_ing
+error_type: vocabulary
+level: A2
+title: Adjectives ending in -ed and -ing (bored vs. boring)
+rule: Adjectives from feelings come in two forms. The -ed form says how a person feels ("I am bored", "She is interested"). The -ing form describes what causes the feeling ("The class is boring", "The film is interesting"). A person is "boring" only when other people find that person boring.
+rule_es: Los adjetivos de emociones tienen dos formas. La forma -ed dice cómo se siente alguien ("I am bored"); la forma -ing describe lo que causa la emoción ("The class is boring").
+examples:
+- I am very boring in this class. -> I am very bored in this class.
+- The trip was tired. -> The trip was tiring.
+- She is interesting in music. -> She is interested in music.
+- We were exciting about the party. -> We were excited about the party.
+spanish_note: Spanish "aburrido" covers both "bored" and "boring" (estoy aburrido / es aburrido), so learners pick one form for both.
+===
+id: vocabulary.age_with_be
+error_type: vocabulary
+level: A1
+title: Age uses the verb be, not have
+rule: To say how old someone is, use "be" plus the number: "I am twenty", "She is twenty years old". Do not use "have": "have twenty years" is a word-for-word copy of Spanish. To ask, say "How old are you?".
+rule_es: Para decir la edad se usa "be" más el número: "I am twenty" o "She is twenty years old". No se usa "have". Se pregunta con "How old are you?".
+examples:
+- I have 25 years. -> I am 25 years old.
+- She has thirty years old. -> She is thirty years old.
+- How many years do you have? -> How old are you?
+- My brother has fifteen. -> My brother is fifteen.
+spanish_note: Spanish says "tengo veinte años" with the verb tener, so "have" is copied into English.

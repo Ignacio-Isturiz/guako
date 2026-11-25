@@ -1,0 +1,59 @@
+id: word_order.svo_basic
+error_type: word_order
+level: A1
+title: Basic order: subject, verb, object
+rule: In a statement the order is subject + verb + object. Do not put the verb before the subject, and do not separate the verb from its direct object with other words: "I like football very much", not "I like very much football".
+rule_es: En una afirmación el orden es sujeto + verbo + objeto. No se separa el verbo de su objeto directo con otras palabras: "I like football very much".
+examples:
+- I like very much football. -> I like football very much.
+- Eats my brother pizza. -> My brother eats pizza.
+- She speaks very well English. -> She speaks English very well.
+spanish_note: Spanish allows "me gusta mucho el fútbol" and a free order of subject and verb, which cannot be copied into English.
+===
+id: word_order.adjective_before_noun
+error_type: word_order
+level: A1
+title: Adjectives come before the noun
+rule: In English adjectives go before the noun and do not change for number: "a red car", "two red cars". Several adjectives follow a usual order: opinion, size, age, colour, origin, material (a beautiful small old red Italian car).
+rule_es: En inglés el adjetivo va antes del sustantivo y no cambia en plural: "a red car", "two red cars".
+examples:
+- I have a car red. -> I have a red car.
+- She wore a dress beautiful. -> She wore a beautiful dress.
+- We saw two houses biggest. -> We saw two big houses.
+spanish_note: Spanish places most adjectives after the noun ("un carro rojo").
+===
+id: word_order.question_inversion
+error_type: word_order
+level: A2
+title: Question word order with auxiliaries
+rule: In direct questions put the auxiliary before the subject: question word + auxiliary + subject + main verb. Use do/does/did when there is no other auxiliary: "Where do you live?", "What did she say?". No inversion is needed when the question word is the subject: "Who called you?".
+rule_es: En preguntas directas el auxiliar va antes del sujeto: palabra interrogativa + auxiliar + sujeto + verbo. Si no hay otro auxiliar se usa do/does/did.
+examples:
+- Where you live? -> Where do you live?
+- What she said? -> What did she say?
+- How much costs this? -> How much does this cost?
+spanish_note: Spanish questions only change intonation or put the subject last, so English auxiliaries get skipped.
+===
+id: word_order.indirect_questions
+error_type: word_order
+level: B1
+title: Indirect questions keep statement order
+rule: In an indirect question (after "Do you know...", "Can you tell me...", "I wonder...") use statement order without do/does/did and without inversion. Say "Do you know where he lives?", not "Do you know where does he live?".
+rule_es: En una pregunta indirecta se usa el orden de una afirmación, sin do/does/did y sin inversión: "Do you know where he lives?".
+examples:
+- Can you tell me where is the station? -> Can you tell me where the station is?
+- I don't know what does she want. -> I don't know what she wants.
+- Do you know how much does it cost? -> Do you know how much it costs?
+spanish_note: Spanish "¿sabes dónde está la estación?" keeps verb-subject order, so inversion carries over.
+===
+id: word_order.adverb_position
+error_type: word_order
+level: B1
+title: Position of adverbs of frequency
+rule: Adverbs of frequency (always, usually, often, sometimes, never) go before the main verb but after the verb "be" and after the first auxiliary: "I always drink coffee", "She is never late", "I have never been there". Time expressions (today, yesterday) normally go at the beginning or end of the sentence.
+rule_es: Los adverbios de frecuencia van antes del verbo principal, pero después de "be" y del primer auxiliar: "I always drink coffee", "She is never late".
+examples:
+- I drink always coffee in the morning. -> I always drink coffee in the morning.
+- She is late never. -> She is never late.
+- I have been never to Spain. -> I have never been to Spain.
+spanish_note: Spanish allows "tomo siempre café" with the adverb after the verb.

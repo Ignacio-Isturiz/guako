@@ -36,6 +36,7 @@ from pydantic import BaseModel
 
 from app.analysis.fluency import LONG_PAUSE_SECONDS, analyze_fluency, fluency_score
 from app.enums import AnalysisStatus
+from app.rag.corpus import rules_by_id
 from app.stt import WordTiming
 
 __all__ = ["LONG_PAUSE_SECONDS"]
@@ -44,12 +45,26 @@ __all__ = ["LONG_PAUSE_SECONDS"]
 Status = Literal["ok", "incomplete", "empty", "pending"]
 
 
+class ReportRule(BaseModel):
+    """The rule of the corpus (app/rag) that backs a correction; written by us, so it can be cited."""
+
+    id: str
+    title: str
+    level: str
+    rule: str  # English
+    rule_es: str  # Spanish
+
+
 class ReportGrammarError(BaseModel):
     turn_number: int
     original: str
     correction: str
     error_type: str
     explanation: str
+    rule: ReportRule | None = None  # None: no rule was close enough (or the RAG was off), never a guess
+    # Earlier sessions of this learner where the same mistake appeared (memory, app/rag/memory.py). 0 = first time
+    # we know of; it never says a mistake "went away".
+    seen_before: int = 0
 
 
 class GrammarReport(BaseModel):
@@ -206,6 +221,14 @@ def _turn_status(row: object | None) -> str:
     return getattr(row, "status", AnalysisStatus.PENDING.value)
 
 
+def _report_rule(rule_id: str | None) -> ReportRule | None:
+    """The corpus rule behind an error; None when there is none or the rule was removed from the corpus."""
+    rule = rules_by_id().get(rule_id) if rule_id else None
+    if rule is None:
+        return None
+    return ReportRule(id=rule.id, title=rule.title, level=rule.level, rule=rule.rule, rule_es=rule.rule_es)
+
+
 def build_grammar_report(turns: Sequence[tuple[int, str]], rows: Mapping[int, object | None]) -> GrammarReport:
     """``turns`` = (turn_number, transcript); ``rows`` = the grammar analysis row of each turn_number."""
     errors: list[ReportGrammarError] = []
@@ -217,7 +240,11 @@ def build_grammar_report(turns: Sequence[tuple[int, str]], rows: Mapping[int, ob
             analyzed += 1
             analyzed_words += count_words(transcript)
             errors.extend(
-                ReportGrammarError(turn_number=number, **{k: e[k] for k in ("original", "correction", "error_type", "explanation")})
+                ReportGrammarError(
+                    turn_number=number,
+                    rule=_report_rule(e.get("rule_id")),
+                    **{k: e[k] for k in ("original", "correction", "error_type", "explanation")},
+                )
                 for e in (row.result or {}).get("errors", [])  # type: ignore[union-attr]
             )
         elif status == AnalysisStatus.FAILED.value:

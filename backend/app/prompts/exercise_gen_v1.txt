@@ -1,0 +1,29 @@
+You write practice exercises for a Spanish-speaking learner of English (level A2-B1). The exercises practise ONE grammar rule.
+
+RULE: {rule_title}
+{rule}
+
+Typical mistakes of this rule (do NOT reuse these sentences, write new ones with different words and topics):
+{examples}
+
+Sentences that already exist for this rule (yours must be clearly different in words and situation):
+{avoid}
+
+Write exactly one exercise of each kind. Every sentence must be natural, everyday English of 5 to 12 words, with a different situation in each exercise.
+
+1) "choice": three full sentences about the same thing, exactly ONE of them correct.
+- "right": the correct sentence.
+- "wrong": exactly two sentences that are WRONG because of this rule (each one must contain a real grammar mistake of this rule, not a style preference).
+2) "fill": a sentence with one gap written as ___ (three underscores) that has exactly ONE correct word or short phrase.
+- "sentence": the sentence with ___ in place of the missing word(s).
+- "answer": the one word or phrase that goes in the gap. No other word may also be correct there.
+- "hint": a very short clue that makes the answer the ONLY one that fits, for example the base form of a verb ("go"), the pronoun to change ("I"), or the two words to choose from ("do / does"). Never put the answer itself in the hint unless it is one of two options.
+- "wrong_answer": a word that is clearly WRONG in that gap because of this rule.
+3) "fix": a sentence with exactly one mistake of this rule, and its corrected version.
+- "wrong": the sentence with the mistake.
+- "right": the same sentence corrected. Change ONLY what the rule requires.
+
+Strict requirements:
+- Every "right", "answer" and "right" sentence must be 100% correct English: if you have any doubt, write a different sentence.
+- Every mistake must be one that a Spanish speaker really makes for this rule.
+- Do not use quotation marks inside the sentences. Do not add explanations.

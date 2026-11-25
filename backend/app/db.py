@@ -17,6 +17,7 @@ from sqlalchemy import (
     false,
     func,
 )
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -238,3 +239,81 @@ async def get_user_db(
     session: AsyncSession = Depends(get_async_session),
 ) -> AsyncGenerator[SQLAlchemyUserDatabase[User, int], None]:
     yield SQLAlchemyUserDatabase(session, User)
+
+
+class GrammarRuleEmbedding(Base):
+    """Embedding of one rule of the grammar corpus (the text itself lives in app/rag/rules, not here).
+
+    ``content_hash`` is the hash of the embedded text: when a rule changes, its hash changes and the indexer
+    re-embeds only that rule. The vector column only exists in PostgreSQL (pgvector); in SQLite it is JSON so the
+    tables can still be created, but nothing searches there: the RAG is switched off outside PostgreSQL.
+    """
+
+    __tablename__ = "grammar_rules"
+
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    error_type: Mapped[str] = mapped_column(String(32), index=True)
+    level: Mapped[str] = mapped_column(String(2))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    embedding: Mapped[list[float]] = mapped_column(
+        Vector(settings.embedding_dimensions).with_variant(JSON(), "sqlite")
+    )
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class ErrorEvent(Base):
+    """One grammar mistake a learner made in one turn: the memory of the RAG (app/rag/memory.py).
+
+    It is what lets the report say "this already happened to you in 2 earlier sessions". ``rule_id`` is the rule of
+    the corpus that explains it (NULL when none was close enough): counting by rule is plain SQL; the vector is
+    for the mistakes that have no rule and for finding similar ones later (the practice built from what was hard).
+    It belongs to the learner: it goes away with the account, the session or the turn.
+    """
+
+    __tablename__ = "error_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), index=True)
+    turn_id: Mapped[int] = mapped_column(ForeignKey("turns.id", ondelete="CASCADE"), index=True)
+    error_type: Mapped[str] = mapped_column(String(32))
+    rule_id: Mapped[str | None] = mapped_column(String(80), default=None)
+    original: Mapped[str] = mapped_column(Text)
+    correction: Mapped[str] = mapped_column(Text)
+    embedding: Mapped[list[float]] = mapped_column(
+        Vector(settings.embedding_dimensions).with_variant(JSON(), "sqlite")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ExerciseSeen(Base):
+    """An exercise a learner already answered, so the next rounds give ones they have not seen (app/exercises).
+
+    Only the exercise id and when: never the answer. It goes away with the account.
+    """
+
+    __tablename__ = "exercise_seen"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    exercise_id: Mapped[str] = mapped_column(String(120), primary_key=True)
+    times: Mapped[int] = mapped_column(default=1)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class GeneratedExercise(Base):
+    """An exercise written by the LLM and accepted by the grammar analyser (app/exercises/generated.py).
+
+    ``kind`` is choice, fill or fix; a fix also gives a speaking exercise when it is served. Rejected exercises are
+    never stored: this table only holds ones that passed the checks.
+    """
+
+    __tablename__ = "generated_exercises"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    rule_id: Mapped[str] = mapped_column(String(80), index=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    prompt: Mapped[str] = mapped_column(Text)  # choice: the question · fill: the sentence with ___ · fix: the wrong one
+    options: Mapped[list] = mapped_column(JSON, default=list)  # choice only, the right one FIRST
+    answers: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+

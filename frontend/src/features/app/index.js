@@ -23,6 +23,7 @@ import revision from '@/features/app/views/revision/revision.js'
 import progreso from '@/features/app/views/progreso/progreso.js'
 import conversaciones from '@/features/app/views/conversaciones/conversaciones.js'
 import practica from '@/features/app/views/practica/practica.js'
+import ejercicios from '@/features/app/views/ejercicios/ejercicios.js'
 import ajustes from '@/features/app/views/ajustes/ajustes.js'
 
 // Los textos de la app viven bajo la clave `app` (t('app.home.heroTitle'))
@@ -31,7 +32,7 @@ addMessages({ es, en }, 'app')
 export { isAppPath } from './routes.js'
 
 // Cada pantalla exporta { head, render, init } (ver views/)
-const VIEWS = { inicio, preparar, conversacion, informe, revision, progreso, conversaciones, practica, ajustes }
+const VIEWS = { inicio, preparar, conversacion, informe, revision, progreso, conversaciones, practica, ejercicios, ajustes }
 
 let container = null
 let shellOn = false // ¿el marco (menú + barra superior) está pintado?

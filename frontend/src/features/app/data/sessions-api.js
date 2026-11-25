@@ -26,7 +26,7 @@ export function errorText(err) {
   return text === key ? t('app.errors.generic') : text
 }
 
-async function request(path, { method = 'GET', json, body, keepalive = false } = {}) {
+export async function request(path, { method = 'GET', json, body, keepalive = false } = {}) {
   const headers = {}
   if (json) {
     headers['Content-Type'] = 'application/json'

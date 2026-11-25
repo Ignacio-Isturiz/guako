@@ -1,0 +1,47 @@
+id: plural_noun.regular_plural
+error_type: plural_noun
+level: A1
+title: Regular plurals
+rule: Most nouns add -s (cat-cats). Nouns ending in -s, -x, -z, -ch, -sh add -es (bus-buses, watch-watches). Nouns ending in consonant + y change to -ies (city-cities), but vowel + y just add -s (day-days). After a number above one, the noun must be plural.
+rule_es: Casi todos los sustantivos añaden -s. Los que terminan en -s, -x, -z, -ch, -sh añaden -es; consonante + y pasa a -ies. Después de un número mayor que uno el sustantivo va en plural.
+examples:
+- I have two brother. -> I have two brothers.
+- She bought three watch. -> She bought three watches.
+- There are many city in Colombia. -> There are many cities in Colombia.
+spanish_note: Spanish marks plural on the article and adjective too, so a bare noun after a number may sound fine to the learner.
+===
+id: plural_noun.irregular_plural
+error_type: plural_noun
+level: A2
+title: Irregular plurals
+rule: Some common nouns have irregular plurals that must be memorised: man-men, woman-women, child-children, person-people, foot-feet, tooth-teeth, mouse-mice. Do not add -s to the irregular form (childrens, peoples, mans are wrong).
+rule_es: Algunos plurales son irregulares: man-men, woman-women, child-children, person-people, foot-feet, tooth-teeth. No se les añade -s extra.
+examples:
+- Three childs were playing. -> Three children were playing.
+- The peoples are friendly. -> The people are friendly.
+- Many womans work here. -> Many women work here.
+spanish_note: Learners apply the regular -s rule to every noun, which is a sign of learning the pattern.
+===
+id: plural_noun.uncountable_nouns
+error_type: plural_noun
+level: B1
+title: Uncountable nouns have no plural
+rule: Uncountable nouns have no plural form and cannot take "a/an" or numbers: advice, information, news, furniture, luggage, homework, money, traffic, weather, equipment, knowledge. Use "some", "a piece of" or "a lot of" to quantify them.
+rule_es: Los incontables no tienen plural ni llevan a/an: advice, information, news, furniture, luggage, homework, money. Se cuantifican con some, a piece of, a lot of.
+examples:
+- She gave me many advices. -> She gave me a lot of advice.
+- I need an information. -> I need some information.
+- We bought new furnitures. -> We bought new furniture.
+spanish_note: Spanish "consejos", "informaciones" and "muebles" are countable, so the plural feels natural.
+===
+id: plural_noun.determiner_agreement
+error_type: plural_noun
+level: A2
+title: This/that vs. these/those and one/each with singular
+rule: "This" and "that" go with singular or uncountable nouns; "these" and "those" go with plural nouns. "One", "each", "every" and "another" are followed by a singular noun. "Many", "few" and "both" are followed by a plural noun.
+rule_es: "This/that" con singular o incontable; "these/those" con plural. "One, each, every, another" llevan sustantivo singular; "many, few, both" llevan plural.
+examples:
+- This shoes are comfortable. -> These shoes are comfortable.
+- Each students has a book. -> Each student has a book.
+- I have been there many time. -> I have been there many times.
+spanish_note: In Spanish the noun and its determiner agree in number, so mismatches show the learner is mixing the two systems.

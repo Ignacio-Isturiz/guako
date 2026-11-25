@@ -38,8 +38,11 @@ from app.enums import AnalysisStatus as Status
 from app.llm.base import LLMProvider
 from app.llm.errors import LLMError
 from app.providers.context import set_call_context
+from app import rag
 from app.providers.errors import LLMExhausted
 from app.pronunciation import PronunciationError, PronunciationProvider
+from app.rag.memory import events_from, record_events
+from app.rag.retrieve import attach_rules
 from app.stt import WordTiming
 
 logger = logging.getLogger("app.analysis")
@@ -53,11 +56,26 @@ def _merge(current: dict | None, update: dict) -> dict:
     return {**(current or {}), **update}
 
 
+async def _with_rules(maker: async_sessionmaker[AsyncSession], result: dict) -> tuple[dict, list[dict]]:
+    """RAG: each error gets the rule of the corpus that explains it, and the learner's memory gets its events.
+
+    Returns the result and the memory events to save with it. Off (no events) without an embedding key or
+    outside PostgreSQL.
+    """
+    embedder = rag.get_embedder()
+    if embedder is None or maker.kw["bind"].dialect.name != "postgresql":
+        return result, []
+    vectors: list[list[float]] = []
+    result = await attach_rules(maker, embedder, result, vectors_out=vectors)
+    return result, events_from(result, vectors)
+
+
 class AnalysisState(TypedDict, total=False):
     turn_id: int
     ctx: dict[str, Any]  # plain data of the turn (never ORM objects: branches run concurrently)
     pending: list[str]  # dimensions still to do
     intended: dict | None  # what the learner meant, from the grammar analysis
+    events: list[dict]  # the grammar errors as memory events (RAG 2), saved with the grammar result
     outcomes: Annotated[dict[str, dict], _merge]  # dimension -> {"status", "result", "error"}
 
 
@@ -116,6 +134,7 @@ def build_analysis_graph(
             user = await db.get(User, session.user_id) if session else None
             ctx = {
                 "session_id": turn.session_id,
+                "user_id": session.user_id if session else None,
                 "turn_number": turn.turn_number,
                 "transcript": turn.user_transcript or "",
                 "words": turn.word_timestamps or [],
@@ -145,9 +164,13 @@ def build_analysis_graph(
             if not ctx["transcript"].strip():  # nothing said, nothing to ask the LLM
                 return {Dim.GRAMMAR.value: (Status.DONE.value, {"errors": [], "discarded_low_confidence": 0}, None)}
             result = await run_in_threadpool(runner._generate_with_backoff, llm, ctx["transcript"], ctx["tutor_prev"])
+            result, events = await _with_rules(maker, result)
+            memory["events"] = events
             return {Dim.GRAMMAR.value: (Status.DONE.value, result, None)}
 
-        return {"outcomes": await _guard(state["turn_id"], (Dim.GRAMMAR.value,), work)}
+        memory: dict = {}  # filled by work(); the events travel in the state next to the outcome
+        outcomes = await _guard(state["turn_id"], (Dim.GRAMMAR.value,), work)
+        return {"outcomes": outcomes, "events": memory.get("events", [])}
 
     async def merge(state: AnalysisState) -> dict:
         """Fan-in of phase 1: what the learner meant, for the nodes of phase 2."""
@@ -219,6 +242,13 @@ def build_analysis_graph(
                 if outcome is None or outcome["status"] == DEFERRED:
                     continue
                 row.status, row.result, row.error = outcome["status"], outcome["result"], outcome["error"]
+                if row.dimension == Dim.GRAMMAR.value and outcome["status"] == Status.DONE.value and state.get("events") is not None:
+                    ctx = state["ctx"]
+                    if ctx.get("user_id") is not None and (state["events"] or (outcome["result"] or {}).get("errors") == []):
+                        await record_events(
+                            db, user_id=ctx["user_id"], session_id=ctx["session_id"], turn_id=state["turn_id"],
+                            events=state["events"],
+                        )
             await db.commit()
         return {}
 

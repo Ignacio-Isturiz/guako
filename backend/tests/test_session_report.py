@@ -127,6 +127,8 @@ def test_full_report(client: TestClient, llm: ScriptedGrammarLLM, db_path: Path)
                 "correction": "went",
                 "error_type": "verb_tense",
                 "explanation": "Use the past.",
+                "rule": None,  # the RAG is off in tests (SQLite)
+                "seen_before": 0,  # the memory is off in tests (SQLite)
             }
         ],
         "turns_analyzed": 2,

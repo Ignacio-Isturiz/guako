@@ -1,0 +1,59 @@
+id: subject_verb_agreement.third_person_s
+error_type: subject_verb_agreement
+level: A1
+title: Third person singular -s in the present simple
+rule: In the present simple, add -s (or -es) to the verb when the subject is he, she, it or a singular noun. Other subjects (I, you, we, they, plural nouns) use the base verb. Have becomes has, go becomes goes, do becomes does.
+rule_es: En presente simple, el verbo lleva -s (o -es) con he, she, it o un sustantivo singular. Have pasa a has, go a goes, do a does.
+examples:
+- She work in a bank. -> She works in a bank.
+- My brother have two cats. -> My brother has two cats.
+- He don't like coffee. -> He doesn't like coffee.
+spanish_note: Spanish marks the person on every verb ending, so the single -s of English is easy to forget when speaking fast.
+===
+id: subject_verb_agreement.do_does
+error_type: subject_verb_agreement
+level: A1
+title: Do vs. does in questions and negatives
+rule: Use "does/doesn't" with he, she, it and singular nouns, and "do/don't" with I, you, we, they and plural nouns. After does or doesn't the main verb has no -s.
+rule_es: "Does/doesn't" con he, she, it y singulares; "do/don't" con los demás. Después de does el verbo no lleva -s.
+examples:
+- Does she works here? -> Does she work here?
+- He don't know the answer. -> He doesn't know the answer.
+- Do your sister live nearby? -> Does your sister live nearby?
+spanish_note: Putting the -s on both "does" and the main verb is a frequent double marking.
+===
+id: subject_verb_agreement.there_is_are
+error_type: subject_verb_agreement
+level: A2
+title: There is / there are
+rule: Use "there is" before a singular or uncountable noun and "there are" before a plural noun. With a list, the verb usually agrees with the first noun. In the past use "there was" and "there were". The contraction "there's" is common before a singular noun only.
+rule_es: "There is" con singular o incontable; "there are" con plural. En pasado, "there was / there were".
+examples:
+- There is many people in the street. -> There are many people in the street.
+- There are a lot of traffic. -> There is a lot of traffic.
+- There was three cars outside. -> There were three cars outside.
+spanish_note: Spanish "hay" never changes, so learners tend to keep one form.
+===
+id: subject_verb_agreement.be_present
+error_type: subject_verb_agreement
+level: A1
+title: Am, is, are with the right subject
+rule: Use "am" with I, "is" with he, she, it and singular nouns, and "are" with you, we, they and plural nouns. English needs the verb "be" for descriptions and states where Spanish may use other structures.
+rule_es: "Am" con I, "is" con he/she/it y singulares, "are" con you/we/they y plurales.
+examples:
+- She are my sister. -> She is my sister.
+- They is late. -> They are late.
+- I is a student. -> I am a student.
+spanish_note: When speaking quickly, "is" and "are" sound alike in reduced form, so slips are common even at higher levels.
+===
+id: subject_verb_agreement.indefinite_subjects
+error_type: subject_verb_agreement
+level: B1
+title: Singular indefinite pronouns and uncountable subjects
+rule: Everyone, everybody, someone, nobody, each, every + noun, and uncountable subjects (news, information, advice, money) take a singular verb. Also "the number of" is singular and "a number of" is plural.
+rule_es: Everyone, everybody, someone, nobody, each y los incontables (news, information, advice) llevan verbo en singular.
+examples:
+- Everybody are ready. -> Everybody is ready.
+- The news are good. -> The news is good.
+- Each of the students have a book. -> Each of the students has a book.
+spanish_note: "Todos están" is plural in Spanish, which pushes learners to use a plural verb with "everybody".

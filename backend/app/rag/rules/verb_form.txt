@@ -1,0 +1,71 @@
+id: verb_form.modal_base_form
+error_type: verb_form
+level: A2
+title: Modal verbs are followed by the base form
+rule: After can, could, will, would, should, must, may and might, use the base form of the verb with no -s, no -ing and no "to". Say "She can swim", not "She can swims" or "She can to swim".
+rule_es: Después de can, could, will, would, should, must, may, might el verbo va en forma base: sin -s, sin -ing y sin "to".
+examples:
+- She can swims very well. -> She can swim very well.
+- You should to study more. -> You should study more.
+- He must goes now. -> He must go now.
+spanish_note: Spanish verbs after "poder" and "deber" are infinitives, so adding "to" feels natural.
+===
+id: verb_form.infinitive_vs_gerund
+error_type: verb_form
+level: B1
+title: Verb + to-infinitive or verb + -ing
+rule: Some verbs take the to-infinitive (want, need, decide, hope, plan, learn, afford, refuse), others take the -ing form (enjoy, avoid, finish, keep, mind, suggest, consider). A few take both (like, love, start, begin, prefer) and some change meaning (stop, remember, try). Learn each verb with its pattern.
+rule_es: Algunos verbos llevan "to + infinitivo" (want, need, decide, hope), otros llevan -ing (enjoy, avoid, finish, keep, suggest). Hay que aprender cada verbo con su patrón.
+examples:
+- I enjoy to cook. -> I enjoy cooking.
+- She wants going home. -> She wants to go home.
+- We finished to eat at nine. -> We finished eating at nine.
+spanish_note: Spanish uses an infinitive after almost every verb, so the English -ing pattern needs conscious learning.
+===
+id: verb_form.preposition_gerund
+error_type: verb_form
+level: B1
+title: -ing after a preposition
+rule: After a preposition (in, on, at, of, about, for, without, before, after, by), use a verb in the -ing form, never the infinitive. This includes "look forward to", where "to" is a preposition.
+rule_es: Después de una preposición el verbo va en -ing, nunca en infinitivo. Incluye "look forward to", donde "to" es preposición.
+examples:
+- I am interested in learn English. -> I am interested in learning English.
+- She left without say goodbye. -> She left without saying goodbye.
+- I look forward to see you. -> I look forward to seeing you.
+spanish_note: Spanish uses the infinitive after a preposition ("sin decir", "interesado en aprender"), which is the opposite of English.
+===
+id: verb_form.past_participle
+error_type: verb_form
+level: A2
+title: Past participle in perfect forms and the passive
+rule: After have/has/had and after be in the passive, use the past participle, which is not always the same as the past simple (go-went-gone, see-saw-seen, write-wrote-written, take-took-taken, be-was-been). Do not use the past simple after have.
+rule_es: Después de have/has/had y del verbo be en pasiva se usa el participio pasado, que no siempre coincide con el pasado simple (see-saw-seen, write-wrote-written).
+examples:
+- I have saw that movie. -> I have seen that movie.
+- She has went home. -> She has gone home.
+- The letter was wrote yesterday. -> The letter was written yesterday.
+spanish_note: Learners mix the second and third forms of irregular verbs because Spanish participles are regular in form.
+===
+id: verb_form.continuous_needs_be
+error_type: verb_form
+level: A1
+title: The -ing form needs be
+rule: A continuous tense needs the verb "be" before the -ing form. An -ing form alone is not a finite verb. Say "I am working", not "I working".
+rule_es: Un tiempo continuo necesita "be" antes del verbo en -ing. Un -ing solo no es un verbo conjugado.
+examples:
+- She working now. -> She is working now.
+- They playing football. -> They are playing football.
+- I studying for the exam. -> I am studying for the exam.
+spanish_note: Spanish "estoy trabajando" has the auxiliary, but in fast speech the "am/is/are" reduces and disappears.
+===
+id: verb_form.make_do
+error_type: verb_form
+level: A2
+title: Make vs. do
+rule: Use "make" for creating or producing something (make a cake, make a decision, make a mistake, make money, make a phone call). Use "do" for activities, tasks and obligations (do homework, do the dishes, do a job, do exercise, do your best).
+rule_es: "Make" para crear o producir (make a decision, make a mistake); "do" para actividades y tareas (do homework, do exercise).
+examples:
+- I need to make my homework. -> I need to do my homework.
+- She did a mistake. -> She made a mistake.
+- He makes exercise every morning. -> He does exercise every morning.
+spanish_note: Spanish uses "hacer" for both, so the choice has to be learned by collocation.

@@ -1,6 +1,6 @@
 // Informe real: se pide al backend (GET /api/sessions/{id}/report) en lugar de usar datos de ejemplo.
 // Solo se pintan puntajes que el backend calculó: lo que aún no existe sale como "pendiente".
-import { t } from '@/core/i18n.js'
+import { t, getLang } from '@/core/i18n.js'
 import { getReport, errorText } from '@/features/app/data/sessions-api.js'
 import { speak, canSpeak } from '@/features/app/services/tts.js'
 import { toast } from '@/features/app/components/toast/toast.js'
@@ -42,6 +42,16 @@ function scoreCard(a, dim) {
     </div>`
 }
 
+// La regla del corpus que respalda la corrección (viene del backend; si no hay una cercana, no se pinta nada).
+const ruleBlock = (rule) =>
+  rule
+    ? `<details class="errors__rule">
+        <summary>${t('app.report.live.rule')}: ${esc(rule.title)} <span>${esc(rule.level)}</span></summary>
+        <p>${esc(getLang() === 'es' ? rule.rule_es : rule.rule)}</p>
+        <button type="button" class="errors__practice" data-nav="/app/ejercicios?rule=${esc(rule.id)}">${t('app.exercises.ruleBtn')}</button>
+      </details>`
+    : ''
+
 const errorsCard = (grammar) => {
   if (!grammar.errors.length) return ''
   return `
@@ -53,7 +63,9 @@ const errorsCard = (grammar) => {
           .map(
             (e, i) => `<li><span class="errors__n">${i + 1}</span><div>
               <strong>${esc(e.original)} → ${esc(e.correction)}</strong>
+              ${e.seen_before ? `<span class="errors__again">${t(e.seen_before === 1 ? 'app.report.live.seenBeforeOne' : 'app.report.live.seenBefore', { n: e.seen_before })}</span>` : ''}
               <p>${esc(e.error_type)}. ${esc(e.explanation)}</p>
+              ${ruleBlock(e.rule)}
             </div></li>`,
           )
           .join('')}

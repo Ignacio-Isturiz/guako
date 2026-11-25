@@ -1,0 +1,283 @@
+# Exercises of the personalised practice: ONE block per rule of the corpus (app/rag/rules); a line with three equals signs splits blocks.
+# Lines (each rule has at least one `choice` and one `fix`; `fill` is optional; there may be several of each):
+#   choice: prompt | the correct option FIRST | wrong option | wrong option   (the order is shuffled when served)
+#   fill:   sentence with ___ | answer / other accepted answer
+#   fix:    sentence with the mistake | corrected sentence / other accepted correction
+# The speaking exercise is made from every `fix`: say the corrected sentence (the first accepted one).
+# Original sentences, written for this project. Each exercise has exactly one right answer.
+
+rule: article.a_an
+choice: Which sentence is correct? | She wants an orange. | She wants a orange. | She wants orange.
+fill: He waited for ___ hour. | an
+fix: I need a umbrella today. | I need an umbrella today.
+===
+rule: article.missing_a_with_singular
+choice: Which sentence is correct? | My sister is a nurse. | My sister is nurse. | My sister are nurse.
+fill: I bought ___ new phone yesterday. | a
+fix: She has dog at home. | She has a dog at home.
+===
+rule: article.the_in_generalisations
+choice: Which sentence is correct? | Dogs are loyal animals. | A dogs are loyal animals. | Dog are loyal animals.
+fix: I like the music in general. | I like music in general.
+===
+rule: article.the_specific_known
+choice: Which sentence is correct? | I saw a man. The man was tall. | I saw a man. A man was tall. | I saw the man. A man was tall.
+fill: She has a cat. ___ cat is black. | The
+fix: Please close window. It is cold. | Please close the window. It is cold.
+===
+rule: article.fixed_expressions_no_the
+choice: Which sentence is correct? | I go to school by bus. | I go to the school by the bus. | I go to school by the bus.
+fix: She goes to the bed at ten. | She goes to bed at ten.
+===
+rule: other.double_negative
+choice: Which sentence is correct? | I don't know anything. | I don't know nothing. | I don't know no thing.
+fill: She didn't see ___ at the party. (a person) | anyone / anybody
+fix: He doesn't have no money. | He doesn't have any money. / He has no money.
+===
+rule: other.comparatives_superlatives
+choice: Which sentence is correct? | This book is better than that one. | This book is more better than that one. | This book is gooder than that one.
+fill: Mount Everest is the ___ mountain in the world. (high) | highest
+fix: My brother is more tall than me. | My brother is taller than me.
+===
+rule: other.conditionals
+choice: Which sentence is correct? | If it rains, we will stay home. | If it will rain, we will stay home. | If it rains, we stay will home.
+fill: If I ___ rich, I would travel the world. (be) | were / was
+fix: If I would have time, I would help you. | If I had time, I would help you.
+===
+rule: other.so_such_too_very
+choice: Which sentence is correct? | The coffee is too hot to drink. | The coffee is very hot to drink. | The coffee is too much hot to drink.
+fill: It was ___ a good film that I watched it twice. | such
+fix: She is so a kind person. | She is such a kind person.
+===
+rule: plural_noun.regular_plural
+choice: Which sentence is correct? | I have two boxes and three watches. | I have two boxs and three watchs. | I have two boxes and three watchies.
+fill: I have two ___ . (baby) | babies
+fix: She has three babys. | She has three babies.
+===
+rule: plural_noun.irregular_plural
+choice: Which sentence is correct? | The children and the women are here. | The childs and the womans are here. | The children and the womens are here.
+fill: I brushed my ___ this morning. (tooth, plural) | teeth
+fix: Two mans are at the door. | Two men are at the door.
+===
+rule: plural_noun.uncountable_nouns
+choice: Which sentence is correct? | I need some advice. | I need some advices. | I need an advices.
+fill: How ___ information do you need? (much / many) | much
+fix: She gave me many informations. | She gave me a lot of information. / She gave me much information. / She gave me some information.
+===
+rule: plural_noun.determiner_agreement
+choice: Which sentence is correct? | These shoes are comfortable. | This shoes are comfortable. | These shoe are comfortable.
+fill: ___ car over there is mine. (that / those) | That
+fix: Each students has a book. | Each student has a book.
+===
+rule: preposition.in_on_at_time
+choice: Which sentence is correct? | We have a meeting on Friday at 3 pm. | We have a meeting in Friday at 3 pm. | We have a meeting at Friday on 3 pm.
+fill: She was born ___ 1995. | in
+fix: I will see you in Monday. | I will see you on Monday.
+===
+rule: preposition.in_on_at_place
+choice: Which sentence is correct? | She lives in Bogotá, on Fifth Street. | She lives at Bogotá, in Fifth Street. | She lives on Bogotá, at Fifth Street.
+fill: The keys are ___ the table. | on
+fix: I am in the bus stop. | I am at the bus stop.
+===
+rule: preposition.dependent_adjectives
+choice: Which sentence is correct? | I am afraid of dogs. | I am afraid from dogs. | I am afraid with dogs.
+fill: She is good ___ maths. | at
+fix: He is married with a doctor. | He is married to a doctor.
+===
+rule: preposition.dependent_verbs
+choice: Which sentence is correct? | We discussed the problem. | We discussed about the problem. | We discussed of the problem.
+fill: I am waiting ___ the bus. | for
+fix: She listens the radio every day. | She listens to the radio every day.
+===
+rule: preposition.to_vs_for
+choice: Which sentence is correct? | I bought a gift for my mother. | I bought a gift to my mother. | I bought a gift at my mother.
+fill: She explained the rules ___ me. | to
+fix: I explained the problem for my boss. | I explained the problem to my boss.
+===
+rule: preposition.travel_and_arrival
+choice: Which sentence is correct? | We arrived at the hotel and then went home. | We arrived to the hotel and then went to home. | We arrived at the hotel and then went to home.
+fill: She got ___ the airport at six. | to
+fix: I go to home after work. | I go home after work.
+===
+rule: preposition.by_with_means
+choice: Which sentence is correct? | She cut the bread with a knife. | She cut the bread by a knife. | She cut the bread in a knife.
+fill: I travel to work ___ train. | by
+fix: I go to school with bus. | I go to school by bus.
+===
+rule: pronoun.subject_object
+choice: Which sentence is correct? | She and I went to the park. | Her and me went to the park. | Her and I went to the park.
+fill: I called Maria and told ___ the news. (she / her) | her
+fix: Me and my friend like music. | My friend and I like music.
+===
+rule: pronoun.possessive_adjectives
+choice: Which sentence is correct? | Maria loves her brother and John loves his sister. | Maria loves his brother and John loves her sister. | Maria loves her brother and John loves her sister.
+fill: The dog wagged ___ tail. | its
+fix: Tom lost her keys yesterday. | Tom lost his keys yesterday.
+===
+rule: pronoun.reflexive_overuse
+choice: Which sentence is correct? | I feel tired today. | I feel myself tired today. | I feel me tired today.
+fix: I always sit myself near the window. | I always sit near the window.
+===
+rule: pronoun.it_dummy_subject
+choice: Which sentence is correct? | It is raining today. | Is raining today. | Are raining today.
+fill: ___ is nine o'clock. | It
+fix: Is very cold in the morning. | It is very cold in the morning.
+===
+rule: pronoun.who_which_relative
+choice: Which sentence is correct? | The woman who lives next door is a doctor. | The woman which lives next door is a doctor. | The woman what lives next door is a doctor.
+fill: This is the book ___ I told you about. | that / which
+fix: The man which called you is my uncle. | The man who called you is my uncle. / The man that called you is my uncle.
+===
+rule: subject_verb_agreement.third_person_s
+choice: Which sentence is correct? | She works in a bank. | She work in a bank. | She working in a bank.
+fill: My brother ___ football every Saturday. (play) | plays
+fix: He go to school by bus. | He goes to school by bus.
+===
+rule: subject_verb_agreement.do_does
+choice: Which sentence is correct? | Does she like pizza? | Do she like pizza? | Does she likes pizza?
+fill: ___ your parents live here? (do / does) | Do
+fix: He don't like coffee. | He doesn't like coffee.
+===
+rule: subject_verb_agreement.there_is_are
+choice: Which sentence is correct? | There are three books on the table. | There is three books on the table. | It are three books on the table.
+fill: There ___ a lot of people in the park. | are
+fix: There is two cars outside. | There are two cars outside.
+===
+rule: subject_verb_agreement.be_present
+choice: Which sentence is correct? | They are my friends and I am happy. | They is my friends and I am happy. | They are my friends and I is happy.
+fill: My sister ___ twelve years old. (be) | is
+fix: We is ready for the test. | We are ready for the test.
+===
+rule: subject_verb_agreement.indefinite_subjects
+choice: Which sentence is correct? | Everyone is here. | Everyone are here. | Everyone were here.
+fill: Nobody ___ the answer. (know) | knows
+fix: Everybody have a pen. | Everybody has a pen.
+===
+rule: verb_form.modal_base_form
+choice: Which sentence is correct? | She can swim very well. | She can swims very well. | She can to swim very well.
+fill: You must ___ a helmet. (wear) | wear
+fix: He should to study more. | He should study more.
+===
+rule: verb_form.infinitive_vs_gerund
+choice: Which sentence is correct? | I enjoy reading books. | I enjoy to read books. | I enjoy read books.
+fill: She decided ___ to Spain. (move) | to move
+fix: I want go home now. | I want to go home now.
+===
+rule: verb_form.preposition_gerund
+choice: Which sentence is correct? | She is good at singing. | She is good at sing. | She is good at to sing.
+fill: Thank you for ___ me. (help) | helping
+fix: He left without say goodbye. | He left without saying goodbye.
+===
+rule: verb_form.past_participle
+choice: Which sentence is correct? | I have eaten lunch already. | I have ate lunch already. | I have eat lunch already.
+fill: The window was ___ yesterday. (break) | broken
+fix: She has wrote a letter. | She has written a letter.
+===
+rule: verb_form.continuous_needs_be
+choice: Which sentence is correct? | They are playing in the garden. | They playing in the garden. | They is playing in the garden.
+fill: I ___ studying right now. | am
+fix: She working today. | She is working today.
+===
+rule: verb_form.make_do
+choice: Which sentence is correct? | I need to do my homework and make a cake. | I need to make my homework and do a cake. | I need to do my homework and do a cake.
+fill: Can you ___ me a favour? | do
+fix: I did a mistake in the test. | I made a mistake in the test.
+===
+rule: verb_tense.present_perfect_vs_past
+choice: Which sentence is correct? | I lost my keys yesterday. | I have lost my keys yesterday. | I am losing my keys yesterday.
+fill: We ___ Paris in 2019. (visit) | visited
+fix: I have seen her last week. | I saw her last week.
+===
+rule: verb_tense.since_for_present_perfect
+choice: Which sentence is correct? | I have lived here for five years. | I have lived here since five years. | I live here for five years.
+fill: She has worked here ___ 2020. | since
+fix: I know him since three years. | I have known him for three years.
+===
+rule: verb_tense.present_simple_vs_continuous
+choice: Which sentence is correct? | I am drinking coffee right now. | I drink coffee right now. | I drinking coffee right now.
+fill: Look! It ___ . (rain) | is raining
+fix: I am wanting a coffee. | I want a coffee.
+===
+rule: verb_tense.past_simple_irregular
+choice: Which sentence is correct? | Yesterday she went to the market and bought apples. | Yesterday she goed to the market and buyed apples. | Yesterday she went to the market and buyed apples.
+fill: He ___ pizza last night. (eat) | ate
+fix: We seed a movie last night. | We saw a movie last night.
+===
+rule: verb_tense.did_in_questions_negatives
+choice: Which sentence is correct? | Did you go to the party? | Did you went to the party? | Do you went to the party?
+fill: She didn't ___ me yesterday. (call) | call
+fix: I didn't went to school. | I didn't go to school.
+===
+rule: verb_tense.future_will_going_to
+choice: Which sentence is correct? | I am meeting my dentist tomorrow at five. | I meeting my dentist tomorrow at five. | I am meet my dentist tomorrow at five.
+fill: Look at the sky! It ___ rain soon. (going to) | is going to
+fix: Tomorrow I go to travel to Cali. | Tomorrow I am going to travel to Cali. / Tomorrow I will travel to Cali.
+===
+rule: verb_tense.no_future_after_time_words
+choice: Which sentence is correct? | I will call you when I arrive. | I will call you when I will arrive. | I call you when I will arrive.
+fill: As soon as she ___ , she will phone you. (finish) | finishes
+fix: If it will rain, we will stay home. | If it rains, we will stay home.
+===
+rule: verb_tense.past_continuous_vs_simple
+choice: Which sentence is correct? | I was cooking when she called. | I cooked when she was calling. | I was cook when she called.
+fill: While we ___ , it started to rain. (walk) | were walking
+fix: I was sleep when he arrived. | I was sleeping when he arrived.
+===
+rule: vocabulary.false_friends_common
+choice: Which sentence is correct? | I attend English class on Tuesdays. | I assist English class on Tuesdays. | I assist to English class on Tuesdays.
+fill: I bought a novel at the ___ . (a shop that sells books) | bookstore / bookshop
+fix: She is very sensible and cries at sad films. | She is very sensitive and cries at sad films.
+===
+rule: vocabulary.borrowed_collocations
+choice: Which sentence is correct? | I need to take a shower and have breakfast. | I need to make a shower and have breakfast. | I need to do a shower and eat a breakfast.
+fill: Let's ___ a break. | take
+fix: She made a photo of the beach. | She took a photo of the beach.
+===
+rule: vocabulary.say_tell_speak_talk
+choice: Which sentence is correct? | She told me the truth. | She said me the truth. | She spoke me the truth.
+fill: He ___ three languages. (speak) | speaks
+fix: He said me a secret. | He told me a secret.
+===
+rule: vocabulary.borrow_lend_bring_take
+choice: Which sentence is correct? | Can you lend me your pen? | Can you borrow me your pen? | Can you take me your pen?
+fill: Can I ___ your car? I will return it tonight. | borrow
+fix: Can you borrow me some money? | Can you lend me some money?
+===
+rule: vocabulary.much_many_few_little
+choice: Which sentence is correct? | There isn't much time and there are many people. | There isn't many time and there are much people. | There isn't much time and there are much people.
+fill: I have very ___ money left. (little / few) | little
+fix: How many water do you drink? | How much water do you drink?
+===
+rule: vocabulary.adjectives_ed_ing
+choice: Which sentence is correct? | The film was boring, so I was bored. | The film was bored, so I was boring. | The film was boring, so I was boring.
+fill: She is ___ in art. (interest) | interested
+fix: I am very boring in this class. | I am very bored in this class.
+===
+rule: vocabulary.age_with_be
+choice: Which sentence is correct? | My father is fifty years old. | My father has fifty years old. | My father is fifty years.
+fill: How ___ are you? | old
+fix: She has twenty years. | She is twenty years old. / She is twenty.
+===
+rule: word_order.svo_basic
+choice: Which sentence is correct? | My brother eats pizza. | Eats my brother pizza. | My brother pizza eats.
+fill: I like football ___ . (very much) | very much
+fix: I like very much football. | I like football very much.
+===
+rule: word_order.adjective_before_noun
+choice: Which sentence is correct? | She has a red car. | She has a car red. | She has a reds car.
+fix: We saw two houses beautiful. | We saw two beautiful houses.
+===
+rule: word_order.question_inversion
+choice: Which sentence is correct? | Where do you live? | Where you live? | Where does you live?
+fill: What time ___ the film start? (do / does) | does
+fix: How much costs this? | How much does this cost?
+===
+rule: word_order.indirect_questions
+choice: Which sentence is correct? | Can you tell me where the station is? | Can you tell me where is the station? | Can you tell me where does the station is?
+fill: Do you know what time it ___ ? | is
+fix: I don't know what does she want. | I don't know what she wants.
+===
+rule: word_order.adverb_position
+choice: Which sentence is correct? | She is never late. | She never is late. | She is late never.
+fill: I ___ drink coffee in the morning. (always) | always
+fix: I drink always tea. | I always drink tea.

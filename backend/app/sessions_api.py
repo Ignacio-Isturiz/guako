@@ -25,6 +25,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.analysis.runner import ensure_pending_rows, run_turn_analysis
+from app.rag.memory import seen_before
 from app.config import settings
 from app.conversation.deps import get_pronunciation_provider, get_stt_provider, get_tts_provider
 from app.conversation.graph import build_graph
@@ -476,6 +477,19 @@ async def get_report(
     return report
 
 
+async def _add_memory(db: AsyncSession, session: ConversationSession, grammar: GrammarReport) -> None:
+    """RAG 2: on each mistake, in how many earlier sessions of this learner it had already appeared (PostgreSQL only)."""
+    if not grammar.errors or db.bind.dialect.name != "postgresql":
+        return
+    try:
+        counts = await seen_before(db, session)
+    except Exception:  # the memory is an extra: the report is complete without it
+        logger.exception("memory_failed session=%s", session.id)
+        return
+    for error in grammar.errors:
+        error.seen_before = counts.get((error.turn_number, error.original), 0)
+
+
 async def _build_report(
     session_id: int,
     background: BackgroundTasks,
@@ -535,6 +549,7 @@ async def _build_report(
     grammar = build_grammar_report(
         [(t.turn_number, t.user_transcript) for t in turns], grammar_rows
     )
+    await _add_memory(db, session, grammar)
     fluency = build_fluency_report(fluency_results)
     pronunciation_report = build_pronunciation_report(
         [(t.turn_number, by_key.get((t.id, AnalysisDimension.PRONUNCIATION.value))) for t in turns]

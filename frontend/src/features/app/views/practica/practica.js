@@ -10,7 +10,15 @@ import { toast } from '@/features/app/components/toast/toast.js'
 // 9. Práctica: escuchar y repetir las palabras y frases de los informes
 export default {
   head: () => ({ eyebrow: t('app.practice.eyebrow'), title: t('app.practice.title') }),
-  render: () => `<div class="practice" id="practice"></div>`,
+  render: () => `
+    <section class="card pex">
+      <div>
+        <h2 class="card__title">${t('app.exercises.cardTitle')}</h2>
+        <p class="card__sub">${t('app.exercises.cardText')}</p>
+      </div>
+      <button class="btn btn--primary" type="button" data-nav="/app/ejercicios">${t('app.exercises.cardBtn')}</button>
+    </section>
+    <div class="practice" id="practice"></div>`,
 
   init(root, _p, scope) {
     const items = practiceItems()

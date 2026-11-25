@@ -11,6 +11,7 @@ export const ROUTES = [
   { name: 'progreso', path: '/app/progreso' },
   { name: 'conversaciones', path: '/app/conversaciones' },
   { name: 'practica', path: '/app/practica' },
+  { name: 'ejercicios', path: '/app/ejercicios' },
   { name: 'ajustes', path: '/app/ajustes' },
 ]
 
