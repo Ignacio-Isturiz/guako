@@ -1,0 +1,95 @@
+id: verb_tense.present_perfect_vs_past
+error_type: verb_tense
+level: B1
+title: Present perfect vs. past simple
+rule: Use the past simple for finished actions at a stated or understood past time (yesterday, in 2019, last week, when I was a child). Use the present perfect (have/has + past participle) when the time is not stated or the period is not finished (ever, never, already, yet, just, since, for, this week).
+rule_es: Usa el pasado simple para acciones terminadas en un momento pasado concreto (yesterday, last week). Usa el present perfect cuando no se dice cuándo o el periodo sigue abierto (ever, already, since, for).
+examples:
+- I have seen him yesterday. -> I saw him yesterday.
+- I saw that film three times. (in your life so far) -> I have seen that film three times.
+- She lives here since 2020. -> She has lived here since 2020.
+spanish_note: In Spanish "he visto" is also used for recent past with a time marker ("ayer he visto"), so learners carry that into English.
+===
+id: verb_tense.since_for_present_perfect
+error_type: verb_tense
+level: A2
+title: Since and for with the present perfect
+rule: For an action that started in the past and continues now, use the present perfect (or present perfect continuous), not the present simple. Use "since" with a starting point (since Monday, since 2020) and "for" with a length of time (for two years, for a long time).
+rule_es: Para algo que empezó en el pasado y sigue ahora, usa present perfect, no presente simple. "Since" va con un punto de inicio y "for" con una duración.
+examples:
+- I live here since 2018. -> I have lived here since 2018.
+- I am working here for three years. -> I have worked here for three years.
+- I have known her since five years. -> I have known her for five years.
+spanish_note: Spanish says "vivo aquí desde 2018" in the present, so the present simple feels natural.
+===
+id: verb_tense.present_simple_vs_continuous
+error_type: verb_tense
+level: A2
+title: Present simple vs. present continuous
+rule: Use the present simple for habits, routines and permanent facts (I work in Bogotá, water boils at 100 degrees). Use the present continuous (am/is/are + verb-ing) for actions happening now or around now, and for temporary situations. State verbs (know, like, want, need, understand, believe) are normally not used in the continuous.
+rule_es: Presente simple para hábitos y hechos permanentes; presente continuo para lo que ocurre ahora o es temporal. Verbos de estado como know, like, want, need no suelen ir en continuo.
+examples:
+- I am knowing the answer. -> I know the answer.
+- She is working every day at 8. -> She works every day at 8.
+- Please be quiet, I study now. -> Please be quiet, I am studying now.
+spanish_note: Spanish uses the simple present for both ("estudio ahora"), so the continuous is often skipped.
+===
+id: verb_tense.past_simple_irregular
+error_type: verb_tense
+level: A2
+title: Past simple of regular and irregular verbs
+rule: Regular verbs add -ed in the past simple (worked, played). Many common verbs are irregular and must be memorised (go-went, have-had, buy-bought, see-saw, take-took, eat-ate, come-came, make-made, say-said). Do not add -ed to an irregular verb.
+rule_es: Los verbos regulares añaden -ed. Muchos verbos comunes son irregulares y hay que memorizarlos (go-went, buy-bought). No se añade -ed a un verbo irregular.
+examples:
+- Yesterday I goed to the market. -> Yesterday I went to the market.
+- She buyed a new phone. -> She bought a new phone.
+- We eated at home. -> We ate at home.
+spanish_note: Overgeneralising the -ed ending is the same mistake English children make; it shows the learner knows the rule.
+===
+id: verb_tense.did_in_questions_negatives
+error_type: verb_tense
+level: A2
+title: Did in past questions and negatives
+rule: In past simple questions and negatives, "did" carries the past tense and the main verb goes back to its base form. Say "Did you go?" and "I did not go", never "Did you went?" or "I didn't went".
+rule_es: En preguntas y negaciones en pasado, "did" lleva el tiempo y el verbo principal va en forma base: "Did you go?", "I didn't go".
+examples:
+- Did you went to the party? -> Did you go to the party?
+- She didn't liked the food. -> She didn't like the food.
+- Where did he lived? -> Where did he live?
+spanish_note: Spanish marks the past on the main verb ("¿fuiste?"), so learners put the past form after "did" as well.
+===
+id: verb_tense.future_will_going_to
+error_type: verb_tense
+level: A2
+title: Talking about the future: will, going to, present continuous
+rule: Use "going to" for plans and for predictions based on evidence you can see now. Use "will" for spontaneous decisions, promises and predictions based on opinion. Use the present continuous for fixed arrangements. Do not use the present simple for a personal plan.
+rule_es: "Going to" para planes y predicciones con evidencia; "will" para decisiones espontáneas, promesas y opiniones; presente continuo para citas ya acordadas.
+examples:
+- Look at those clouds, it will rain. -> Look at those clouds, it is going to rain.
+- I am hungry. I make a sandwich. -> I am hungry. I will make a sandwich.
+- Tomorrow I travel to Cali with my friends. -> Tomorrow I am going to travel to Cali with my friends.
+spanish_note: Spanish often uses the present for the near future ("mañana viajo"), which does not work for plans in English.
+===
+id: verb_tense.no_future_after_time_words
+error_type: verb_tense
+level: B1
+title: No will after when, if, as soon as, before, after
+rule: In time clauses (when, as soon as, before, after, until) and in the first conditional "if" clause, use the present simple even though the meaning is future. Put "will" only in the main clause.
+rule_es: Después de when, as soon as, before, after, until e if (primer condicional) se usa presente simple aunque el significado sea futuro. "Will" solo va en la otra parte.
+examples:
+- When I will arrive, I will call you. -> When I arrive, I will call you.
+- If it will rain, we will stay home. -> If it rains, we will stay home.
+- I will wait until you will finish. -> I will wait until you finish.
+spanish_note: Spanish uses the present subjunctive here ("cuando llegue"), which is also not a future form, but learners translate it as "will".
+===
+id: verb_tense.past_continuous_vs_simple
+error_type: verb_tense
+level: B1
+title: Past continuous vs. past simple
+rule: Use the past continuous (was/were + verb-ing) for an action in progress at a past moment or as background, and the past simple for the shorter action that interrupts it or for a completed event. "I was walking when it started to rain."
+rule_es: Pasado continuo para la acción en curso o el fondo de la escena; pasado simple para la acción corta que la interrumpe o un hecho terminado.
+examples:
+- I walked home when it started to rain. -> I was walking home when it started to rain.
+- What did you do when I called? (in progress) -> What were you doing when I called?
+- She was cooking dinner yesterday. (finished, whole event) -> She cooked dinner yesterday.
+spanish_note: Spanish contrasts "caminaba" and "caminé", so this is a matter of mapping imperfecto and pretérito onto English forms.

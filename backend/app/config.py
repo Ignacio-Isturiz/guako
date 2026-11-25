@@ -58,6 +58,30 @@ class Settings(BaseSettings):
     # Extra attempts after the first one when the output fails validation.
     llm_max_retries: int = Field(default=2, ge=0, le=10)
 
+    # --- RAG: grammar rules found with embeddings (Gemini; reuses gemini_api_key; needs PostgreSQL + pgvector) ----
+    embedding_model: str = "gemini-embedding-001"
+    # Changing it means a new migration (the column has this size) and re-indexing every rule.
+    embedding_dimensions: int = Field(default=768, ge=64, le=3072)
+    embedding_timeout_seconds: float = Field(default=10.0, gt=0)
+    # Below this cosine similarity the best rule is not shown: a wrong rule is worse than none.
+    # 0.70 comes from scripts/run_rag_evals on evals/rag (60 cases): 98% of the shown rules were the expected one,
+    # 93% of the cases with a rule got it, 0 of 6 cases without a rule got a wrong one. Only 6 such cases: re-run
+    # it when the corpus or the embedding model changes.
+    rag_min_similarity: float = Field(default=0.70, ge=0.0, le=1.0)
+
+    # Memory (error_events): a mistake with no rule counts as "the same" as an earlier one only above this cosine
+    # similarity. Measured on 8 pairs with real embeddings: the same mistake in other sentences scored 0.80-0.83,
+    # different mistakes of the same type 0.58-0.62. A small sample, not real learners: re-check it with real data.
+    memory_min_similarity: float = Field(default=0.72, ge=0.0, le=1.0)
+
+    # Generated exercises (app/exercises/generated.py): when a learner is running out of exercises they have not seen
+    # for a rule, the analysis LLM writes more in the background; each one is checked with the grammar analyser first.
+    exercises_generation_enabled: bool = True
+    exercises_low_water: int = Field(default=2, ge=1)  # fewer unseen exercises than this for a rule: write more
+    exercises_max_generated_per_rule: int = Field(default=30, ge=1)  # the pool of a rule never grows past this
+    exercises_daily_generation_limit: int = Field(default=90, ge=1)  # accepted exercises per day, whole app
+    exercises_generation_cooldown_seconds: float = Field(default=900.0, ge=0)  # between two tries for the same rule
+
     # --- Speech-to-text (Groq-hosted Whisper; reuses groq_api_key) ----
     stt_model: str = "whisper-large-v3"
     # ISO-639-1 language hint sent to Whisper (the tutor listens to English). Empty = auto-detect.

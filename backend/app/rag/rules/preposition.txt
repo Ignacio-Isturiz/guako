@@ -1,0 +1,85 @@
+id: preposition.in_on_at_time
+error_type: preposition
+level: A1
+title: In, on, at for time
+rule: Use "at" for clock times and points in time (at 5 pm, at night, at the weekend), "on" for days and dates (on Monday, on 5 May, on my birthday), and "in" for months, years, seasons and parts of the day (in July, in 2024, in winter, in the morning).
+rule_es: "At" para horas y momentos puntuales; "on" para días y fechas; "in" para meses, años, estaciones y partes del día.
+examples:
+- I wake up in 6 am. -> I wake up at 6 am.
+- We have class at Monday. -> We have class on Monday.
+- My birthday is on July. -> My birthday is in July.
+spanish_note: Spanish uses "a las", "el" and "en" in similar slots but with different groupings, so mapping is not one-to-one.
+===
+id: preposition.in_on_at_place
+error_type: preposition
+level: A1
+title: In, on, at for place
+rule: Use "in" for enclosed spaces and larger areas (in a room, in Bogotá, in Colombia), "on" for surfaces and lines (on the table, on the wall, on the street), and "at" for specific points and addresses or events (at the door, at 25 Main Street, at the party, at work).
+rule_es: "In" para espacios cerrados o áreas grandes; "on" para superficies; "at" para puntos concretos, direcciones y eventos.
+examples:
+- She lives at Medellín. -> She lives in Medellín.
+- The keys are in the table. -> The keys are on the table.
+- I will meet you in the bus stop. -> I will meet you at the bus stop.
+spanish_note: Spanish "en" covers all three, so learners pick one by guess.
+===
+id: preposition.dependent_adjectives
+error_type: preposition
+level: B1
+title: Adjective + preposition
+rule: Many adjectives need a fixed preposition: interested in, good at, afraid of, proud of, worried about, married to, different from, tired of, angry with (a person) / about (a thing), excited about, responsible for. Learn them as a unit.
+rule_es: Muchos adjetivos llevan una preposición fija: interested in, good at, afraid of, proud of, worried about, married to, different from.
+examples:
+- I am interested on music. -> I am interested in music.
+- She is good in maths. -> She is good at maths.
+- He is married with a doctor. -> He is married to a doctor.
+spanish_note: Spanish "casado con", "interesado en", "bueno para" do not match the English choices.
+===
+id: preposition.dependent_verbs
+error_type: preposition
+level: B1
+title: Verb + preposition
+rule: Some verbs need a fixed preposition and others take none. Common patterns: depend on, listen to, wait for, look at, look for, arrive in/at, believe in, think about, talk to/about, laugh at, agree with. Some verbs take no preposition at all: discuss something, enter a room, marry someone, answer someone, reach a place.
+rule_es: Algunos verbos llevan preposición fija (depend on, listen to, wait for, look at) y otros no llevan ninguna (discuss, enter, marry, answer).
+examples:
+- I depend of my parents. -> I depend on my parents.
+- We discussed about the problem. -> We discussed the problem.
+- She entered to the room. -> She entered the room.
+- We are waiting our teacher. -> We are waiting for our teacher.
+- He looked the picture. -> He looked at the picture.
+spanish_note: Spanish "depender de", "hablar sobre" and "entrar a" are copied directly into English.
+===
+id: preposition.to_vs_for
+error_type: preposition
+level: A2
+title: To vs. for
+rule: Use "to" for direction and for the recipient of an action (go to Cali, give it to him, send a letter to her). Use "for" for purpose, benefit and duration (a gift for you, I study for the exam, I waited for an hour). Before a verb, use "to + verb" for purpose, not "for + verb": "I came to learn", not "I came for learn".
+rule_es: "To" para dirección y destinatario; "for" para finalidad, beneficio y duración. Para expresar propósito con un verbo se usa "to + verbo", no "for + verbo".
+examples:
+- I went to the store for buy milk. -> I went to the store to buy milk.
+- This gift is to you. -> This gift is for you.
+- I have lived here to ten years. -> I have lived here for ten years.
+spanish_note: Spanish "para" and "por" both map onto "for" and "to" depending on use, which confuses the choice.
+===
+id: preposition.travel_and_arrival
+error_type: preposition
+level: A2
+title: Go to, arrive at/in, get to, at home
+rule: With verbs of movement, use "to" for the destination (go to, come to, travel to). Use "arrive in" with cities and countries and "arrive at" with specific places. Do not use "to" with "home", "here" and "there": go home, come here, get there.
+rule_es: Con verbos de movimiento: "to" para el destino. "Arrive in" con ciudades y países, "arrive at" con lugares concretos. No se usa "to" con home, here, there.
+examples:
+- I went to home early. -> I went home early.
+- We arrived to Madrid at night. -> We arrived in Madrid at night.
+- She arrived to the station at six. -> She arrived at the station at six.
+spanish_note: Spanish "llegar a" and "ir a casa" lead to adding "to" everywhere.
+===
+id: preposition.by_with_means
+error_type: preposition
+level: A2
+title: By and with for means and tools
+rule: Use "by" for means of transport and communication (by bus, by plane, by email, by phone) and for the agent in the passive. Use "with" for tools and accompaniment (cut it with a knife, with my friend). Say "on foot", not "by foot".
+rule_es: "By" para medios de transporte y comunicación y para el agente de la pasiva; "with" para herramientas y compañía. "On foot", no "by foot".
+examples:
+- I go to work with bus. -> I go to work by bus.
+- She wrote it by a pen. -> She wrote it with a pen.
+- We went by foot. -> We went on foot.
+spanish_note: Spanish "en bus" and "con lápiz" do not map directly to the English prepositions.

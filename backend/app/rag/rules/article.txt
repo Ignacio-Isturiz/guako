@@ -1,0 +1,59 @@
+id: article.a_an
+error_type: article
+level: A1
+title: A or an
+rule: Use "an" before a vowel sound and "a" before a consonant sound. It depends on the sound, not the spelling: "an hour", "an MBA", but "a university", "a European city".
+rule_es: "An" antes de un sonido vocálico y "a" antes de un sonido consonántico. Importa el sonido, no la letra: "an hour", "a university".
+examples:
+- She is a engineer. -> She is an engineer.
+- I waited for a hour. -> I waited for an hour.
+- It was an unique idea. -> It was a unique idea.
+spanish_note: Spanish has no a/an distinction, so the choice is easy to miss when speaking.
+===
+id: article.missing_a_with_singular
+error_type: article
+level: A1
+title: Singular countable nouns need an article or determiner
+rule: A singular countable noun cannot stand alone. It needs a/an, the, or another determiner (my, this, each). Use "a/an" when introducing something or giving a job or identity: "She is a teacher".
+rule_es: Un sustantivo contable en singular no puede ir solo: necesita a/an, the u otro determinante. También con profesiones: "She is a teacher".
+examples:
+- She is teacher. -> She is a teacher.
+- I need pen. -> I need a pen.
+- He wants to buy car. -> He wants to buy a car.
+spanish_note: Spanish drops the article before professions ("es profesora") and before an unspecified noun ("necesito bolígrafo"), so learners leave it out in English.
+===
+id: article.the_in_generalisations
+error_type: article
+level: A2
+title: No article for general plural and uncountable nouns
+rule: Do not use "the" when you talk about things in general with plural or uncountable nouns (life, music, people, money, love). Use "the" only when the noun is specific and the listener knows which one.
+rule_es: No uses "the" al hablar en general con plurales o incontables (life, music, people). "The" solo cuando es algo específico y conocido.
+examples:
+- The life is difficult. -> Life is difficult.
+- I like the music. (in general) -> I like music.
+- The people are friendly in my country. (in general) -> People are friendly in my country.
+spanish_note: Spanish requires the article in generalisations ("la vida es difícil", "me gusta la música"), the opposite of English.
+===
+id: article.the_specific_known
+error_type: article
+level: A2
+title: Use the for specific or already mentioned things
+rule: Use "the" when the listener knows which thing you mean: it was mentioned before, it is unique (the sun, the president), or the context makes it clear (the kitchen, the bus stop). The first mention of a singular countable noun takes "a/an".
+rule_es: Usa "the" cuando el oyente sabe a qué te refieres: ya se mencionó, es único (the sun) o el contexto lo aclara. La primera mención lleva a/an.
+examples:
+- I bought a shirt and a hat. Shirt was blue. -> I bought a shirt and a hat. The shirt was blue.
+- I went to a restaurant. A food was great. -> I went to a restaurant. The food was great.
+- Please close a window. (the one next to us) -> Please close the window.
+spanish_note: This usually follows Spanish logic, so errors are mostly missing "the" with known things.
+===
+id: article.fixed_expressions_no_the
+error_type: article
+level: B1
+title: Places and institutions with and without the
+rule: Use no article with go to school, go to work, go to bed, go home, at home, by bus, by car, in hospital and in class when you mean their normal purpose. Use "the" with specific buildings or when you mean the place, not the activity: "I went to the school to talk to the director".
+rule_es: Sin artículo en go to school, go to work, go to bed, at home, by bus cuando se habla de su función normal. Con "the" si es el edificio concreto.
+examples:
+- I go to the work by the bus. -> I go to work by bus.
+- She is at the home. -> She is at home.
+- He goes to the school every day to study. -> He goes to school every day.
+spanish_note: Spanish "voy al trabajo en el bus" uses articles where English does not.

@@ -1,0 +1,250 @@
+/* ---------- Ejercicios (práctica personalizada) ---------- */
+.ex {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.ex__card {
+  display: grid;
+  gap: 1rem;
+}
+.ex__head {
+  display: grid;
+  gap: 0.3rem;
+}
+.ex__head small {
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.6);
+}
+.ex__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.ex__rulename {
+  font-weight: 800;
+  color: var(--navy);
+}
+.ex__mine {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: #fff3d1;
+  color: var(--navy);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.ex__body {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+}
+.ex__prompt {
+  margin: 0;
+  font-weight: 700;
+  color: rgba(11, 27, 68, 0.75);
+}
+.ex__sentence {
+  margin: 0;
+  font: 800 clamp(1.15rem, 2.4vw, 1.5rem) / 1.6 var(--font-display);
+  color: var(--navy);
+}
+.ex__sentence--say {
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  background: #fff3d1;
+}
+.ex__wrong {
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  background: rgba(232, 32, 26, 0.08);
+  font: 800 clamp(1.05rem, 2.2vw, 1.3rem) / 1.5 var(--font-display);
+  color: var(--navy);
+}
+
+/* Elegir */
+.ex__options {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+}
+.ex__option {
+  padding: 0.8rem 1rem;
+  border: 2px solid rgba(11, 42, 107, 0.2);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--navy);
+  font: 700 1.05rem var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.ex__option:hover:not(:disabled),
+.ex__option:focus-visible {
+  outline: none;
+  border-color: var(--navy);
+  background: var(--app-soft);
+}
+.ex__option:disabled {
+  cursor: default;
+}
+.ex__option.is-right {
+  border-color: #1aa05a;
+  background: rgba(26, 160, 90, 0.12);
+}
+.ex__option.is-wrong {
+  border-color: var(--red);
+  background: rgba(232, 32, 26, 0.08);
+}
+
+/* Completar y corregir */
+.ex__gap,
+.ex__text {
+  border: 2px solid rgba(11, 42, 107, 0.25);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--navy);
+  font: 800 1rem var(--font-body);
+}
+.ex__gap {
+  width: 8.5rem;
+  margin: 0 0.3rem;
+  padding: 0.15rem 0.6rem;
+  text-align: center;
+}
+.ex__text {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+}
+.ex__gap:focus,
+.ex__text:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(10, 124, 255, 0.18);
+}
+.ex__gap:disabled,
+.ex__text:disabled {
+  background: var(--app-soft);
+}
+
+/* Hablar */
+.ex__mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.3rem;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: 800 1rem var(--font-body);
+  cursor: pointer;
+}
+.ex__mic:hover:not(:disabled),
+.ex__mic:focus-visible {
+  outline: none;
+  background: rgba(255, 199, 0, 0.3);
+  box-shadow: 0 0 0 4px rgba(255, 199, 0, 0.5);
+}
+.ex__mic:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.ex__mic.is-rec {
+  background: #e5484d;
+  border-color: #e5484d;
+  color: #fff;
+  animation: ex-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ex-pulse {
+  50% {
+    box-shadow: 0 0 0 8px rgba(229, 72, 77, 0.2);
+  }
+}
+
+/* Resultado */
+.ex__note {
+  margin: 0;
+  font-weight: 700;
+  color: var(--red);
+}
+.ex__result {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 2px solid transparent;
+}
+.ex__result p {
+  margin: 0;
+}
+.ex__result.is-ok {
+  background: rgba(26, 160, 90, 0.1);
+  border-color: rgba(26, 160, 90, 0.4);
+}
+.ex__result.is-no {
+  background: #fff3d1;
+  border-color: var(--yellow);
+}
+.ex__verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: 800 1.1rem var(--font-display);
+  color: var(--navy);
+}
+.ex__rule summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+.ex__rule summary span {
+  margin-left: 0.3rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 0.7rem;
+}
+.ex__rule p {
+  margin-top: 0.4rem;
+}
+.ex__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+/* Resumen */
+.ex__score {
+  margin: 0;
+  font: 800 1.3rem var(--font-display);
+  color: var(--navy);
+}
+.ex__score strong {
+  font-size: 2.4rem;
+}
+.ex__focus {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ex__focus small {
+  color: rgba(11, 27, 68, 0.6);
+}
+
+@media (max-width: 600px) {
+  .ex__actions .btn {
+    flex: 1 1 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ex__mic.is-rec {
+    animation: none;
+  }
+}

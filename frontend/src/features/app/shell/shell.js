@@ -13,7 +13,7 @@ const NAV = [
   { name: 'inicio', path: '/app/inicio', icon: 'home', key: 'home', match: ['inicio'] },
   { name: 'conversaciones', path: '/app/conversaciones', icon: 'chat', key: 'conversations', tab: 'history', match: ['conversaciones', 'informe', 'revision'] },
   { name: 'progreso', path: '/app/progreso', icon: 'chart', key: 'progress', match: ['progreso'] },
-  { name: 'practica', path: '/app/practica', icon: 'ear', key: 'practice', match: ['practica'] },
+  { name: 'practica', path: '/app/practica', icon: 'ear', key: 'practice', match: ['practica', 'ejercicios'] },
   { name: 'ajustes', path: '/app/ajustes', icon: 'gear', key: 'settings', match: ['ajustes'] },
 ]
 

@@ -1,0 +1,59 @@
+id: pronoun.subject_object
+error_type: pronoun
+level: A1
+title: Subject and object pronouns
+rule: Use subject pronouns (I, you, he, she, it, we, they) before the verb and object pronouns (me, you, him, her, it, us, them) after a verb or preposition. Say "Give it to him", "between you and me", "She and I went".
+rule_es: Pronombres sujeto (I, he, she, we, they) antes del verbo; pronombres objeto (me, him, her, us, them) después del verbo o de una preposición.
+examples:
+- Her is my sister. -> She is my sister.
+- Give the book to he. -> Give the book to him.
+- Me and my friend went there. -> My friend and I went there.
+spanish_note: Spanish "a mí" and "yo" depend on context, so object and subject forms are mixed up in English.
+===
+id: pronoun.possessive_adjectives
+error_type: pronoun
+level: A1
+title: Possessive adjectives agree with the owner
+rule: Choose the possessive adjective (my, your, his, her, its, our, their) by the owner, not by the thing owned. "His" is for a male owner and "her" for a female owner, whatever the noun is. Never use an article with a possessive adjective.
+rule_es: El posesivo (my, his, her, their) concuerda con quien posee, no con lo poseído. "His" si el dueño es hombre y "her" si es mujer. No se usa artículo con el posesivo.
+examples:
+- She loves his husband. -> She loves her husband.
+- Peter lost her keys. -> Peter lost his keys.
+- I like the my house. -> I like my house.
+spanish_note: Spanish "su" works for everyone, so learners lose track of he/she.
+===
+id: pronoun.reflexive_overuse
+error_type: pronoun
+level: B1
+title: Reflexive pronouns are used less in English
+rule: English uses a reflexive pronoun (myself, yourself...) only when subject and object are the same person and the verb is truly reflexive (hurt yourself, enjoy yourself). Many verbs that are reflexive in Spanish are not in English: wake up, get up, sit down, feel, relax, wash, shave, dress, remember. Do not add -self to them.
+rule_es: En inglés se usa reflexivo solo cuando sujeto y objeto son la misma persona y el verbo lo exige. Muchos verbos reflexivos en español no lo son en inglés: wake up, sit down, feel, relax, remember.
+examples:
+- I woke myself up at six. -> I woke up at six.
+- She feels herself tired. -> She feels tired.
+- We remember ourselves that day. -> We remember that day.
+spanish_note: "Me levanto", "se siente" and "nos acordamos" are reflexive in Spanish, so the learner adds a reflexive pronoun.
+===
+id: pronoun.it_dummy_subject
+error_type: pronoun
+level: A2
+title: Dummy it for weather, time and general statements
+rule: English needs an explicit subject in every sentence. Use "it" for weather, time, distance and impersonal statements: "It is raining", "It is five o'clock", "It is important to rest". Do not start with the verb alone.
+rule_es: En inglés la oración siempre necesita sujeto. Usa "it" para clima, hora, distancia y frases impersonales: "It is raining", "It is five o'clock".
+examples:
+- Is raining today. -> It is raining today.
+- Is very important to sleep well. -> It is very important to sleep well.
+- Is two kilometers from here. -> It is two kilometers from here.
+spanish_note: Spanish drops the subject ("llueve", "es tarde"), so learners start with the verb.
+===
+id: pronoun.who_which_relative
+error_type: pronoun
+level: B1
+title: Relative pronouns: who, which, that
+rule: Use "who" (or "that") for people and "which" (or "that") for things in a relative clause. Do not repeat the object inside the clause: "the book that I read", not "the book that I read it". "Whose" shows possession.
+rule_es: "Who" (o that) para personas y "which" (o that) para cosas. No se repite el objeto dentro de la cláusula: "the book that I read".
+examples:
+- The man which lives here is a doctor. -> The man who lives here is a doctor.
+- The film that I saw it was great. -> The film that I saw was great.
+- I know a girl that her father is a pilot. -> I know a girl whose father is a pilot.
+spanish_note: Spanish "que" covers all cases, so learners use one word or add a pronoun to repeat the noun.

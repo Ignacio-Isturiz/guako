@@ -1,0 +1,46 @@
+{"error_type": "verb_form", "original": "she go", "correction": "she goes", "explanation": "Third person singular needs -s.", "expected_rule": "subject_verb_agreement.third_person_s"}
+{"error_type": "verb_form", "original": "has 28 years old", "correction": "is 28 years old", "explanation": "Age uses be, not have.", "expected_rule": "vocabulary.age_with_be"}
+{"error_type": "vocabulary", "original": "boring", "correction": "bored", "explanation": "Use -ed for how a person feels.", "expected_rule": "vocabulary.adjectives_ed_ing"}
+{"error_type": "preposition", "original": "talk you", "correction": "talk to you", "explanation": "The verb talk requires the preposition to.", "expected_rule": "preposition.dependent_verbs"}
+{"error_type": "verb_form", "original": "he don't like", "correction": "he doesn't like", "explanation": "Use doesn't with he, she, it.", "expected_rule": "subject_verb_agreement.do_does"}
+{"error_type": "verb_tense", "original": "he don't like", "correction": "he doesn't like", "explanation": "Use doesn't with he, she, it.", "expected_rule": "subject_verb_agreement.do_does"}
+{"error_type": "verb_tense", "original": "I am agree", "correction": "I agree", "explanation": "Agree is a verb, it does not need be.", "expected_rule": "verb_form.continuous_needs_be"}
+{"error_type": "verb_form", "original": "I can to swim", "correction": "I can swim", "explanation": "Modal verbs are followed by the base form without to.", "expected_rule": "verb_form.modal_base_form"}
+{"error_type": "verb_tense", "original": "I can swimming", "correction": "I can swim", "explanation": "After a modal verb use the base form.", "expected_rule": "verb_form.modal_base_form"}
+{"error_type": "verb_tense", "original": "I have eat", "correction": "I have eaten", "explanation": "Use the past participle after have.", "expected_rule": "verb_form.past_participle"}
+{"error_type": "verb_tense", "original": "I go yesterday", "correction": "I went yesterday", "explanation": "Use the past simple for finished past time.", "expected_rule": "verb_tense.past_simple_irregular"}
+{"error_type": "verb_tense", "original": "I didn't went", "correction": "I didn't go", "explanation": "After didn't use the base form.", "expected_rule": "verb_tense.did_in_questions_negatives"}
+{"error_type": "verb_tense", "original": "I live here since 2020", "correction": "I have lived here since 2020", "explanation": "Use the present perfect with since.", "expected_rule": "verb_tense.since_for_present_perfect"}
+{"error_type": "verb_tense", "original": "if it will rain", "correction": "if it rains", "explanation": "No will after if in a real condition.", "expected_rule": "verb_tense.no_future_after_time_words"}
+{"error_type": "article", "original": "I saw elephant", "correction": "I saw an elephant", "explanation": "A singular countable noun needs an article.", "expected_rule": "article.missing_a_with_singular"}
+{"error_type": "article", "original": "a apple", "correction": "an apple", "explanation": "Use an before a vowel sound.", "expected_rule": "article.a_an"}
+{"error_type": "article", "original": "the life is hard", "correction": "life is hard", "explanation": "No the for general ideas.", "expected_rule": "article.the_in_generalisations"}
+{"error_type": "article", "original": "go to the home", "correction": "go home", "explanation": "Home does not take the here.", "expected_rule": "article.fixed_expressions_no_the"}
+{"error_type": "plural_noun", "original": "two childs", "correction": "two children", "explanation": "Child has an irregular plural.", "expected_rule": "plural_noun.irregular_plural"}
+{"error_type": "plural_noun", "original": "many informations", "correction": "much information", "explanation": "Information is uncountable.", "expected_rule": "plural_noun.uncountable_nouns"}
+{"error_type": "plural_noun", "original": "this books", "correction": "these books", "explanation": "The determiner must agree with the noun.", "expected_rule": "plural_noun.determiner_agreement"}
+{"error_type": "preposition", "original": "in Monday", "correction": "on Monday", "explanation": "Use on with days.", "expected_rule": "preposition.in_on_at_time"}
+{"error_type": "preposition", "original": "arrive to the airport", "correction": "arrive at the airport", "explanation": "Arrive takes at or in, not to.", "expected_rule": "preposition.travel_and_arrival"}
+{"error_type": "preposition", "original": "good in English", "correction": "good at English", "explanation": "Good is followed by at.", "expected_rule": "preposition.dependent_adjectives"}
+{"error_type": "preposition", "original": "listen music", "correction": "listen to music", "explanation": "Listen needs to.", "expected_rule": "preposition.dependent_verbs"}
+{"error_type": "pronoun", "original": "me and him goes", "correction": "he and I go", "explanation": "Use subject pronouns as the subject.", "expected_rule": "pronoun.subject_object"}
+{"error_type": "pronoun", "original": "he lost her keys", "correction": "he lost his keys", "explanation": "Possessive agrees with the owner.", "expected_rule": "pronoun.possessive_adjectives"}
+{"error_type": "pronoun", "original": "is raining", "correction": "it is raining", "explanation": "English needs a subject, use it.", "expected_rule": "pronoun.it_dummy_subject"}
+{"error_type": "subject_verb_agreement", "original": "there is many people", "correction": "there are many people", "explanation": "Use are with plural nouns.", "expected_rule": "subject_verb_agreement.there_is_are"}
+{"error_type": "subject_verb_agreement", "original": "everybody are happy", "correction": "everybody is happy", "explanation": "Everybody takes a singular verb.", "expected_rule": "subject_verb_agreement.indefinite_subjects"}
+{"error_type": "word_order", "original": "where you live", "correction": "where do you live", "explanation": "Questions need inversion.", "expected_rule": "word_order.question_inversion"}
+{"error_type": "word_order", "original": "I like very much it", "correction": "I like it very much", "explanation": "Adverb position.", "expected_rule": "word_order.svo_basic"}
+{"error_type": "word_order", "original": "a car red", "correction": "a red car", "explanation": "Adjective goes before the noun.", "expected_rule": "word_order.adjective_before_noun"}
+{"error_type": "vocabulary", "original": "say me", "correction": "tell me", "explanation": "Tell takes a person directly.", "expected_rule": "vocabulary.say_tell_speak_talk"}
+{"error_type": "vocabulary", "original": "borrow me your pen", "correction": "lend me your pen", "explanation": "Lend is giving, borrow is receiving.", "expected_rule": "vocabulary.borrow_lend_bring_take"}
+{"error_type": "vocabulary", "original": "much friends", "correction": "many friends", "explanation": "Many with countable nouns.", "expected_rule": "vocabulary.much_many_few_little"}
+{"error_type": "other", "original": "more better", "correction": "better", "explanation": "Better is already a comparative.", "expected_rule": "other.comparatives_superlatives"}
+{"error_type": "other", "original": "I don't know nothing", "correction": "I don't know anything", "explanation": "Avoid double negatives.", "expected_rule": "other.double_negative"}
+{"error_type": "vocabulary", "original": "pull the trigger on it", "correction": "decide on it", "explanation": "A more natural word choice.", "expected_rule": null}
+{"error_type": "other", "original": "yeah", "correction": "yes", "explanation": "More formal.", "expected_rule": null}
+{"error_type": "vocabulary", "original": "nice weather", "correction": "lovely weather", "explanation": "A stylistic preference, not an error.", "expected_rule": null}
+{"error_type": "other", "original": "the thing", "correction": "the idea", "explanation": "More precise word.", "expected_rule": null}
+{"error_type": "vocabulary", "original": "big problem", "correction": "serious problem", "explanation": "More natural collocation.", "expected_rule": null}
+{"error_type": "other", "original": "I think that", "correction": "I believe that", "explanation": "Style variation.", "expected_rule": null}
+{"error_type": "verb_form", "original": "I have 30 years", "correction": "I am 30 years old", "explanation": "Age uses be.", "expected_rule": "vocabulary.age_with_be"}
+{"error_type": "vocabulary", "original": "I am very interesting in art", "correction": "I am very interested in art", "explanation": "Use -ed for how a person feels.", "expected_rule": "vocabulary.adjectives_ed_ing"}

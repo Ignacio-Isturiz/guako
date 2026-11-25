@@ -11,10 +11,13 @@ from app.config import settings
 from app.conversation.deps import get_pronunciation_provider
 from app.conversation.errors import register_speech_error_handlers
 from app.db import async_session_maker
+from app.exercises_api import router as exercises_router
 from app.grammar_api import router as grammar_router
 from app.llm.handlers import register_llm_error_handlers
 from app.practice_api import router as practice_router
 from app.providers import chains
+from app.rag import get_embedder
+from app.rag.store import sync_index
 from app.providers.state import get_state
 from app.providers.usage import flush_usage, load_baseline, run_flusher
 from app.sessions_api import router as sessions_router
@@ -39,6 +42,18 @@ def _check_providers() -> None:
         )
 
 
+async def _index_rules() -> None:
+    """Embed the grammar rules that are new or edited (only the changed ones). Best effort: never stops the API."""
+    embedder = get_embedder()
+    if embedder is None or async_session_maker.kw["bind"].dialect.name != "postgresql":
+        return  # no Gemini key, or SQLite: the report simply has no rules
+    try:
+        async with async_session_maker() as db:
+            await sync_index(db, embedder)
+    except Exception:
+        logger.exception("rag_index_failed: corrections will have no rule until the next start")
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):  # noqa: ANN201
     """Startup: check the provider chains, restore the day's counters, start the usage flusher and the retrier."""
@@ -50,6 +65,7 @@ async def lifespan(_: FastAPI):  # noqa: ANN201
             await load_baseline(async_session_maker, state)
         except Exception:
             logger.exception("usage_baseline_failed: counters start from zero")
+        await _index_rules()
         tasks = [
             asyncio.create_task(run_flusher(async_session_maker, state)),
             asyncio.create_task(
@@ -101,6 +117,7 @@ app.include_router(grammar_router)
 # POST /api/sessions · POST /api/sessions/{id}/turns (audio) · GET /api/sessions/{id}/turns/{n}/reply-audio
 app.include_router(sessions_router)
 app.include_router(practice_router)
+app.include_router(exercises_router)
 
 # GET /api/admin/usage  (superusers only)
 app.include_router(admin_router)

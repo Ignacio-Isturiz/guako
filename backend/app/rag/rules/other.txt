@@ -1,0 +1,47 @@
+id: other.double_negative
+error_type: other
+level: A2
+title: One negative per clause
+rule: Standard English uses a single negative in a clause. After "not" use "any" words (anything, anybody, anywhere), or use a negative word on its own (nothing, nobody, nowhere). Say "I don't have anything" or "I have nothing", never "I don't have nothing".
+rule_es: En inglés estándar solo se usa una negación por cláusula: "I don't have anything" o "I have nothing", no "I don't have nothing".
+examples:
+- I don't know nothing. -> I don't know anything.
+- She never says nothing. -> She never says anything.
+- Nobody didn't come. -> Nobody came.
+spanish_note: Spanish requires a double negative ("no tengo nada"), so it is carried into English.
+===
+id: other.comparatives_superlatives
+error_type: other
+level: A2
+title: Comparatives and superlatives
+rule: Short adjectives add -er and -est (taller, tallest). Long adjectives use more and most (more expensive, most expensive). Use "than" after a comparative (not "that" or "of") and never combine both forms ("more taller"). For the superlative use "the" and "in/of": "the best in the class".
+rule_es: Adjetivos cortos: -er / -est. Largos: more / most. Después del comparativo se usa "than". No se mezclan las dos formas ("more taller").
+examples:
+- She is more tall than me. -> She is taller than me.
+- This is the most easy exercise. -> This is the easiest exercise.
+- He is older that his sister. -> He is older than his sister.
+spanish_note: Spanish "más alto que" always uses "más", so learners overuse "more".
+===
+id: other.conditionals
+error_type: other
+level: B1
+title: Conditionals: if clauses
+rule: Zero and first conditional use the present simple in the if-clause: "If you heat ice, it melts", "If it rains, we will stay". The second conditional uses the past simple in the if-clause and "would" in the result clause for unreal present situations: "If I had money, I would travel". Do not put "would" in the if-clause.
+rule_es: Primer condicional: if + presente, will. Segundo condicional: if + pasado simple, would. No se pone "would" en la cláusula con if.
+examples:
+- If I would have time, I would travel. -> If I had time, I would travel.
+- If she will come, I will tell her. -> If she comes, I will tell her.
+- If I am you, I would study more. -> If I were you, I would study more.
+spanish_note: Spanish uses the imperfect subjunctive after "si" ("si tuviera"), which has no direct English form, so learners use "would".
+===
+id: other.so_such_too_very
+error_type: other
+level: B1
+title: Too, very, enough and so
+rule: "Very" means a high degree. "Too" means more than is wanted or possible (too hot to drink). "Enough" goes after an adjective and before a noun (old enough, enough money). "So" goes before an adjective and "such" before a noun phrase.
+rule_es: "Very" = muy; "too" = demasiado (más de lo deseable); "enough" va después del adjetivo y antes del sustantivo. "So" + adjetivo; "such" + sustantivo.
+examples:
+- This coffee is too good. -> This coffee is very good.
+- She is enough old to drive. -> She is old enough to drive.
+- It was so a nice day. -> It was such a nice day.
+spanish_note: Spanish "demasiado" and "muy" blur together, and "suficiente" goes before the adjective.
