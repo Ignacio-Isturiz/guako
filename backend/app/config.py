@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     groq_api_key: SecretStr | None = None
     gemini_model: str = "gemini-3.5-flash-lite"
     groq_model: str = "openai/gpt-oss-20b"
+    # Reasoning effort of the Groq model in the CONVERSATION chain only (gpt-oss: low, medium, high).
+    # "low" keeps the learner waiting less; the background analysis keeps the model default.
+    # Empty = do not send it (needed for a Groq model without reasoning).
+    groq_conversation_reasoning_effort: str = "low"
     llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     # Per-call timeout in seconds.
     llm_timeout_seconds: float = Field(default=30.0, gt=0)
@@ -83,7 +87,8 @@ class Settings(BaseSettings):
     exercises_generation_cooldown_seconds: float = Field(default=900.0, ge=0)  # between two tries for the same rule
 
     # --- Speech-to-text (Groq-hosted Whisper; reuses groq_api_key) ----
-    stt_model: str = "whisper-large-v3"
+    # turbo: much faster than whisper-large-v3 and nearly as accurate in English; the learner is waiting.
+    stt_model: str = "whisper-large-v3-turbo"
     # ISO-639-1 language hint sent to Whisper (the tutor listens to English). Empty = auto-detect.
     stt_language: str = "en"
     # Per-request timeout in seconds.

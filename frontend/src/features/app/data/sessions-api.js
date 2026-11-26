@@ -81,6 +81,10 @@ export function sendTurn(sessionId, blob, filename) {
 // El audio está detrás de la cookie: se descarga con credenciales y se reproduce desde un Blob
 export const fetchReplyAudio = (url) => request(url).then((res) => res.blob())
 
+// Dirección para dársela directamente a un <audio>: empieza a sonar mientras se descarga
+// (la cookie de sesión viaja igual porque la petición va al mismo sitio).
+export const replyAudioSrc = (url) => `${API_BASE}${url}`
+
 // `keepalive` deja que la petición termine aunque la pestaña se esté cerrando
 export const endSession = (sessionId, { keepalive = false } = {}) =>
   request(`/api/sessions/${sessionId}`, { method: 'PATCH', json: { ended: true }, keepalive }).then(json)

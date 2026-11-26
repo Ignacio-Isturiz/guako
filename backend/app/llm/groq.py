@@ -24,10 +24,13 @@ class GroqProvider(BaseLLMProvider):
         temperature: float,
         timeout_seconds: float,
         max_retries: int = 2,
+        reasoning_effort: str | None = None,
     ) -> None:
         super().__init__(max_retries=max_retries)
         self.model = model
         self._temperature = temperature
+        # Only sent when set: a Groq model without reasoning rejects the parameter.
+        self._extra = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
         # SDK-level retries are disabled: our own loop owns retry policy, and
         # SDK retries on 429 would hide quota errors and multiply latency.
         self._client = groq.Groq(api_key=api_key.get_secret_value(), timeout=timeout_seconds, max_retries=0)
@@ -48,6 +51,7 @@ class GroqProvider(BaseLLMProvider):
                 ],
                 temperature=self._temperature,
                 response_format={"type": "json_object"},
+                **self._extra,
             )
         except groq.AuthenticationError as exc:
             raise LLMAuthError("Groq rejected the API key") from exc

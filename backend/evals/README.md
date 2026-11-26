@@ -4,7 +4,7 @@ Casos de prueba con respuesta esperada conocida, para medir la calidad del tutor
 
 - `grammar/cases.jsonl`: 40 frases en inglés. 34 con errores de gramática conocidos (`expected_errors`: fragmento `original`, `correction` y `error_type`) y 6 correctas (lista vacía, para detectar falsos positivos).
 - `grammar/pronunciation_cases.jsonl`: 8 frases para pronunciación. Indican las palabras objetivo y el error típico (`mispronunciation`). `audio_file` es `null` hasta grabar cada audio.
-- `audio/latency/`: audios para `scripts.measure_latency`.
+- `audio/latency/`: audios para `scripts.measure_latency` y `scripts.measure_turn_latency`.
 
 Cada línea es un JSON. El formato lo valida `tests/test_evals_dataset.py`.
 
@@ -50,3 +50,14 @@ python -m scripts.run_judge_evals --yes  # llama al LLM por el router (uso "aná
 ```
 
 Guarda `results/evals/judges-<fecha>.jsonl` y muestra, por dimensión, cuántas veces el juez coincide exacto y a ±1 punto, el error medio, el sesgo (positivo = más generoso que la persona) y la confianza cuando acierta frente a cuando falla. **No inventa cifras**: un caso sin cuota o con fallo se anota aparte y no entra en las estadísticas; si ninguno se pudo juzgar, no imprime ninguna cifra.
+
+## Latencia de un turno (lo que el usuario espera)
+
+`scripts.measure_turn_latency` mide cuánto tarda Guako en responder un mensaje de voz: pasa por el endpoint real (`POST /api/sessions/{id}/turns` + descarga del audio), con el router de proveedores, el prompt del tutor y el historial creciendo dentro de cada sesión. Usa una base SQLite y un caché de TTS vacíos y temporales; no llama a Azure ni corre el análisis de fondo. No incluye la red navegador-servidor ni la detección de fin de habla.
+
+```powershell
+python -m scripts.measure_turn_latency        # muestra el plan; no envía nada
+python -m scripts.measure_turn_latency --yes  # 20 turnos en 4 sesiones + 4 aperturas
+```
+
+Gasta cuota real: cada turno es 1 STT, 1 LLM y 1 TTS (Groq Orpheus tiene ~100 TTS/día; pasado el tope responde OpenAI, que es de pago y tiene otra latencia). Revisa `tts_provider` en el resumen. Guarda `results/latency/turns-<run_id>.jsonl`.
