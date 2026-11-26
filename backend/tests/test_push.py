@@ -147,3 +147,30 @@ def test_deleting_the_account_drops_its_subscriptions(client: TestClient, db_pat
     client.put("/api/push/subscription", json=SUB)
     assert client.delete("/api/users/me").status_code == 204
     assert _rows(db_path) == []
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("mailto:ana@guako.app", "mailto:ana@guako.app"),
+        ("  mailto: ana@guako.app ", "mailto:ana@guako.app"),
+        ('"mailto:ana@guako.app"', "mailto:ana@guako.app"),
+        ("<ana@guako.app>", "mailto:ana@guako.app"),
+        ("ana@guako.app", "mailto:ana@guako.app"),
+        ("https://guako.app", "https://guako.app"),
+    ],
+)
+def test_vapid_subject_is_normalized_to_what_py_vapid_accepts(raw: str, expected: str) -> None:
+    from py_vapid import _check_sub
+
+    config = Settings(vapid_public_key="BPublic", vapid_private_key=SecretStr("priv"), vapid_subject=raw)
+    assert config.vapid_subject == expected
+    assert config.push_enabled
+    assert _check_sub(config.vapid_subject)  # the same check that failed in production
+
+
+@pytest.mark.parametrize("raw", ["", "mailto:", "ana", "mailto:ana", "http://guako.app", "correo de ana"])
+def test_an_invalid_vapid_subject_turns_push_off(raw: str) -> None:
+    config = Settings(vapid_public_key="BPublic", vapid_private_key=SecretStr("priv"), vapid_subject=raw)
+    assert config.push_configured
+    assert not config.push_enabled
