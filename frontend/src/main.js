@@ -2,13 +2,14 @@
 //   1. Carga los estilos globales y los módulos (cada módulo registra sus textos y estilos).
 //   2. Decide qué módulo se ve según la URL: "/" → landing, "/app/..." → app,
 //      "/privacidad", "/terminos", "/borrar-cuenta" (y en inglés) → página legal propia,
-//      "/bienvenida" → onboarding. En la app móvil NO hay landing: "/" lleva al onboarding
+//      "/bienvenida" → onboarding. En la app móvil (y en la web instalada) NO hay landing: "/" lleva al onboarding
 //      (la primera vez), a la pantalla de acceso o al inicio si ya hay sesión.
 //   3. Atiende los clics "accionables" de toda la página (data-nav, data-auth, data-legal...).
 import '@/shared/styles/index.css'
 import { setLang, applyMeta } from '@/core/i18n.js'
 import { navigate } from '@/core/router.js'
-import { initNative, isNative } from '@/core/native.js'
+import { initNative, isNative, isInstalledApp } from '@/core/native.js'
+import { registerServiceWorker } from '@/core/pwa.js'
 import { mountLanding, unmountLanding, updateNavbarAuth } from '@/features/landing/index.js'
 import { initAuth, openAuth, logout, getSession } from '@/features/auth/index.js'
 import { initLegal, openLegal, legalDocFromPath, mountLegalPage } from '@/features/legal/index.js'
@@ -49,8 +50,8 @@ function render() {
     leave('onboarding')
     mode = 'onboarding'
     mountOnboarding(root, { onFinish: finishOnboarding })
-  } else if (isNative) {
-    // La app móvil no tiene landing
+  } else if (isInstalledApp) {
+    // La app móvil (nativa o web instalada) no tiene landing
     navigate(nativeStartPath(!!getSession()), { replace: true })
   } else {
     leave('landing')
@@ -69,6 +70,7 @@ applyMeta()
 window.addEventListener('routechange', render)
 render()
 initNative()
+if (!isNative) registerServiceWorker()
 
 // Cambio de idioma: se repinta el módulo actual conservando la posición del scroll
 window.addEventListener('langchange', () => {

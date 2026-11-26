@@ -102,4 +102,30 @@ export default {
     privacy: 'Política de privacidad',
     rights: '© 2026 Guako',
   },
+
+  install: {
+    button: 'Instalar la app en el celular',
+    done: '¡Listo! Busca Guako en la pantalla de tu celular.',
+    close: 'Cerrar',
+    ok: 'Entendido',
+    title: {
+      android: 'Instala Guako en tu Android',
+      ios: 'Instala Guako en tu iPhone',
+      desktop: 'Instala Guako en tu celular',
+    },
+    steps: {
+      android: [
+        'Abre esta página en <strong>Chrome</strong>.',
+        'Toca el menú <strong>⋮</strong> de arriba a la derecha.',
+        'Elige <strong>Instalar app</strong> o <strong>Agregar a la pantalla principal</strong>.',
+      ],
+      ios: [
+        'Abre esta página en <strong>Safari</strong>.',
+        'Toca el botón <strong>Compartir</strong> (el cuadro con la flecha hacia arriba).',
+        'Elige <strong>Agregar a inicio</strong> y luego <strong>Agregar</strong>.',
+      ],
+    },
+    desktop: 'Abre <strong>{url}</strong> desde tu celular y toca <strong>Instalar la app en el celular</strong>: detectamos si es Android o iPhone y te llevamos a instalarla.',
+    store: { android: 'Descargar en Google Play', ios: 'Descargar en App Store' },
+  },
 }

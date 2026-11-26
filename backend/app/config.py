@@ -192,6 +192,22 @@ class Settings(BaseSettings):
         parse_caps(value)
         return value
 
+    # --- Web Push: recordatorio diario de racha en la web instalada (app/push.py) ----
+    # La app nativa usa notificaciones locales; la web instalada no puede programarlas, así que el backend
+    # se las envía. Claves VAPID: python -m scripts.vapid_keys. Sin las tres, no se envía nada.
+    vapid_public_key: str = ""  # base64url sin relleno: se le entrega al navegador
+    vapid_private_key: SecretStr | None = None  # base64url sin relleno (la misma pareja)
+    vapid_subject: str = ""  # "mailto:alguien@dominio" o "https://…": los servicios de push la piden
+    push_check_seconds: float = Field(default=300.0, gt=0)  # cada cuánto se buscan recordatorios pendientes
+    # Token para POST /api/push/run (un cron externo despierta el servidor, p. ej. si el hosting lo duerme).
+    # Vacío = ese endpoint no existe (404).
+    push_cron_token: SecretStr | None = None
+
+    @property
+    def push_enabled(self) -> bool:
+        private = self.vapid_private_key.get_secret_value().strip() if self.vapid_private_key else ""
+        return bool(self.vapid_public_key.strip() and private and self.vapid_subject.strip())
+
     @property
     def langfuse_enabled(self) -> bool:
         keys = (self.langfuse_public_key, self.langfuse_secret_key)

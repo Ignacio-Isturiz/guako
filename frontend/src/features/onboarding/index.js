@@ -1,5 +1,5 @@
-// Módulo onboarding (solo app móvil): API pública.
-// En Android/iOS no hay landing: la app entra por aquí la primera vez y después va directo al acceso.
+// Módulo onboarding (solo app móvil y web instalada): API pública.
+// En Android/iOS y en la web instalada no hay landing: la app entra por aquí la primera vez y después va directo al acceso.
 import { addMessages } from '@/core/i18n.js'
 import { createScope } from '@/core/lifecycle.js'
 import { renderOnboarding, initOnboarding } from './onboarding.js'

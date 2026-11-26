@@ -1,7 +1,8 @@
 // Genera las imágenes base de la app móvil a partir del logo (src/shared/assets/brand/guako-logo.png):
-//   assets/icon-only.png        1024×1024 sin transparencia (iOS, App Store, Play Store 512 se saca de aquí)
+//   assets/icon-only.png        1024×1024 logo completo sobre blanco, sin transparencia (iOS, App Store, Play Store 512 se saca de aquí)
 //   assets/icon-foreground.png  1024×1024 capa delantera del ícono adaptable de Android (dentro de la zona segura)
-//   assets/icon-background.png  1024×1024 capa de fondo (azul del logo)
+//   assets/icon-background.png  1024×1024 capa de fondo (blanca)
+//   public/icons/*              íconos de la web instalable (manifest) y apple-touch-icon
 //   assets/splash.png           2732×2732 pantalla de inicio (y splash-dark.png igual)
 //   assets/play-store-icon-512.png  ícono de la ficha de Google Play
 // Después `capacitor-assets generate` saca de aquí todos los tamaños de Android e iOS (npm run assets:mobile).
@@ -25,21 +26,35 @@ const fit = (size) => sharp(trimmed).resize(size, size, { fit: 'cover', kernel: 
 
 await mkdir(OUT, { recursive: true })
 
-// Ícono completo: el logo llena el cuadrado y sus esquinas redondeadas quedan del mismo azul (cada sistema
-// le pone su propia máscara: círculo, cuadrado redondeado…)
-await square(1024, LOGO_BG)
-  .composite([{ input: await fit(1024) }])
-  .flatten({ background: LOGO_BG })
-  .png()
-  .toFile(`${OUT}/icon-only.png`)
+// Íconos con el logo COMPLETO (su cuadro azul de esquinas redondeadas entero) sobre fondo blanco, con aire
+// alrededor: así ningún sistema le recorta las esquinas ni la cresta (cada uno pone su máscara encima).
+const ICON_BG = '#ffffff'
+const contain = (size) =>
+  sharp(trimmed).resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 }, kernel: 'lanczos3' }).toBuffer()
+const iconOn = async (size, ratio, background = ICON_BG) =>
+  square(size, background)
+    .composite([{ input: await contain(Math.round(size * ratio)), gravity: 'center' }])
+    .flatten({ background })
+    .png()
 
-// Ícono adaptable de Android: la máscara recorta hasta un 33 %, así que el dibujo va al 70 % y centrado
-const fg = Math.round(1024 * 0.7)
+// iOS / App Store / Play Store: iOS redondea el cuadrado blanco y el logo queda dentro con margen
+await (await iconOn(1024, 0.8)).toFile(`${OUT}/icon-only.png`)
+
+// Ícono adaptable de Android: el XML lo dibuja dentro de la zona visible y la máscara más estricta es un
+// círculo; al 70 % las esquinas redondeadas del logo caben enteras dentro de ese círculo
 await square(1024, { r: 0, g: 0, b: 0, alpha: 0 })
-  .composite([{ input: await fit(fg), gravity: 'center' }])
+  .composite([{ input: await contain(Math.round(1024 * 0.7)), gravity: 'center' }])
   .png()
   .toFile(`${OUT}/icon-foreground.png`)
-await square(1024, LOGO_BG).png().toFile(`${OUT}/icon-background.png`)
+await square(1024, ICON_BG).png().toFile(`${OUT}/icon-background.png`)
+
+// Íconos de la web instalable (manifest.webmanifest) y del acceso directo de iPhone
+const PUB = `${root}public/icons`
+await mkdir(PUB, { recursive: true })
+await (await iconOn(192, 0.8)).toFile(`${PUB}/icon-192.png`)
+await (await iconOn(512, 0.8)).toFile(`${PUB}/icon-512.png`)
+await (await iconOn(512, 0.62)).toFile(`${PUB}/icon-maskable-512.png`) // "maskable": Android recorta hasta un círculo
+await (await iconOn(180, 0.8)).toFile(`${PUB}/apple-touch-icon.png`)
 
 // Pantalla de inicio: el logo pequeño en el centro (los sistemas recortan los bordes según la pantalla)
 const splash = await square(2732, SPLASH_BG)
@@ -78,5 +93,7 @@ console.log('Listo: frontend/assets (icon-only, icon-foreground, icon-background
       .png()
       .toFile(`${RES}/drawable-${dpi}/ic_stat_guako.png`)
   }
-  console.log('Listo: ic_stat_guako (ícono de notificación de Android)')
+  // La misma silueta es el "badge" de la notificación de la web instalada (barra de estado de Android)
+  await sharp(`${RES}/drawable-xxxhdpi/ic_stat_guako.png`).toFile(`${root}public/icons/badge-96.png`)
+  console.log('Listo: ic_stat_guako (ícono de notificación de Android) y public/icons/badge-96.png')
 }

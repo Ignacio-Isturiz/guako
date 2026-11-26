@@ -22,7 +22,7 @@ const radio = (name, value, current, title, body) => `
     <span class="opt__text"><strong>${title}</strong><small>${body}</small></span>
   </label>`
 
-// Recordatorio diario de racha: solo existe en la app móvil y siempre está activo. Aquí se elige la hora
+// Recordatorio diario de racha: solo existe en la app móvil y en la web instalada, y siempre está activo. Aquí se elige la hora
 // y se ve si el teléfono deja mostrar notificaciones (el estado se pinta en init, es asíncrono).
 const HOURS = [7, 8, 9, 12, 13, 18, 19, 20, 21, 22]
 const reminderCard = () => `

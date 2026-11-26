@@ -22,6 +22,8 @@ from app.rag import get_embedder
 from app.rag.store import sync_index
 from app.providers.state import get_state
 from app.providers.usage import flush_usage, load_baseline, run_flusher
+from app.push import run_push_scheduler
+from app.push_api import router as push_router
 from app.sessions_api import router as sessions_router
 from app.streak_api import router as streak_router
 from app.users import UserCreate, UserRead, UserUpdate, auth_backend, fastapi_users
@@ -63,7 +65,7 @@ async def _index_rules() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):  # noqa: ANN201
-    """Startup: check the provider chains, restore the day's counters, start the usage flusher and the retrier."""
+    """Startup: check the provider chains, restore the day's counters, start the usage flusher, the retrier and the push reminders."""
     tasks: list[asyncio.Task] = []
     state = get_state()
     if settings.background_tasks_enabled:
@@ -79,6 +81,8 @@ async def lifespan(_: FastAPI):  # noqa: ANN201
                 run_retrier(async_session_maker, lambda: chains.analysis_llm(settings), get_pronunciation_provider)
             ),
         ]
+        if settings.push_enabled:
+            tasks.append(asyncio.create_task(run_push_scheduler(async_session_maker)))
     yield
     for task in tasks:
         task.cancel()
@@ -130,6 +134,9 @@ app.include_router(grammar_router)
 app.include_router(sessions_router)
 app.include_router(practice_router)
 app.include_router(exercises_router)
+
+# GET /api/push/key · PUT|DELETE /api/push/subscription · POST /api/push/run  (recordatorio de la web instalada)
+app.include_router(push_router)
 
 # GET /api/admin/usage  (superusers only)
 app.include_router(admin_router)

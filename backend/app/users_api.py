@@ -23,6 +23,7 @@ from app.db import (
     ConversationSession,
     ErrorEvent,
     ExerciseSeen,
+    PushSubscription,
     ReplyReport,
     SafetyEvent,
     Streak,
@@ -79,7 +80,7 @@ async def delete_my_account(
     await db.execute(delete(WordPractice).where(WordPractice.session_id.in_(session_ids)))
     await db.execute(delete(Turn).where(Turn.session_id.in_(session_ids)))
     await db.execute(delete(ConversationSession).where(ConversationSession.user_id == user.id))
-    for table in (Streak, ActivityDay, ExerciseSeen, Consent, ReplyReport):
+    for table in (Streak, ActivityDay, ExerciseSeen, Consent, ReplyReport, PushSubscription):
         await db.execute(delete(table).where(table.user_id == user.id))
     await db.commit()
     user_id = user.id

@@ -45,7 +45,7 @@ export function mountApp(root) {
   shellOn = false
   document.documentElement.classList.add('is-app')
   routeApp()
-  initReminders() // solo en la app móvil; programa el recordatorio de racha si está activado
+  initReminders() // app móvil (avisos locales) y web instalada (Web Push); en la web normal no hace nada
 }
 
 export function unmountApp() {
