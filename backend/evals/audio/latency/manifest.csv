@@ -1,21 +1,21 @@
-file,text,condition,expected_duration_s
-lat_01_short_clean.ogg,"Yes, I do.",short_clean,
-lat_02_short_clean.ogg,I like coffee a lot.,short_clean,
-lat_03_short_clean.ogg,Sounds good to me.,short_clean,
-lat_04_short_clean.ogg,"Can you repeat that, please?",short_clean,
-lat_05_short_clean.ogg,I work as a teacher.,short_clean,
-lat_06_medium_clean.ogg,"I went to Medellín last year with my friends, and we loved the food.",medium_clean,
-lat_07_medium_clean.ogg,"In my job, I answer emails in the morning and attend meetings in the afternoon.",medium_clean,
-lat_08_medium_clean.ogg,I want to travel to Japan someday because I'm interested in the culture and the trains.,medium_clean,
-lat_09_medium_clean.ogg,"My favorite place to relax is a small beach near my house, especially on weekends.",medium_clean,
-lat_10_medium_clean.ogg,"Last week my laptop stopped working, so I called the technical support team.",medium_clean,
-lat_11_medium_clean.ogg,I think the best way to learn English is to practice speaking every day.,medium_clean,
-lat_12_medium_clean.ogg,"When I was a child, I wanted to be a pilot, but now I work in a different field.",medium_clean,
-lat_13_medium_clean.ogg,"If I could change one thing about my city, I would add more parks and bike lanes.",medium_clean,
-lat_14_long_clean.ogg,"We are planning a trip to the mountains, so we need to buy warm clothes and a map for the hiking route.",long_clean,
-lat_15_long_clean.ogg,Last summer I visited my grandparents in a small town. Every morning we walked to the market to buy fresh bread and fruit. It was very relaxing.,long_clean,
-lat_16_long_clean.ogg,"At work, our team is preparing a presentation for the client next week. I am responsible for the data, and my colleague will explain the design.",long_clean,
-lat_17_medium_noisy.ogg,I think the best way to learn English is to practice speaking every day.,medium_noisy,
-lat_18_short_noisy.ogg,"Could you tell me more about the project, please?",short_noisy,
-lat_19_medium_noisy.ogg,"We are planning a trip to the mountains, so we need to buy warm clothes.",medium_noisy,
-lat_20_long_noisy.ogg,"I am not sure about the answer, but I think the train leaves at nine, so we should arrive around eight-thirty.",long_noisy,
+file,text,condition,expected_duration_s,speaker,accent
+lat_01_short_clean.ogg,"Yes, I do.",short_clean,,s01,latin_american_spanish
+lat_02_short_clean.ogg,I like coffee a lot.,short_clean,,s01,latin_american_spanish
+lat_03_short_clean.ogg,Sounds good to me.,short_clean,,s01,latin_american_spanish
+lat_04_short_clean.ogg,"Can you repeat that, please?",short_clean,,s01,latin_american_spanish
+lat_05_short_clean.ogg,I work as a teacher.,short_clean,,s01,latin_american_spanish
+lat_06_medium_clean.ogg,"I went to Medellín last year with my friends, and we loved the food.",medium_clean,,s01,latin_american_spanish
+lat_07_medium_clean.ogg,"In my job, I answer emails in the morning and attend meetings in the afternoon.",medium_clean,,s01,latin_american_spanish
+lat_08_medium_clean.ogg,I want to travel to Japan someday because I'm interested in the culture and the trains.,medium_clean,,s01,latin_american_spanish
+lat_09_medium_clean.ogg,"My favorite place to relax is a small beach near my house, especially on weekends.",medium_clean,,s01,latin_american_spanish
+lat_10_medium_clean.ogg,"Last week my laptop stopped working, so I called the technical support team.",medium_clean,,s01,latin_american_spanish
+lat_11_medium_clean.ogg,I think the best way to learn English is to practice speaking every day.,medium_clean,,s01,latin_american_spanish
+lat_12_medium_clean.ogg,"When I was a child, I wanted to be a pilot, but now I work in a different field.",medium_clean,,s01,latin_american_spanish
+lat_13_medium_clean.ogg,"If I could change one thing about my city, I would add more parks and bike lanes.",medium_clean,,s01,latin_american_spanish
+lat_14_long_clean.ogg,"We are planning a trip to the mountains, so we need to buy warm clothes and a map for the hiking route.",long_clean,,s01,latin_american_spanish
+lat_15_long_clean.ogg,Last summer I visited my grandparents in a small town. Every morning we walked to the market to buy fresh bread and fruit. It was very relaxing.,long_clean,,s01,latin_american_spanish
+lat_16_long_clean.ogg,"At work, our team is preparing a presentation for the client next week. I am responsible for the data, and my colleague will explain the design.",long_clean,,s01,latin_american_spanish
+lat_17_medium_noisy.ogg,I think the best way to learn English is to practice speaking every day.,medium_noisy,,s01,latin_american_spanish
+lat_18_short_noisy.ogg,"Could you tell me more about the project, please?",short_noisy,,s01,latin_american_spanish
+lat_19_medium_noisy.ogg,"We are planning a trip to the mountains, so we need to buy warm clothes.",medium_noisy,,s01,latin_american_spanish
+lat_20_long_noisy.ogg,"I am not sure about the answer, but I think the train leaves at nine, so we should arrive around eight-thirty.",long_noisy,,s01,latin_american_spanish

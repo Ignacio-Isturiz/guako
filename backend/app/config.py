@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     embedding_dimensions: int = Field(default=768, ge=64, le=3072)
     embedding_timeout_seconds: float = Field(default=10.0, gt=0)
     # Below this cosine similarity the best rule is not shown: a wrong rule is worse than none.
-    # 0.70 comes from scripts/run_rag_evals on evals/rag (60 cases): 98% of the shown rules were the expected one,
+    # 0.70 comes from the rag eval (python -m scripts.run_evals rag) on evals/rag (60 cases): 98% of the shown rules were the expected one,
     # 93% of the cases with a rule got it, 0 of 6 cases without a rule got a wrong one. Only 6 such cases: re-run
     # it when the corpus or the embedding model changes.
     rag_min_similarity: float = Field(default=0.70, ge=0.0, le=1.0)
