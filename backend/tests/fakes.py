@@ -5,8 +5,32 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from app.config import settings
+from app.safety.moderation import Verdict
 from app.stt import STTProvider, TranscriptionResult, WordTiming
 from app.tts import TTSProvider, TTSResult
+
+# What the sign-up form sends when the learner ticks "I accept the Terms and the Privacy Policy".
+TERMS = {"accept_terms": True, "terms_version": settings.legal_version}
+
+
+class FakeModerator:
+    """Flags the texts that contain one of ``flag`` (word -> categories); records what it was asked."""
+
+    def __init__(self, flag: dict[str, tuple[str, ...]] | None = None, error: Exception | None = None) -> None:
+        self.flag = flag or {}
+        self.error = error
+        self.calls: list[list[str]] = []
+
+    def check(self, texts: list[str]) -> list[Verdict]:
+        self.calls.append(list(texts))
+        if self.error is not None:
+            raise self.error
+        verdicts = []
+        for text in texts:
+            hit = next((cats for word, cats in self.flag.items() if word in (text or "").lower()), None)
+            verdicts.append(Verdict(flagged=True, categories=hit) if hit else Verdict())
+        return verdicts
 
 
 class FakeSTT(STTProvider):

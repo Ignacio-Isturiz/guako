@@ -14,6 +14,7 @@ from app.main import app
 from app.reports import LONG_PAUSE_SECONDS, compute_fluency
 from app.stt import WordTiming
 from tests.analysis_helpers import ScriptedGrammarLLM, err, rate_limited, run_analyses
+from tests.fakes import TERMS
 
 
 @pytest.fixture
@@ -24,7 +25,7 @@ def llm() -> Iterator[ScriptedGrammarLLM]:
 
 
 def _login(client: TestClient, name: str) -> None:
-    creds = {"username": name, "email": f"{name}@example.com", "password": "Passw0rd123"}
+    creds = {"username": name, "email": f"{name}@example.com", "password": "Passw0rd123", **TERMS}
     assert client.post("/api/auth/register", json=creds).status_code == 201
     login = client.post("/api/auth/login", data={"username": creds["email"], "password": creds["password"]})
     assert login.status_code == 204

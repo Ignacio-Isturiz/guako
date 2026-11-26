@@ -1,8 +1,7 @@
 // Conversación real: junta el micrófono, la API de sesiones y la reproducción de la respuesta.
 // La pantalla (conversacion.js) solo pinta; todo lo que habla con el backend vive aquí.
 import { openMic } from '@/features/app/services/recorder.js'
-import { createSession, setAudioConsent, startOpening, sendTurn, replyAudioSrc, endSession } from '@/features/app/data/sessions-api.js'
-import { readAudioConsent } from '@/features/app/data/consent.js'
+import { createSession, startOpening, sendTurn, replyAudioSrc, endSession } from '@/features/app/data/sessions-api.js'
 import { speak, stopSpeaking } from '@/features/app/services/tts.js'
 
 export function createLiveSession({ level, topic, role }) {
@@ -57,9 +56,7 @@ export function createLiveSession({ level, topic, role }) {
         mic = null
         throw e
       }
-      // "Guardar mi audio": se avisa al backend antes del primer turno. Si esa llamada falla la
-      // conversación sigue SIN consentimiento (lo seguro): solo que no se medirá la pronunciación.
-      if (readAudioConsent()) await setAudioConsent(sessionId, true).catch(() => {})
+      // "Guardar mi audio" no se envía aquí: el backend copia en la sesión la autorización guardada.
     },
 
     // Guako habla primero: pide su frase de apertura y deja lista su voz. Devuelve { text }.

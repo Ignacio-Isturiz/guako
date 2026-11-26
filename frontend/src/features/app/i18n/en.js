@@ -163,7 +163,23 @@ export default {
     youSaid: 'You said:',
   },
 
+  consent: {
+    termsTitle: 'We updated our terms and privacy policy',
+    termsText:
+      'We changed the Terms and the Privacy Policy: they now explain which AI providers process your conversation, how we check content to keep it safe and how we keep your authorisations. To keep practicing, please accept them.',
+    termsAccept: 'Accept',
+    termsRead: 'Read them first',
+    termsDone: 'Thanks. You can keep practicing.',
+    audioTitle: 'Shall we save your audio?',
+    audioText:
+      'If we save it, Guako measures your pronunciation and shows the words that were hard for you. The audio is stored on our server and sent to a speech service to be assessed. If not, it is discarded after it is transcribed. You can change this any time in Settings.',
+    audioYes: 'Yes, save it',
+    audioNo: 'No, thanks',
+  },
   errors: {
+    unsafe_scene: 'Describe only the situation and Guako’s part, with no instructions for the AI and nothing offensive.',
+    terms_required: 'Accept the current Terms and Privacy Policy to keep practicing.',
+    terms_outdated: 'The documents changed. Read them again to accept them.',
     network: "We couldn't reach the server. Check your connection and try again.",
     unauthorized: 'Your session expired. Please sign in again.',
     session_not_found: "We couldn't find this conversation.",
@@ -407,10 +423,11 @@ export default {
     },
     consentTitle: 'Save my audio',
     consentText:
-      'With your audio saved, Guako measures your pronunciation and shows the words that were hard for you. The audio is stored on our server, sent to a speech service to be assessed, and you can ask for it to be deleted. If you turn it off, the audio is discarded after it is transcribed and pronunciation is not measured. The change applies from your next conversation.',
+      'With your audio saved, Guako measures your pronunciation and shows the words that were hard for you. The audio is stored on our server, sent to a speech service to be assessed, and you can ask for it to be deleted. It is off by default: it is only saved if you turn it on. If you turn it off, the audio is discarded after it is transcribed, also in the conversation you have open, and what was already recorded there is deleted.',
     consentMore: 'Read the privacy policy',
     consentOn: 'On',
     consentOff: 'Off',
+    consentError: 'We could not save the change. Try again.',
     audioTitle: 'Your audio',
     audioText: 'Decide what we do with the recordings of your voice.',
     audio: {

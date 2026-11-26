@@ -317,3 +317,42 @@ class GeneratedExercise(Base):
     answers: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+
+
+class SafetyEvent(Base):
+    """Something the safety guard found (app.safety.guard): a moderation flag, an injection attempt, a leak.
+
+    Keeps WHAT was found (kind, who, categories), never the text itself: the turn already has the transcript and
+    the reply, and an attempt does not need to be stored twice. Used to review abuse and tune the guard.
+    """
+
+    __tablename__ = "safety_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True, default=None)
+    session_id: Mapped[int | None] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), default=None)
+    turn_number: Mapped[int | None] = mapped_column(default=None)
+    kind: Mapped[str] = mapped_column(String(32), index=True)  # moderation, injection_attempt, instruction_leak...
+    source: Mapped[str] = mapped_column(String(16))  # learner, tutor, scene, service
+    categories: Mapped[list] = mapped_column(JSON, default=list)
+    replaced: Mapped[bool] = mapped_column(Boolean, default=False)  # the reply was swapped for a safe line
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class Consent(Base):
+    """Each time a user grants or withdraws an authorisation: the proof Law 1581 asks to keep.
+
+    Append-only: the newest row of a (user, kind) is the current state. ``kind`` is "terms" (Terms of Use and
+    Privacy Policy, with the ``version`` accepted) or "audio" (keep recordings to assess pronunciation).
+    """
+
+    __tablename__ = "consents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(16))
+    granted: Mapped[bool] = mapped_column(Boolean)
+    version: Mapped[str | None] = mapped_column(String(32), default=None)
+    ip: Mapped[str | None] = mapped_column(String(45), default=None)
+    user_agent: Mapped[str | None] = mapped_column(String(200), default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

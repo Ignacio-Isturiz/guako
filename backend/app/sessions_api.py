@@ -24,7 +24,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app import observability
+from app import consents, observability
 from app.analysis.runner import ensure_pending_rows, run_turn_analysis
 from app.rag.memory import seen_before
 from app.config import settings
@@ -54,6 +54,8 @@ from app.stt import STTProvider
 from app.stt.groq import SUPPORTED_EXTENSIONS
 from app.tts import TTSProvider
 from app.usage import seconds_used_today
+from app.consents import user_with_terms
+from app.safety.guard import check_scene
 from app.users import current_active_user
 
 logger = logging.getLogger("app.conversation")
@@ -142,10 +144,26 @@ async def _own_session(db: AsyncSession, session_id: int, user: User) -> Convers
 @router.post("", status_code=201, response_model=SessionRead)
 async def create_session(
     body: SessionCreate,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(user_with_terms)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> ConversationSession:
-    session = ConversationSession(user_id=user.id, level=body.level, topic=body.topic, role=body.role or None)
+    # The scene and the part go into the tutor's instructions: no orders to the model, no harmful content.
+    found = await run_in_threadpool(check_scene, body.topic, body.role)
+    if found:
+        consents.add_safety_events(db, found, user_id=user.id)
+        await db.commit()
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "unsafe_scene",
+                "message": "Describe solo la situación y el papel de Guako, sin instrucciones ni contenido ofensivo.",
+            },
+        )
+    # The learner's answer to "keep my audio" (off until they say yes) applies to the new session.
+    keep_audio = await consents.audio_granted(db, user.id) is True
+    session = ConversationSession(
+        user_id=user.id, level=body.level, topic=body.topic, role=body.role or None, audio_consent=keep_audio
+    )
     db.add(session)
     await db.commit()
     await db.refresh(session)
@@ -166,6 +184,12 @@ async def end_session(
         # turns can be recorded), so it is refused. Withdrawing is always allowed.
         if body.audio_consent and session.ended_at is not None:
             raise HTTPException(status_code=409, detail={"code": "session_ended", "message": "Esta sesión ya terminó."})
+        if body.audio_consent and await consents.audio_granted(db, user.id) is not True:
+            # The proof of the authorisation lives in the consent log: grant it there first (POST /api/consents).
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "audio_consent_required", "message": "Activa \"Guardar mi audio\" en Ajustes primero."},
+            )
         session.audio_consent = body.audio_consent
         if not body.audio_consent:
             await _discard_stored_audio(db, session_id)
@@ -256,7 +280,7 @@ def _turn_read(turn: Turn) -> TurnRead:
 async def create_opening(
     session_id: int,
     response: Response,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(user_with_terms)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
     tts: Annotated[TTSProvider, Depends(get_tts_provider)],
@@ -307,6 +331,7 @@ async def create_opening(
         reply_audio_seconds=opening.reply_audio_seconds,
     )
     db.add(turn)
+    consents.add_safety_events(db, opening.safety_events, user_id=user.id, session_id=session_id, turn_number=OPENING_TURN)
     try:
         await db.commit()
     except IntegrityError:
@@ -325,7 +350,7 @@ async def create_turn(
     session_id: int,
     audio: UploadFile,
     background: BackgroundTasks,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(user_with_terms)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     stt: Annotated[STTProvider, Depends(get_stt_provider)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
@@ -414,6 +439,9 @@ async def create_turn(
         stt_no_speech_prob=result.get("user_no_speech_prob"),
     )
     db.add(turn)
+    consents.add_safety_events(
+        db, result.get("safety_events") or [], user_id=user.id, session_id=session_id, turn_number=result["turn_number"]
+    )
     try:
         # The analysis rows are saved with the turn, so a saved turn is always queued for analysis.
         await db.flush()

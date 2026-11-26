@@ -14,7 +14,7 @@ from app.llm.factory import get_llm_provider
 from app.main import app
 from app.stt.errors import STTError
 from app.tts.errors import TTSError
-from tests.fakes import FakeLLM, FakeSTT, FakeTTS
+from tests.fakes import TERMS, FakeLLM, FakeSTT, FakeTTS
 
 AUDIO = {"audio": ("turn.wav", b"RIFFfake-audio", "audio/wav")}
 
@@ -40,8 +40,13 @@ def providers(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Provi
     yield fakes
 
 
+def _allow_audio(client: TestClient) -> None:
+    """The learner says yes to "keep my audio" (the consent log is what allows a session to keep it)."""
+    assert client.post("/api/consents", json={"kind": "audio", "granted": True}).status_code == 200
+
+
 def _login(client: TestClient, name: str) -> None:
-    creds = {"username": name, "email": f"{name}@example.com", "password": "Passw0rd123"}
+    creds = {"username": name, "email": f"{name}@example.com", "password": "Passw0rd123", **TERMS}
     assert client.post("/api/auth/register", json=creds).status_code == 201
     login = client.post("/api/auth/login", data={"username": creds["email"], "password": creds["password"]})
     assert login.status_code == 204
@@ -330,6 +335,7 @@ def test_consent_can_be_granted_and_the_audio_is_then_kept(
     _login(client, "ana")
     session_id = _new_session(client)
 
+    _allow_audio(client)
     res = client.patch(f"/api/sessions/{session_id}", json={"audio_consent": True})
     assert res.status_code == 200 and res.json()["audio_consent"] is True
     assert res.json()["ended_at"] is None  # changing consent does not end the session
@@ -344,6 +350,7 @@ def test_withdrawing_consent_deletes_stored_audio_and_stops_keeping_it(
 ) -> None:
     _login(client, "ana")
     session_id = _new_session(client)
+    _allow_audio(client)
     client.patch(f"/api/sessions/{session_id}", json={"audio_consent": True})
     client.post(f"/api/sessions/{session_id}/turns", files=AUDIO)
     (stored,) = _query(db_path, "select user_audio_path from turns")[0]
@@ -364,9 +371,11 @@ def test_withdrawing_consent_deletes_stored_audio_and_stops_keeping_it(
 def test_withdrawing_after_the_end_works_but_granting_does_not(client: TestClient, providers: Providers) -> None:
     _login(client, "ana")
     session_id = _new_session(client)
+    _allow_audio(client)
     client.patch(f"/api/sessions/{session_id}", json={"audio_consent": True, "ended": True})
 
     assert client.patch(f"/api/sessions/{session_id}", json={"audio_consent": False}).status_code == 200
+    _allow_audio(client)
     late = client.patch(f"/api/sessions/{session_id}", json={"audio_consent": True})
     assert late.status_code == 409 and late.json()["detail"]["code"] == "session_ended"
 

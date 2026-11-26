@@ -55,11 +55,6 @@ const json = async (res) => res.json()
 export const createSession = ({ level, topic, role }) =>
   request('/api/sessions', { method: 'POST', json: { level, topic, ...(role ? { role } : {}) } }).then(json)
 
-// Consentimiento para guardar el audio de la sesión (antes del primer turno). Sin él, el backend
-// descarta el audio tras transcribirlo y la pronunciación no se mide.
-export const setAudioConsent = (sessionId, value) =>
-  request(`/api/sessions/${sessionId}`, { method: 'PATCH', json: { audio_consent: value } }).then(json)
-
 // "Ahora tú": evalúa una palabra de la lista de palabras que costaron. El servidor decide si se logró
 // y cuántos intentos quedan (POST /api/sessions/{id}/practice, multipart: word + audio).
 export function practiceWord(sessionId, word, blob, filename) {

@@ -1,12 +1,13 @@
 // Capa de autenticación del frontend.
 //
 // Habla con el backend (fastapi-users, sesión en cookie httpOnly):
-//   POST /api/auth/register  { username, email, password }  → crea la cuenta
+//   POST /api/auth/register  { username, email, password, accept_terms, terms_version }  → crea la cuenta
 //   POST /api/auth/login     (formulario: username=<correo>, password) → cookie de sesión
 //   POST /api/auth/logout
 //   GET  /api/users/me       → { username, email, … }
 //
 // Con VITE_AUTH_MOCK=true corre en MODO DEMO sin backend (cualquier cuenta funciona).
+import { LEGAL_VERSION } from '@/features/legal/index.js'
 
 export const MOCK = import.meta.env.VITE_AUTH_MOCK === 'true'
 
@@ -121,7 +122,10 @@ async function login({ email, password }) {
 const real = {
   login,
   async register({ username, email, password }) {
-    await request('/api/auth/register', { json: { username, email, password } })
+    // La casilla "acepto" ya se validó en el formulario; el backend guarda la versión aceptada como prueba.
+    await request('/api/auth/register', {
+      json: { username, email, password, accept_terms: true, terms_version: LEGAL_VERSION },
+    })
     return login({ email, password })
   },
   async logout() {

@@ -23,7 +23,7 @@ const MOOD = { idle: 'mic', listening: 'ear', thinking: 'bulb', speaking: 'volum
 const MIN_HOLD = 450 // ms mínimos manteniendo la barra para que cuente como "hablé"
 
 // Errores tras los que no tiene sentido seguir intentando hablar en esta sesión
-const FATAL = new Set(['unauthorized', 'session_not_found', 'session_ended', 'daily_limit_reached', 'micDenied', 'noMic', 'micUnsupported'])
+const FATAL = new Set(['unauthorized', 'session_not_found', 'session_ended', 'daily_limit_reached', 'unsafe_scene', 'terms_required', 'micDenied', 'noMic', 'micUnsupported'])
 
 // El tutor trabaja en inglés: el tema se manda en inglés aunque la interfaz esté en español
 const apiTopic = (s) => (s.topicId === 'custom' ? s.custom.trim() : en.topics[s.topicId].name).slice(0, 200)

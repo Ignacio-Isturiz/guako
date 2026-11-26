@@ -42,6 +42,8 @@ export default {
       usernameTaken: 'That username is already taken.',
       exists: 'An account with that email already exists.',
       network: "We couldn't connect. Check your connection and try again.",
+      termsRequired: 'You must accept the terms and the privacy policy.',
+      termsOutdated: 'The terms changed while this page was open. Reload it and read them again.',
       generic: 'Something went wrong. Please try again.',
     },
   },

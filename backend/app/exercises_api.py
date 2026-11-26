@@ -36,6 +36,7 @@ from app.stt import STTProvider
 from app.stt.errors import NoSpeechError, STTError
 from app.stt.groq import SUPPORTED_EXTENSIONS
 from app.users import current_active_user
+from app.consents import user_with_terms
 
 router = APIRouter(prefix="/api/practice", tags=["exercises"])
 
@@ -215,7 +216,7 @@ def _running_low(rule_ids: list[str], pool: list[Exercise], seen: dict[str, floa
 @router.get("/exercises", response_model=ExercisesOut)
 async def get_exercises(
     background: BackgroundTasks,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(user_with_terms)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     size: Annotated[int, Query(ge=1, le=20)] = 8,
     rule: Annotated[str | None, Query(max_length=80)] = None,
@@ -262,7 +263,7 @@ async def check_answer(
 async def check_speech(
     exercise_id: Annotated[str, Form(max_length=120)],
     audio: UploadFile,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(user_with_terms)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     stt: Annotated[STTProvider, Depends(get_stt_provider)],
 ) -> SpeakOut:

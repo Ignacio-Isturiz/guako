@@ -2,7 +2,7 @@ import './ajustes.css'
 import { t, getLang } from '@/core/i18n.js'
 import { navigate } from '@/core/router.js'
 import { settings, setSetting, exportData, deleteAccount } from '@/features/app/data/store.js'
-import { readAudioConsent, writeAudioConsent } from '@/features/app/data/consent.js'
+import { loadConsents, readAudioConsent, writeAudioConsent } from '@/features/app/data/consent.js'
 import { confirmDialog } from '@/features/app/components/confirm-dialog/confirm-dialog.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { toast } from '@/features/app/components/toast/toast.js'
@@ -38,9 +38,9 @@ export default {
             <p class="card__sub"><button type="button" class="link" data-legal="privacy">${t('app.settings.consentMore')}</button></p>
           </div>
           <label class="switch">
-            <input type="checkbox" id="audioConsent" ${readAudioConsent() ? 'checked' : ''} />
+            <input type="checkbox" id="audioConsent" ${readAudioConsent() === true ? 'checked' : ''} />
             <span class="switch__track" aria-hidden="true"></span>
-            <span class="switch__text" id="consentState">${t(readAudioConsent() ? 'app.settings.consentOn' : 'app.settings.consentOff')}</span>
+            <span class="switch__text" id="consentState" aria-live="polite">${t(readAudioConsent() === true ? 'app.settings.consentOn' : 'app.settings.consentOff')}</span>
           </label>
         </section>
 
@@ -104,6 +104,14 @@ export default {
   },
 
   init(root, _p, scope) {
+    const paintConsent = () => {
+      const box = root.querySelector('#audioConsent')
+      if (!box) return
+      box.checked = readAudioConsent() === true
+      root.querySelector('#consentState').textContent = t(box.checked ? 'app.settings.consentOn' : 'app.settings.consentOff')
+    }
+    loadConsents({ fresh: true }).then(() => root.isConnected && paintConsent())
+
     scope.listen(root, 'change', (e) => {
       const el = e.target
       if (el.matches('input[type=radio]')) {
@@ -111,9 +119,19 @@ export default {
         root.querySelectorAll(`input[name="${el.name}"]`).forEach((r) => r.closest('.opt').classList.toggle('is-on', r.checked))
         toast(t('app.settings.saved'))
       } else if (el.id === 'audioConsent') {
-        writeAudioConsent(el.checked)
-        root.querySelector('#consentState').textContent = t(el.checked ? 'app.settings.consentOn' : 'app.settings.consentOff')
-        toast(t('app.settings.saved'))
+        // Se guarda en el servidor (es la prueba de la autorización); si falla, el interruptor vuelve atrás.
+        const on = el.checked
+        el.disabled = true
+        writeAudioConsent(on)
+          .then(() => toast(t('app.settings.saved')))
+          .catch(() => {
+            el.checked = !on
+            toast(t('app.settings.consentError'))
+          })
+          .finally(() => {
+            el.disabled = false
+            paintConsent()
+          })
       } else if (el.id === 'sound') {
         setSetting('sound', el.checked)
         root.querySelector('#soundText').textContent = t(el.checked ? 'app.settings.soundOn' : 'app.settings.soundOff')

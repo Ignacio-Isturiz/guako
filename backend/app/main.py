@@ -9,6 +9,7 @@ from app import observability
 from app.admin_api import router as admin_router
 from app.analysis.retry import run_retrier
 from app.config import settings
+from app.consents_api import router as consents_router
 from app.conversation.deps import get_pronunciation_provider
 from app.conversation.errors import register_speech_error_handlers
 from app.db import async_session_maker
@@ -103,12 +104,15 @@ def health() -> dict[str, str]:
 
 # POST /api/auth/login · POST /api/auth/logout
 app.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/api/auth", tags=["auth"])
-# POST /api/auth/register  { username, email, password }
+# POST /api/auth/register  { username, email, password, accept_terms, terms_version }
 app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix="/api/auth", tags=["auth"])
 # GET /api/users/me
 app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/api/users", tags=["users"])
 # PATCH /api/users/me/settings  { feedback_language }
 app.include_router(users_settings_router)
+
+# GET /api/consents/me · POST /api/consents  {kind: terms|audio, granted, version?}
+app.include_router(consents_router)
 
 # GET /api/streak · POST /api/streak/activity  (?tz=America/Bogota)
 app.include_router(streak_router)

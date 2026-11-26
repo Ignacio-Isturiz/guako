@@ -10,7 +10,8 @@ from app.llm.base import LLMProvider
 from app.llm.factory import get_llm_provider
 from app.llm.schemas import GrammarAnalysis
 from app.prompts import load_prompt
-from app.users import current_active_user
+from app.safety.text import untrusted
+from app.consents import user_with_terms
 
 router = APIRouter(prefix="/api/grammar", tags=["grammar"])
 
@@ -22,8 +23,8 @@ class GrammarRequest(BaseModel):
 @router.post("/analyze", response_model=GrammarAnalysis)
 def analyze(
     body: GrammarRequest,
-    _user: Annotated[User, Depends(current_active_user)],
+    _user: Annotated[User, Depends(user_with_terms)],
     llm: Annotated[LLMProvider, Depends(get_llm_provider)],
 ) -> GrammarAnalysis:
-    prompt = load_prompt("grammar_analysis", 1, text=body.text)
+    prompt = load_prompt("grammar_analysis", 1, text=untrusted(body.text))
     return llm.generate(prompt, GrammarAnalysis)

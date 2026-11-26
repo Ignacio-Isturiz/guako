@@ -235,6 +235,9 @@ async function onSubmit(e) {
     } else if (err instanceof AuthError && (err.code === 'usernameTaken' || err.code === 'usernameInvalid')) {
       state.errors = { username: t(`auth.errors.${err.code}`) }
       showErrors()
+    } else if (err instanceof AuthError && (err.code === 'termsRequired' || err.code === 'termsOutdated')) {
+      state.errors = { accept: t(`auth.errors.${err.code}`) }
+      showErrors()
     } else if (err instanceof AuthError && err.code === 'weak') {
       state.errors = { password: t('auth.errors.password') }
       showErrors()

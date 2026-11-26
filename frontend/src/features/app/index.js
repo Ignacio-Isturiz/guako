@@ -12,6 +12,7 @@ import { getSession } from '@/features/auth/index.js'
 import { matchRoute } from '@/features/app/routes.js'
 import { navigate } from '@/core/router.js'
 import { renderShell, updateChrome } from '@/features/app/shell/shell.js'
+import { checkTerms } from '@/features/app/shell/terms-gate.js'
 import { stopSpeaking } from '@/features/app/services/tts.js'
 import { clearDemo, hideBanner } from '@/features/app/data/store.js'
 import entrar from '@/features/app/views/entrar/entrar.js'
@@ -73,6 +74,7 @@ export function routeApp() {
 
   const m = matchRoute()
   if (!m) return navigate('/app/inicio', { replace: true })
+  checkTerms() // una vez por visita: si los documentos cambiaron, pide aceptarlos
   const view = VIEWS[m.route.name]
 
   // 2. Pantalla completa (conversación): sin menú

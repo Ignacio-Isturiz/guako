@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from app.analysis.intent import validated_fixes
 from app.llm.base import LLMProvider
 from app.prompts import load_prompt
+from app.safety.text import untrusted
 
 # Honesty rule: a correction the analyser is not sure about is never shown to the learner.
 # 0.7 is a starting value, not a calibrated one: below it the prompt tells the model it is
@@ -50,7 +51,10 @@ def analyze_grammar(llm: LLMProvider, transcript: str, context: str = "") -> dic
 
     ``context`` is the tutor's previous message; it helps tell which words were misrecognised.
     """
-    prompt = load_prompt("grammar", PROMPT_VERSION, text=transcript, context=context.strip() or "(none: this is the first answer)")
+    # The learner's words are data to analyse: neutralised so they cannot break out of their place in the prompt.
+    prompt = load_prompt(
+        "grammar", PROMPT_VERSION, text=untrusted(transcript), context=untrusted(context) or "(none: this is the first answer)"
+    )
     analysis = llm.generate(prompt, TurnGrammarAnalysis)
     assert isinstance(analysis, TurnGrammarAnalysis)
     shown = [e for e in analysis.errors if e.confidence >= MIN_CONFIDENCE]

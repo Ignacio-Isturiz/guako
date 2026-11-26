@@ -163,7 +163,23 @@ export default {
     youSaid: 'Dijiste:',
   },
 
+  consent: {
+    termsTitle: 'Actualizamos los términos y la privacidad',
+    termsText:
+      'Cambiamos los Términos y la Política de privacidad: ahora explican qué proveedores de IA procesan tu conversación, cómo revisamos el contenido para que sea seguro y cómo guardamos tus autorizaciones. Para seguir practicando necesitamos que los aceptes.',
+    termsAccept: 'Aceptar',
+    termsRead: 'Leerlos primero',
+    termsDone: 'Gracias. Ya puedes seguir practicando.',
+    audioTitle: '¿Guardamos tu audio?',
+    audioText:
+      'Si lo guardamos, Guako mide tu pronunciación y te muestra las palabras que te costaron. El audio se guarda en nuestro servidor y se envía a un servicio de voz para evaluarlo. Si no, se descarta después de transcribirlo. Puedes cambiarlo cuando quieras en Ajustes.',
+    audioYes: 'Sí, guardarlo',
+    audioNo: 'No, gracias',
+  },
   errors: {
+    unsafe_scene: 'Describe solo la situación y el papel de Guako, sin instrucciones para la IA ni contenido ofensivo.',
+    terms_required: 'Acepta los Términos y la Política de privacidad vigentes para seguir practicando.',
+    terms_outdated: 'Los documentos cambiaron. Vuelve a leerlos para aceptarlos.',
     network: 'No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.',
     unauthorized: 'Tu sesión venció. Inicia sesión de nuevo.',
     session_not_found: 'No encontramos esta conversación.',
@@ -407,10 +423,11 @@ export default {
     },
     consentTitle: 'Guardar mi audio',
     consentText:
-      'Con tu audio guardado, Guako mide tu pronunciación y te muestra las palabras que te costaron. El audio se guarda en nuestro servidor, se envía a un servicio de voz para evaluarlo y puedes pedir que se borre. Si lo desactivas, el audio se descarta después de transcribirlo y no se mide la pronunciación. El cambio vale desde tu próxima conversación.',
+      'Con tu audio guardado, Guako mide tu pronunciación y te muestra las palabras que te costaron. El audio se guarda en nuestro servidor, se envía a un servicio de voz para evaluarlo y puedes pedir que se borre. Viene desactivado: solo se guarda si lo activas. Si lo desactivas, el audio se descarta después de transcribirlo, también en la conversación que tengas abierta, y se borra lo que ya se había grabado en ella.',
     consentMore: 'Leer la política de privacidad',
     consentOn: 'Activado',
     consentOff: 'Desactivado',
+    consentError: 'No pudimos guardar el cambio. Inténtalo de nuevo.',
     audioTitle: 'Tus audios',
     audioText: 'Decide qué hacemos con las grabaciones de tu voz.',
     audio: {

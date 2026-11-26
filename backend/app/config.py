@@ -147,6 +147,16 @@ class Settings(BaseSettings):
     azure_speech_region: str = ""  # e.g. "brazilsouth"; the REST hosts are built from it
     azure_speech_timeout_seconds: float = Field(default=20.0, gt=0)
 
+    # --- Safety: moderation, prompt injection and legal consent ----
+    # OpenAI's moderation endpoint (free; reuses openai_api_key). Without that key moderation is off.
+    moderation_enabled: bool = True
+    moderation_model: str = "omni-moderation-latest"
+    moderation_timeout_seconds: float = Field(default=3.0, gt=0)
+    # When the moderation service fails: False = the turn goes on unchecked (logged); True = the safe reply is used.
+    moderation_fail_closed: bool = False
+    # Version of the Terms and Privacy Policy the learner must have accepted (the date the frontend shows).
+    legal_version: str = "2026-11-26"
+
     # --- Observability (Langfuse Cloud) ----
     # Without both keys tracing is off: nothing is sent and the app works the same.
     langfuse_public_key: SecretStr | None = None

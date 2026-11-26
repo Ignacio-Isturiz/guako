@@ -21,7 +21,7 @@ from app.pronunciation.errors import PronunciationNoSpeechError, PronunciationRa
 from app.pronunciation.quota import USABLE_MONTHLY_SECONDS, month_key
 from tests.analysis_helpers import ScriptedGrammarLLM, ScriptedPronunciation
 from tests.fakes import FakeSTT
-from tests.test_sessions_api import _login, _new_session, _query
+from tests.test_sessions_api import _allow_audio, _login, _new_session, _query
 
 WAV = {"audio": ("word.wav", b"RIFFfake", "audio/wav")}
 BEACH_PHONEMES = [
@@ -61,6 +61,7 @@ def _session_with_hard_word(client: TestClient, db_path: Path, *, consent: bool 
     """An ended session whose only turn has "beach" scored 14: the hard word to practice."""
     session_id = _new_session(client)
     if consent:
+        _allow_audio(client)
         assert client.patch(f"/api/sessions/{session_id}", json={"audio_consent": True}).status_code == 200
     result = {
         "accuracy_score": 40.0,

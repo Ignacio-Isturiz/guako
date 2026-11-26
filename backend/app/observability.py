@@ -182,6 +182,8 @@ def score(name: str, value: float, *, comment: str | None = None) -> None:
     """A score on the current trace (the judges' marks, the number of grammar errors...)."""
     client = _get()
     if client is not None:
+        if client.get_current_trace_id() is None:  # outside a trace (a script, a test): nothing to attach it to
+            return
         _safe("score", client.score_current_trace, name=name, value=float(value), comment=comment)
 
 

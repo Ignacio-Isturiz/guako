@@ -33,5 +33,7 @@ class ConversationState(TypedDict, total=False):
     user_stt_confidence: float | None
     user_no_speech_prob: float | None
     reply_text: str
+    # What the safety guard found in this turn (app.safety.guard): kind, source, categories; never the text.
+    safety_events: list[dict]
     reply_audio_path: str
     reply_audio_seconds: float
