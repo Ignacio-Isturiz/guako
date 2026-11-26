@@ -11,3 +11,4 @@ langgraph
 openai
 pgvector
 jiwer==4.0.0
+langfuse==5.2.0

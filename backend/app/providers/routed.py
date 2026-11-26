@@ -8,6 +8,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from app import observability
 from app.llm.errors import (
     LLMAuthError,
     LLMError,
@@ -89,10 +90,14 @@ class RoutedLLM:
     def generate(self, prompt: str, response_model: type[T], *, system: str | None = None) -> T:
         def invoke(route: Route) -> tuple[T, Usage]:
             provider = route.provider
+            observability.record_io(input={"system": system, "prompt": prompt})
             if hasattr(provider, "generate_with_usage"):
                 result, used = provider.generate_with_usage(prompt, response_model, system=system)
-                return result, Usage(prompt_tokens=used.prompt_tokens, completion_tokens=used.completion_tokens)
-            return provider.generate(prompt, response_model, system=system), Usage()
+                usage = Usage(prompt_tokens=used.prompt_tokens, completion_tokens=used.completion_tokens)
+            else:
+                result, usage = provider.generate(prompt, response_model, system=system), Usage()
+            observability.record_io(output=result)
+            return result, usage
 
         pricing = self._router.state.pricing
         size = len(prompt) + len(system or "")
@@ -122,6 +127,7 @@ class RoutedSTT(STTProvider):
     def transcribe(self, audio_path: str, context: str | None = None) -> TranscriptionResult:
         def invoke(route: Route) -> tuple[TranscriptionResult, Usage]:
             result = route.provider.transcribe(audio_path, context)
+            observability.record_io(output=result.text)  # the transcript only: audio never leaves the server
             seconds = result.duration if result.duration is not None else (result.words[-1].end if result.words else 0.0)
             return result, Usage(audio_seconds_in=seconds)
 
@@ -158,6 +164,7 @@ class RoutedTTS(TTSProvider):
 
     def synthesize(self, text: str, output_path: str) -> TTSResult:
         def invoke(route: Route) -> tuple[TTSResult, Usage]:
+            observability.record_io(input=text)
             result = route.provider.synthesize(text, output_path)
             seconds = 0.0 if result.from_cache else wav_duration_seconds(result.audio_path)
             return result, Usage(audio_seconds_out=seconds, chars=len(text), from_cache=result.from_cache)

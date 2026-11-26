@@ -147,6 +147,17 @@ class Settings(BaseSettings):
     azure_speech_region: str = ""  # e.g. "brazilsouth"; the REST hosts are built from it
     azure_speech_timeout_seconds: float = Field(default=20.0, gt=0)
 
+    # --- Observability (Langfuse Cloud) ----
+    # Without both keys tracing is off: nothing is sent and the app works the same.
+    langfuse_public_key: SecretStr | None = None
+    langfuse_secret_key: SecretStr | None = None
+    langfuse_base_url: str = "https://cloud.langfuse.com"  # EU; US: https://us.cloud.langfuse.com
+    langfuse_environment: str = "development"  # lets one project tell dev traces from production ones
+    # Fraction of traces sent (1.0 = all). Lower it if the free quota runs short.
+    langfuse_sample_rate: float = Field(default=1.0, ge=0.0, le=1.0)
+    # False = traces keep timings, models, tokens and costs but no prompts, transcripts or answers.
+    langfuse_capture_content: bool = True
+
     # --- Conversation ----
     # Where uploaded user audio (with consent) and tutor reply audio are written.
     sessions_audio_dir: str = "output/sessions"
@@ -170,6 +181,11 @@ class Settings(BaseSettings):
     def _check_caps(cls, value: str) -> str:
         parse_caps(value)
         return value
+
+    @property
+    def langfuse_enabled(self) -> bool:
+        keys = (self.langfuse_public_key, self.langfuse_secret_key)
+        return all(key is not None and key.get_secret_value().strip() for key in keys)
 
     @property
     def daily_caps(self) -> dict[tuple[str, str], int]:

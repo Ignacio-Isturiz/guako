@@ -29,6 +29,7 @@ from langgraph.types import Send
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app import observability
 from app.analysis import runner
 from app.analysis.fluency import analyze_fluency
 from app.analysis.judge import is_trivial
@@ -88,17 +89,33 @@ async def _guard(turn_id: int, dimensions: tuple[str, ...], work) -> dict[str, d
 
     ``work`` returns {dimension: (status, result, error)}.
     """
-    try:
-        done = await work()
-    except LLMExhausted as exc:
-        # Not a failure: nobody could answer right now. The rows stay pending for the retrier.
-        logger.warning("analysis_deferred turn=%s dimensions=%s retry_after=%s", turn_id, ",".join(dimensions), exc.retry_after)
-        return {d: _outcome(DEFERRED) for d in dimensions}
-    except Exception as exc:
-        code = exc.code if isinstance(exc, (LLMError, PronunciationError)) else type(exc).__name__
-        logger.warning("analysis_failed turn=%s dimensions=%s error=%s", turn_id, ",".join(dimensions), code)
-        return {d: _outcome(Status.FAILED.value, None, str(code)[:200]) for d in dimensions}
-    return {d: _outcome(*done[d]) for d in dimensions}
+    with observability.span("+".join(dimensions) or "nada") as traced:  # one span per branch of the fan-out
+        try:
+            done = await work()
+        except LLMExhausted as exc:
+            # Not a failure: nobody could answer right now. The rows stay pending for the retrier.
+            logger.warning("analysis_deferred turn=%s dimensions=%s retry_after=%s", turn_id, ",".join(dimensions), exc.retry_after)
+            traced.update(level="WARNING", status_message=DEFERRED)
+            return {d: _outcome(DEFERRED) for d in dimensions}
+        except Exception as exc:
+            code = exc.code if isinstance(exc, (LLMError, PronunciationError)) else type(exc).__name__
+            logger.warning("analysis_failed turn=%s dimensions=%s error=%s", turn_id, ",".join(dimensions), code)
+            traced.update(level="ERROR", status_message=str(code)[:200])
+            return {d: _outcome(Status.FAILED.value, None, str(code)[:200]) for d in dimensions}
+        traced.update(output={d: done[d][0] for d in dimensions})  # statuses only; the results go in as scores
+        return {d: _outcome(*done[d]) for d in dimensions}
+
+
+def _score(outcomes: dict[str, dict]) -> None:
+    """The analysis results as Langfuse scores on its trace, to filter and compare turns in the UI."""
+    for dimension, outcome in outcomes.items():
+        result = outcome["result"] if outcome["status"] == Status.DONE.value else None
+        if not result:
+            continue
+        if dimension == Dim.GRAMMAR.value:
+            observability.score("grammar_errors", len(result.get("errors", [])))
+        elif dimension in JUDGE_DIMENSIONS and result.get("score") is not None:
+            observability.score(dimension, result["score"])
 
 
 def build_analysis_graph(
@@ -250,6 +267,7 @@ def build_analysis_graph(
                             events=state["events"],
                         )
             await db.commit()
+        _score(outcomes)
         return {}
 
     # --- routing -------------------------------------------------------------------------------

@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import observability
 from app.admin_api import router as admin_router
 from app.analysis.retry import run_retrier
 from app.config import settings
@@ -78,6 +79,7 @@ async def lifespan(_: FastAPI):  # noqa: ANN201
     await asyncio.gather(*tasks, return_exceptions=True)
     if tasks:
         await flush_usage(async_session_maker, state)
+    observability.shutdown()  # sends the last traces
 
 
 app = FastAPI(title="Guako API", lifespan=lifespan)

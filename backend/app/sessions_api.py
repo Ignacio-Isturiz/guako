@@ -24,6 +24,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app import observability
 from app.analysis.runner import ensure_pending_rows, run_turn_analysis
 from app.rag.memory import seen_before
 from app.config import settings
@@ -283,17 +284,20 @@ async def create_opening(
             },
         )
 
-    opening = await run_in_threadpool(
-        lambda: generate_opening(
-            llm,
-            tts,
-            session_id=session_id,
-            level=session.level,
-            topic=session.topic,
-            role=session.role,
-            audio_dir=settings.sessions_audio_dir,
+    with observability.trace(
+        "apertura", session_id=session_id, user_id=user.id, tags=["conversacion"], metadata={"level": session.level}
+    ):
+        opening = await run_in_threadpool(
+            lambda: generate_opening(
+                llm,
+                tts,
+                session_id=session_id,
+                level=session.level,
+                topic=session.topic,
+                role=session.role,
+                audio_dir=settings.sessions_audio_dir,
+            )
         )
-    )
     turn = Turn(
         session_id=session_id,
         turn_number=OPENING_TURN,
@@ -378,7 +382,15 @@ async def create_turn(
     }
     graph = build_graph(stt, llm, tts)
     try:
-        result = await graph.ainvoke(initial, {"configurable": {"thread_id": str(session_id)}})
+        # The trace covers what the learner waits for (STT -> LLM -> TTS): its time is the turn's latency.
+        with observability.trace(
+            "turno",
+            session_id=session_id,
+            user_id=user.id,
+            tags=["conversacion"],
+            metadata={"turn_number": completed + 1, "level": session.level},
+        ):
+            result = await graph.ainvoke(initial, {"configurable": {"thread_id": str(session_id)}})
     except BaseException:
         _remove(user_audio)  # nothing is stored for a failed turn
         raise
