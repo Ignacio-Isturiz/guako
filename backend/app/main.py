@@ -83,6 +83,12 @@ async def lifespan(_: FastAPI):  # noqa: ANN201
         ]
         if settings.push_enabled:
             tasks.append(asyncio.create_task(run_push_scheduler(async_session_maker)))
+        elif settings.push_configured:
+            # Con un subject mal escrito, cada envío falla al firmar: mejor apagarlo y decirlo bien claro
+            logger.error(
+                "push_disabled VAPID_SUBJECT=%r is not valid: use mailto:you@your-domain.com or https://your-domain.com",
+                settings.vapid_subject,
+            )
     yield
     for task in tasks:
         task.cancel()

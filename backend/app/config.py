@@ -1,7 +1,21 @@
+import re
 from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# Lo mismo que exige py_vapid al firmar: "mailto:alguien@dominio" o "https://dominio"
+VAPID_SUBJECT_RE = re.compile(r"^(mailto:[^\s@]+@[^\s@]+\.[^\s@]+|https://[^\s/]+\.[^\s]+)$", re.IGNORECASE)
+
+
+def normalize_vapid_subject(value: str) -> str:
+    """Arregla los descuidos típicos al pegarlo en el hosting: comillas, <>, espacios, sin "mailto:"."""
+    value = value.strip().strip("\"'<>").strip()
+    value = re.sub(r"^mailto:\s*", "mailto:", value, flags=re.IGNORECASE)
+    if value and "@" in value and not value.lower().startswith(("mailto:", "https://")):
+        value = f"mailto:{value}"
+    return value
 
 
 def parse_order(value: str) -> list[str]:
@@ -203,10 +217,24 @@ class Settings(BaseSettings):
     # Vacío = ese endpoint no existe (404).
     push_cron_token: SecretStr | None = None
 
+    @field_validator("vapid_subject")
+    @classmethod
+    def _normalize_vapid_subject(cls, value: str) -> str:
+        return normalize_vapid_subject(value)
+
+    @property
+    def push_configured(self) -> bool:
+        """Hay claves VAPID (aunque el subject esté mal): sirve para avisar en el arranque."""
+        private = self.vapid_private_key.get_secret_value().strip() if self.vapid_private_key else ""
+        return bool(self.vapid_public_key.strip() and private)
+
+    @property
+    def vapid_subject_valid(self) -> bool:
+        return bool(VAPID_SUBJECT_RE.match(self.vapid_subject))
+
     @property
     def push_enabled(self) -> bool:
-        private = self.vapid_private_key.get_secret_value().strip() if self.vapid_private_key else ""
-        return bool(self.vapid_public_key.strip() and private and self.vapid_subject.strip())
+        return self.push_configured and self.vapid_subject_valid
 
     @property
     def langfuse_enabled(self) -> bool:
