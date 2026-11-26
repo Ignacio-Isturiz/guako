@@ -5,7 +5,8 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 1rem;
-  padding: 1rem clamp(1rem, 3vw, 2rem) 1.4rem;
+  padding: calc(1rem + var(--safe-top)) calc(clamp(1rem, 3vw, 2rem) + var(--safe-right)) calc(1.4rem + var(--safe-bottom))
+    calc(clamp(1rem, 3vw, 2rem) + var(--safe-left));
   color: #fff;
   background: radial-gradient(ellipse at 50% 30%, #0a4fc0 0%, #0b2a6b 60%, #081a45 100%);
   overflow: hidden;
@@ -320,6 +321,10 @@
   font-size: 0.92rem;
   font-weight: 600;
   line-height: 1.4;
+}
+.tbubble .flag-btn {
+  justify-self: end;
+  margin: -0.2rem -0.4rem -0.4rem 0;
 }
 .tbubble--user {
   justify-self: end;

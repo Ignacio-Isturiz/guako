@@ -1,9 +1,9 @@
 /* ---------- Menú lateral ---------- */
 .side {
   position: sticky;
-  top: 0;
+  top: var(--safe-top);
   align-self: start;
-  height: 100vh;
+  height: calc(100vh - var(--safe-top));
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -268,7 +268,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr)) 74px repeat(3, minmax(0, 1fr));
     align-items: end;
-    padding: 0.4rem 0.4rem calc(0.5rem + env(safe-area-inset-bottom));
+    padding: 0.4rem calc(0.4rem + var(--safe-right)) calc(0.5rem + var(--safe-bottom)) calc(0.4rem + var(--safe-left));
     background: #fff;
     border-top: 1px solid var(--app-line);
     box-shadow: 0 -8px 24px rgba(11, 42, 107, 0.08);

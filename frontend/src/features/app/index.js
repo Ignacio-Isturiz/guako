@@ -14,6 +14,7 @@ import { navigate } from '@/core/router.js'
 import { renderShell, updateChrome } from '@/features/app/shell/shell.js'
 import { checkTerms } from '@/features/app/shell/terms-gate.js'
 import { stopSpeaking } from '@/features/app/services/tts.js'
+import { initReminders } from '@/features/app/services/reminders.js'
 import { clearDemo, hideBanner } from '@/features/app/data/store.js'
 import entrar from '@/features/app/views/entrar/entrar.js'
 import inicio from '@/features/app/views/inicio/inicio.js'
@@ -44,6 +45,7 @@ export function mountApp(root) {
   shellOn = false
   document.documentElement.classList.add('is-app')
   routeApp()
+  initReminders() // solo en la app móvil; programa el recordatorio de racha si está activado
 }
 
 export function unmountApp() {

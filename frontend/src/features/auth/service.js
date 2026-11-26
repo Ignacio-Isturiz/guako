@@ -7,6 +7,7 @@
 //   GET  /api/users/me       → { username, email, … }
 //
 // Con VITE_AUTH_MOCK=true corre en MODO DEMO sin backend (cualquier cuenta funciona).
+import { apiUrl } from '@/core/api.js'
 import { LEGAL_VERSION } from '@/features/legal/index.js'
 
 export const MOCK = import.meta.env.VITE_AUTH_MOCK === 'true'
@@ -98,7 +99,7 @@ async function request(path, { method = 'POST', json, form } = {}) {
   }
   let res
   try {
-    res = await fetch(path, { method, headers, credentials: 'include', body })
+    res = await fetch(apiUrl(path), { method, headers, credentials: 'include', body })
   } catch {
     throw new AuthError('network')
   }

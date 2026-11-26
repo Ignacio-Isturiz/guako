@@ -7,6 +7,13 @@ import { confirmDialog } from '@/features/app/components/confirm-dialog/confirm-
 import { icon } from '@/features/app/components/icon/icon.js'
 import { toast } from '@/features/app/components/toast/toast.js'
 import { esc } from '@/features/app/utils/html.js'
+import {
+  remindersAvailable,
+  reminderHour,
+  setReminderHour,
+  notificationPermission,
+  askNotificationPermission,
+} from '@/features/app/services/reminders.js'
 
 const radio = (name, value, current, title, body) => `
   <label class="opt ${current === value ? 'is-on' : ''}">
@@ -14,6 +21,19 @@ const radio = (name, value, current, title, body) => `
     <span class="opt__dot" aria-hidden="true"></span>
     <span class="opt__text"><strong>${title}</strong><small>${body}</small></span>
   </label>`
+
+// Recordatorio diario de racha: solo existe en la app móvil y siempre está activo. Aquí se elige la hora
+// y se ve si el teléfono deja mostrar notificaciones (el estado se pinta en init, es asíncrono).
+const HOURS = [7, 8, 9, 12, 13, 18, 19, 20, 21, 22]
+const reminderCard = () => `
+  <section class="card">
+    <h2 class="card__title">${t('app.settings.reminderTitle')}</h2>
+    <p class="card__sub">${t('app.settings.reminderText')}</p>
+    <label class="reminder__hour">${t('app.settings.reminderAt')}
+      <select id="reminderHour">${HOURS.map((h) => `<option value="${h}" ${h === reminderHour() ? 'selected' : ''}>${String(h).padStart(2, '0')}:00</option>`).join('')}</select>
+    </label>
+    <p class="reminder__status" id="reminderStatus" aria-live="polite"></p>
+  </section>`
 
 // 10. Ajustes: idioma de las explicaciones, qué se hace con los audios, exportar y borrar
 export default {
@@ -64,6 +84,8 @@ export default {
           </label>
         </section>
 
+        ${remindersAvailable ? reminderCard() : ''}
+
         <section class="card row">
           <div>
             <h2 class="card__title">${t('app.settings.interface')}</h2>
@@ -112,6 +134,25 @@ export default {
     }
     loadConsents({ fresh: true }).then(() => root.isConnected && paintConsent())
 
+    // Recordatorio: ¿el teléfono deja mostrar notificaciones? Si no, botón para pedirlas otra vez
+    const paintReminder = async () => {
+      const box = root.querySelector('#reminderStatus')
+      if (!box) return
+      const state = await notificationPermission()
+      if (!root.isConnected) return
+      box.innerHTML =
+        state === 'granted'
+          ? `${icon('check', 16)} ${t('app.settings.reminderPermOn')}`
+          : `${t('app.settings.reminderPermOff')} <button type="button" class="btn btn--navy btn--sm" id="reminderAsk">${t('app.settings.reminderEnable')}</button>`
+      box.classList.toggle('is-off', state !== 'granted')
+    }
+    if (remindersAvailable) paintReminder()
+    scope.listen(root, 'click', async (e) => {
+      if (!e.target.closest('#reminderAsk')) return
+      if (!(await askNotificationPermission())) toast(t('app.settings.reminderDenied'))
+      paintReminder()
+    })
+
     scope.listen(root, 'change', (e) => {
       const el = e.target
       if (el.matches('input[type=radio]')) {
@@ -132,6 +173,8 @@ export default {
             el.disabled = false
             paintConsent()
           })
+      } else if (el.id === 'reminderHour') {
+        setReminderHour(Number(el.value)).then(() => toast(t('app.settings.saved')))
       } else if (el.id === 'sound') {
         setSetting('sound', el.checked)
         root.querySelector('#soundText').textContent = t(el.checked ? 'app.settings.soundOn' : 'app.settings.soundOff')
@@ -160,9 +203,15 @@ export default {
         danger: true,
         requireWord: t('app.settings.deleteWord'),
       })
-      if (ok) {
-        deleteAccount()
+      if (!ok) return
+      const button = root.querySelector('#delete')
+      button.disabled = true
+      try {
+        await deleteAccount()
         navigate('/')
+      } catch {
+        button.disabled = false
+        toast(t('app.settings.deleteError'))
       }
     })
   },

@@ -77,6 +77,34 @@
   line-height: 1.4;
   color: rgba(11, 27, 68, 0.62);
 }
+.reminder__hour {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  font-weight: 700;
+}
+.reminder__hour select {
+  min-height: 40px;
+  padding: 0 0.6rem;
+  border: 2px solid var(--app-line);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+}
+.reminder__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  font-weight: 700;
+  color: #1a7a45;
+}
+.reminder__status.is-off {
+  color: var(--red);
+}
 .switch {
   display: inline-flex;
   align-items: center;

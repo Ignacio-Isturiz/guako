@@ -6,9 +6,28 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:mobile": "vite build --mode mobile && cap sync",
+    "android": "npm run build:mobile && cap open android",
+    "ios": "npm run build:mobile && cap open ios",
+    "assets:mobile": "node scripts/brand-assets.mjs && capacitor-assets generate --android --ios --iconBackgroundColor \"#01296a\" --iconBackgroundColorDark \"#01296a\" --splashBackgroundColor \"#0b2a6b\" --splashBackgroundColorDark \"#0b2a6b\"",
+    "version:mobile": "node scripts/bump-mobile-version.mjs",
+    "android:keystore": "node scripts/android-keystore.mjs",
+    "android:bundle": "npm run build:mobile && cd android && gradlew bundleRelease"
   },
   "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.3",
     "vite": "^8.3.6"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.3",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.6.3",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
   }
 }

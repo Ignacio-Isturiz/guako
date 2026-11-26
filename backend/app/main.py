@@ -30,6 +30,11 @@ from app.users_api import router as users_settings_router
 
 logger = logging.getLogger("app.providers")
 
+# Orígenes de la app móvil (Capacitor): iOS sirve la web desde capacitor://localhost y
+# Android desde https://localhost. Se suman siempre a CORS_ORIGINS para que la app funcione
+# aunque el .env de producción solo liste los dominios web.
+MOBILE_ORIGINS = ["capacitor://localhost", "https://localhost"]
+
 
 def _check_providers() -> None:
     """Build every chain at startup: a chain with no usable provider is a configuration error that must be loud."""
@@ -89,7 +94,7 @@ register_speech_error_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=[*settings.cors_origins, *MOBILE_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -106,10 +111,11 @@ def health() -> dict[str, str]:
 app.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/api/auth", tags=["auth"])
 # POST /api/auth/register  { username, email, password, accept_terms, terms_version }
 app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix="/api/auth", tags=["auth"])
+# PATCH /api/users/me/settings  { feedback_language } · DELETE /api/users/me (borrar la cuenta y todo lo suyo)
+# Va ANTES del router de fastapi-users: su DELETE /api/users/{id} (solo superusuarios) atraparía "/me".
+app.include_router(users_settings_router)
 # GET /api/users/me
 app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/api/users", tags=["users"])
-# PATCH /api/users/me/settings  { feedback_language }
-app.include_router(users_settings_router)
 
 # GET /api/consents/me · POST /api/consents  {kind: terms|audio, granted, version?}
 app.include_router(consents_router)

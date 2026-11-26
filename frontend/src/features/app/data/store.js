@@ -1,7 +1,8 @@
 // Datos de la app (modo demo): viven en el navegador, por cuenta, hasta que exista el backend.
 // Las conversaciones guardan solo lo dinámico (fecha, puntajes...) y el contenido del
 // informe se deriva de la plantilla del tema (ver seed.js).
-import { getSession, clearSession } from '@/features/auth/index.js'
+import { getSession, clearSession, MOCK } from '@/features/auth/index.js'
+import { request } from '@/features/app/data/sessions-api.js'
 import { TEMPLATES } from '@/features/app/data/seed.js'
 
 export const ASPECTS = ['pron', 'gram', 'fluency', 'clarity', 'listening']
@@ -195,8 +196,11 @@ export function exportData() {
   )
 }
 
-// Borra la cuenta y todos sus datos locales
-export function deleteAccount() {
+// Borra la cuenta: primero en el backend (DELETE /api/users/me borra la cuenta, las conversaciones,
+// los audios y todo lo demás, y cierra la sesión) y después los datos de este navegador.
+// Si el backend falla, lanza el error y no toca nada local: la cuenta sigue existiendo.
+export async function deleteAccount() {
+  if (!MOCK) await request('/api/users/me', { method: 'DELETE' })
   try {
     localStorage.removeItem(keyOf())
     localStorage.removeItem('guako.names')

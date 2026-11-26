@@ -32,7 +32,7 @@ from app.conversation.deps import get_pronunciation_provider, get_stt_provider, 
 from app.conversation.graph import build_graph
 from app.conversation.opening import OPENING_TURN, generate_opening
 from app.conversation.state import ConversationState, Message
-from app.db import ConversationSession, Turn, TurnAnalysis, User, get_async_session
+from app.db import ConversationSession, ReplyReport, Turn, TurnAnalysis, User, get_async_session
 from app.enums import AnalysisDimension, AnalysisStatus
 from app.llm.base import LLMProvider
 from app.llm.factory import get_analysis_llm_provider, get_llm_provider
@@ -500,6 +500,39 @@ async def get_reply_audio(
     if turn is None or not turn.reply_audio_path or not Path(turn.reply_audio_path).is_file():
         raise HTTPException(status_code=404, detail={"code": "audio_not_found", "message": "Audio no encontrado."})
     return FileResponse(turn.reply_audio_path, media_type="audio/wav")
+
+
+class ReplyReportCreate(BaseModel):
+    reason: Literal["offensive", "harmful", "wrong", "other"]
+    comment: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = None
+
+
+@router.post("/{session_id}/turns/{turn_number}/flag", status_code=201)
+async def flag_reply(
+    session_id: int,
+    turn_number: int,
+    body: ReplyReportCreate,
+    user: Annotated[User, Depends(current_active_user)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+) -> dict:
+    """Report one of Guako's replies (offensive, harmful, wrong). Reporting the same reply again updates it."""
+    await _own_session(db, session_id, user)
+    turn = await db.scalar(select(Turn.id).where(Turn.session_id == session_id, Turn.turn_number == turn_number))
+    if turn is None:
+        raise HTTPException(status_code=404, detail={"code": "turn_not_found", "message": "Turno no encontrado."})
+    report = await db.scalar(
+        select(ReplyReport).where(
+            ReplyReport.session_id == session_id, ReplyReport.turn_number == turn_number, ReplyReport.user_id == user.id
+        )
+    )
+    if report is None:
+        report = ReplyReport(user_id=user.id, session_id=session_id, turn_number=turn_number)
+        db.add(report)
+    report.reason = body.reason
+    report.comment = body.comment or None
+    await db.commit()
+    logger.warning("reply_reported session=%s turn=%s reason=%s", session_id, turn_number, body.reason)
+    return {"reported": True}
 
 
 @router.get("/{session_id}/report", response_model=SessionReport)

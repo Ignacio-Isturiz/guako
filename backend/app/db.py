@@ -356,3 +356,23 @@ class Consent(Base):
     ip: Mapped[str | None] = mapped_column(String(45), default=None)
     user_agent: Mapped[str | None] = mapped_column(String(200), default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ReplyReport(Base):
+    """A learner reported one of Guako's replies (offensive, harmful, wrong...).
+
+    Google Play asks apps with generative AI to let people report offensive output from inside the app, and the
+    App Store reviews it too. One report per reply and learner (reporting again updates it). The reply text is
+    read from the turn when reviewing, not copied here. Goes away with the account.
+    """
+
+    __tablename__ = "reply_reports"
+    __table_args__ = (UniqueConstraint("session_id", "turn_number", "user_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"))
+    turn_number: Mapped[int]
+    reason: Mapped[str] = mapped_column(String(16))  # offensive, harmful, wrong, other
+    comment: Mapped[str | None] = mapped_column(Text, default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)

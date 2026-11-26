@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Config pública del build móvil (solo la URL del backend)
+!frontend/.env.mobile
 
 # Dependencias y compilados
 node_modules/
@@ -45,3 +47,6 @@ tmp/
 *.webm
 *.flac
 !backend/tests/fixtures/**
+
+# Capturas para las tiendas (~20 MB): se regeneran con `node frontend/scripts/store-screenshots.mjs`
+docs/tiendas/capturas/
