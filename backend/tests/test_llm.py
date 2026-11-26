@@ -103,3 +103,19 @@ def test_settings_reject_unknown_provider() -> None:
 
 def test_secret_not_in_repr() -> None:
     assert "dummy-a" not in repr(_settings("gemini"))
+
+
+def test_low_reasoning_only_in_the_conversation_chain() -> None:
+    """The learner waits for the conversation; the background analysis keeps the model's own effort."""
+    from app.llm.factory import get_analysis_llm_provider
+
+    cfg = _make(llm_conversation_order="groq", llm_analysis_order="groq", groq_api_key=SecretStr("dummy-b"))
+    conversation = get_llm_provider(cfg)._router.routes[0].provider  # type: ignore[attr-defined]
+    analysis = get_analysis_llm_provider(cfg)._router.routes[0].provider  # type: ignore[attr-defined]
+    assert conversation._extra == {"reasoning_effort": "low"}
+    assert analysis._extra == {}
+
+
+def test_empty_reasoning_effort_is_not_sent() -> None:
+    cfg = _make(llm_conversation_order="groq", groq_api_key=SecretStr("dummy-b"), groq_conversation_reasoning_effort="")
+    assert get_llm_provider(cfg)._router.routes[0].provider._extra == {}  # type: ignore[attr-defined]

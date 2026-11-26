@@ -18,7 +18,7 @@ logger = logging.getLogger("app.conversation")
 
 Node = Callable[[ConversationState], dict]
 
-TUTOR_PROMPT_VERSION = 2
+TUTOR_PROMPT_VERSION = 3
 DEFAULT_ROLE = "a friendly English tutor who chats with the learner."
 
 

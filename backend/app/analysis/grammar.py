@@ -12,6 +12,8 @@ from app.prompts import load_prompt
 # 0.7 is a starting value, not a calibrated one: below it the prompt tells the model it is
 # guessing. Re-tune it with evals/grammar (the eval report counts how many errors each cut-off drops).
 MIN_CONFIDENCE = 0.7
+# Version of app/prompts/grammar_v*.txt the app uses (the evals record it, so runs of different prompts are not mixed).
+PROMPT_VERSION = 2
 
 
 class GrammarErrorType(str, Enum):
@@ -48,7 +50,7 @@ def analyze_grammar(llm: LLMProvider, transcript: str, context: str = "") -> dic
 
     ``context`` is the tutor's previous message; it helps tell which words were misrecognised.
     """
-    prompt = load_prompt("grammar", 2, text=transcript, context=context.strip() or "(none: this is the first answer)")
+    prompt = load_prompt("grammar", PROMPT_VERSION, text=transcript, context=context.strip() or "(none: this is the first answer)")
     analysis = llm.generate(prompt, TurnGrammarAnalysis)
     assert isinstance(analysis, TurnGrammarAnalysis)
     shown = [e for e in analysis.errors if e.confidence >= MIN_CONFIDENCE]

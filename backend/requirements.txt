@@ -10,3 +10,4 @@ alembic
 langgraph
 openai
 pgvector
+jiwer==4.0.0

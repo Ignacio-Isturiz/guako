@@ -1,7 +1,7 @@
 // Conversación real: junta el micrófono, la API de sesiones y la reproducción de la respuesta.
 // La pantalla (conversacion.js) solo pinta; todo lo que habla con el backend vive aquí.
 import { openMic } from '@/features/app/services/recorder.js'
-import { createSession, setAudioConsent, startOpening, sendTurn, fetchReplyAudio, endSession } from '@/features/app/data/sessions-api.js'
+import { createSession, setAudioConsent, startOpening, sendTurn, replyAudioSrc, endSession } from '@/features/app/data/sessions-api.js'
 import { readAudioConsent } from '@/features/app/data/consent.js'
 import { speak, stopSpeaking } from '@/features/app/services/tts.js'
 
@@ -9,34 +9,37 @@ export function createLiveSession({ level, topic, role }) {
   let mic = null
   let sessionId = null
   let ended = false
-  let audio = null
-  let audioUrl = null
+  // <audio> de la última respuesta. Se crea apenas llega el turno, así el navegador ya la está
+  // descargando mientras se pinta el texto, y suena en cuanto hay datos (sin esperar el archivo entero).
+  let player = null
 
   const stopPlayback = () => {
-    audio?.pause()
-    audio = null
+    if (player) {
+      player.pause()
+      player.currentTime = 0
+    }
     stopSpeaking()
   }
   const forgetAudio = () => {
     stopPlayback()
-    if (audioUrl) URL.revokeObjectURL(audioUrl)
-    audioUrl = null
+    if (player) {
+      player.removeAttribute('src')
+      player.load() // corta la descarga en curso
+    }
+    player = null
   }
 
   // Texto de la última respuesta cuando no hay audio (todas las voces del servidor estaban agotadas):
   // se lee en voz alta con la voz del navegador.
   let spokenText = ''
 
-  // Descarga el audio de una respuesta y lo deja listo; sin audio igual se muestra el texto
-  const loadAudio = async (url, text = '') => {
+  // Deja lista la voz de una respuesta (empieza a descargarse ya); sin audio igual se muestra el texto
+  const loadAudio = (url, text = '') => {
     forgetAudio()
     spokenText = url ? '' : text
     if (!url) return
-    try {
-      audioUrl = URL.createObjectURL(await fetchReplyAudio(url))
-    } catch {
-      audioUrl = null
-    }
+    player = new Audio(replyAudioSrc(url))
+    player.preload = 'auto'
   }
 
   return {
@@ -81,20 +84,19 @@ export function createLiveSession({ level, topic, role }) {
     // Reproduce la última respuesta; se resuelve cuando termina (o enseguida si no hay audio)
     play() {
       return new Promise((resolve) => {
-        if (!audioUrl) {
+        if (!player) {
           if (!spokenText) return resolve()
           // Sin audio del servidor: la voz del navegador lee la respuesta (respeta el ajuste de voz de Guako)
           stopPlayback()
           return speak(spokenText).then(resolve, resolve)
         }
         stopPlayback()
-        audio = new Audio(audioUrl)
-        audio.onended = audio.onerror = () => resolve()
-        audio.play().catch(() => resolve())
+        player.onended = player.onerror = () => resolve()
+        player.play().catch(() => resolve())
       })
     },
     stopPlayback,
-    hasAudio: () => !!audioUrl || !!spokenText,
+    hasAudio: () => !!player || !!spokenText,
 
     // Termina la sesión en el backend (una sola vez; si falla, se puede reintentar)
     async end({ keepalive = false } = {}) {

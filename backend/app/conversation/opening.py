@@ -20,7 +20,7 @@ OPENING_TURN = 0
 _OPENING_PROMPT = (
     "Conversation so far: nothing yet.\n\n"
     "The learner has just arrived and has not said anything. Open the scene now: say your first line in "
-    "your part, in 1 or 2 short sentences, and end with a question or a remark that invites them to answer."
+    "your part, in 1 or 2 short sentences (15 words at most), and end with a question or a remark that invites them to answer."
 )
 
 

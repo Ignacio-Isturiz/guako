@@ -43,13 +43,14 @@ def _has_key(key: Any) -> bool:
     return key is not None and bool(key.get_secret_value().strip())
 
 
-def _llm_provider(name: str, cfg: Settings):  # noqa: ANN202
+def _llm_provider(name: str, cfg: Settings, use: str = "conversation"):  # noqa: ANN202
     keys = {"groq": cfg.groq_api_key, "gemini": cfg.gemini_api_key, "openai": cfg.openai_api_key}
     if not _has_key(keys[name]):
         raise LLMAuthError(f"{name} API key is not configured")
     common = {"temperature": cfg.llm_temperature, "timeout_seconds": cfg.llm_timeout_seconds, "max_retries": cfg.llm_max_retries}
     if name == "groq":
-        return GroqProvider(keys[name], cfg.groq_model, **common)
+        effort = cfg.groq_conversation_reasoning_effort.strip() if use == "conversation" else ""
+        return GroqProvider(keys[name], cfg.groq_model, **common, reasoning_effort=effort or None)
     if name == "gemini":
         return GeminiProvider(keys[name], cfg.gemini_model, **common)
     return OpenAIProvider(keys[name], cfg.openai_llm_model, **common)
@@ -101,7 +102,7 @@ def build_llm(use: str, cfg: Settings = settings, state: ProviderState | None = 
     """use = "conversation" (latency first) or "analysis" (background; keeps the conversation's free quota)."""
     order = cfg.llm_conversation_order if use == "conversation" else cfg.llm_analysis_order
     empty = LLMAuthError(f"No LLM provider is configured for '{use}' (check the API keys and LLM_{use.upper()}_ORDER)")
-    routes = _routes(order, lambda n: _llm_provider(n, cfg), "llm", use, empty)
+    routes = _routes(order, lambda n: _llm_provider(n, cfg, use), "llm", use, empty)
     return RoutedLLM(ProviderRouter("llm", use, routes, _state_for(cfg, state), classify_llm, llm_exhausted(use)))
 
 
