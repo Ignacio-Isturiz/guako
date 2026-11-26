@@ -4,7 +4,8 @@ import { navigate } from '@/core/router.js'
 import { TOPICS, LEVELS } from '@/features/app/data/seed.js'
 import { level as savedLevel } from '@/features/app/data/store.js'
 import { readSetup, writeSetup } from '@/features/app/data/setup.js'
-import { readAudioConsent } from '@/features/app/data/consent.js'
+import { loadConsents, readAudioConsent, writeAudioConsent } from '@/features/app/data/consent.js'
+import { confirmDialog } from '@/features/app/components/confirm-dialog/confirm-dialog.js'
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
 import { roleArt as art } from '@/shared/assets/illustrations/index.js'
@@ -118,7 +119,7 @@ export default {
         : t('app.prepare.summaryEmpty')
       root.querySelector('#sumRole').textContent = state.role.trim() || t('app.prepare.roleNone')
       root.querySelector('#sumLevel').textContent = state.level ? `${state.level} · ${t(`app.levels.${state.level}.name`)}` : t('app.prepare.summaryEmpty')
-      root.querySelector('#sumAudio').textContent = t(readAudioConsent() ? 'app.prepare.consentOn' : 'app.prepare.consentOff')
+      root.querySelector('#sumAudio').textContent = t(readAudioConsent() === true ? 'app.prepare.consentOn' : 'app.prepare.consentOff')
       const ok = !!ready()
       root.querySelector('#startBtn').disabled = !ok
       root.querySelector('#startNote').hidden = ok
@@ -156,7 +157,7 @@ export default {
       }
       if (e.target.closest('#startBtn') && ready()) {
         writeSetup(state)
-        navigate('/app/conversacion')
+        start()
       }
     })
     scope.listen(customInput, 'input', () => {
@@ -167,6 +168,22 @@ export default {
       state.role = roleInput.value
       paint()
     })
+    // "Guardar mi audio" viene desactivado: la primera vez se pregunta antes de empezar (Ley 1581: expreso).
+    // Si guardar la respuesta falla se sigue sin audio guardado, que es lo seguro.
+    async function start() {
+      if (readAudioConsent() === null && (await loadConsents())) {
+        const yes = await confirmDialog({
+          title: t('app.consent.audioTitle'),
+          text: t('app.consent.audioText'),
+          yes: t('app.consent.audioYes'),
+          no: t('app.consent.audioNo'),
+        })
+        await writeAudioConsent(yes).catch(() => {})
+      }
+      navigate('/app/conversacion')
+    }
+
+    loadConsents().then(() => root.isConnected && paint())
     paint()
   },
 }

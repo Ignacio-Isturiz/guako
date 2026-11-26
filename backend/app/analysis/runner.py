@@ -14,10 +14,11 @@ from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app import observability
 from app.analysis.grammar import analyze_grammar
 from app.analysis.judge import judge_turn
 from app.analysis.pronunciation import empty_result, plan_assessment, stored_result
-from app.db import Turn, TurnAnalysis
+from app.db import ConversationSession, Turn, TurnAnalysis
 from app.enums import AnalysisDimension, AnalysisStatus
 from app.llm.base import LLMProvider
 from app.llm.errors import LLMProviderError, LLMRateLimitError, LLMTimeoutError
@@ -148,11 +149,29 @@ async def run_turn_analysis(
         return
     _IN_FLIGHT.add(turn_id)
     try:
-        await build_analysis_graph(maker, llm, pronunciation).ainvoke({"turn_id": turn_id})
+        session_id, user_id = await _owner(maker, turn_id) if observability.enabled() else (None, None)
+        # Its own trace (the turn's one closed when the response was sent), in the same Langfuse session.
+        with observability.trace(
+            "analisis", session_id=session_id, user_id=user_id, tags=["analisis"], metadata={"turn_id": turn_id}
+        ):
+            await build_analysis_graph(maker, llm, pronunciation).ainvoke({"turn_id": turn_id})
     except Exception:  # background task: nothing may escape
         logger.exception("analysis_crashed turn=%s", turn_id)
     finally:
         _IN_FLIGHT.discard(turn_id)
+
+
+async def _owner(maker: async_sessionmaker[AsyncSession], turn_id: int) -> tuple[int | None, int | None]:
+    """Session and user of a turn, to file its analysis trace under the right conversation."""
+    async with maker() as db:
+        row = (
+            await db.execute(
+                select(ConversationSession.id, ConversationSession.user_id)
+                .join(Turn, Turn.session_id == ConversationSession.id)
+                .where(Turn.id == turn_id)
+            )
+        ).first()
+    return (row[0], row[1]) if row else (None, None)
 
 
 async def _previous_tutor_text(db: AsyncSession, turn: Turn) -> str:

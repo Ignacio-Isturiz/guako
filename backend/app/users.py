@@ -25,6 +25,10 @@ class UserRead(schemas.BaseUser[int]):
 
 class UserCreate(schemas.BaseUserCreate):
     username: str = Field(min_length=3, max_length=30)
+    # Law 1581: the authorisation is express (the box ticked) and its version is recorded. Not User columns:
+    # excluded from the dict fastapi-users turns into the new user; saved in the consents table instead.
+    accept_terms: bool = Field(default=False, exclude=True)
+    terms_version: str | None = Field(default=None, exclude=True)
 
 
 class UserUpdate(schemas.BaseUserUpdate):
@@ -49,7 +53,17 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             select(User.id).where(User.username.ilike(username)))
         if taken.first():
             raise HTTPException(status_code=400, detail={"code": "usernameTaken"})
-        return await super().create(user_create, safe, request)
+        if not getattr(user_create, "accept_terms", False):
+            raise HTTPException(status_code=400, detail={"code": "termsRequired"})
+        if getattr(user_create, "terms_version", None) != settings.legal_version:
+            raise HTTPException(status_code=400, detail={"code": "termsOutdated"})
+        user = await super().create(user_create, safe, request)
+        from app import consents  # here: app.consents depends on this module
+
+        session = self.user_db.session  # type: ignore[attr-defined]
+        consents.record(session, user.id, consents.TERMS, True, version=settings.legal_version, request=request)
+        await session.commit()
+        return user
 
 
 async def get_user_manager(

@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 
-CREDENTIALS = {"username": "ana_test", "email": "ana@example.com", "password": "Passw0rd123"}
+from tests.fakes import TERMS
+
+CREDENTIALS = {"username": "ana_test", "email": "ana@example.com", "password": "Passw0rd123", **TERMS}
 
 
 def _register_and_login(client: TestClient) -> dict:

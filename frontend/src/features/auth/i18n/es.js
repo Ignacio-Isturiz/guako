@@ -42,6 +42,8 @@ export default {
       usernameTaken: 'Ese nombre de usuario ya está en uso.',
       exists: 'Ya existe una cuenta con ese correo.',
       network: 'No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.',
+      termsRequired: 'Debes aceptar los términos y la política de privacidad.',
+      termsOutdated: 'Los términos cambiaron mientras tenías esta página abierta. Recárgala y vuelve a leerlos.',
       generic: 'Algo salió mal. Inténtalo otra vez.',
     },
   },

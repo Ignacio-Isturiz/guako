@@ -44,7 +44,7 @@ from app.sessions_api import _own_session
 from app.stt import STTProvider
 from app.stt.errors import NoSpeechError, STTError
 from app.stt.groq import SUPPORTED_EXTENSIONS
-from app.users import current_active_user
+from app.consents import user_with_terms
 
 logger = logging.getLogger("app.practice")
 
@@ -75,7 +75,7 @@ async def practice_word(
     session_id: int,
     word: Annotated[str, Form(max_length=64)],
     audio: UploadFile,
-    user: Annotated[User, Depends(current_active_user)],
+    user: Annotated[User, Depends(user_with_terms)],
     db: Annotated[AsyncSession, Depends(get_async_session)],
     provider: Annotated[PronunciationProvider | None, Depends(get_pronunciation_provider)],
     stt: Annotated[STTProvider, Depends(get_stt_provider)],

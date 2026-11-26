@@ -8,7 +8,7 @@ from app.llm.base import BaseLLMProvider, LLMProvider, RawCompletion
 from app.llm.errors import LLMAuthError, LLMError, LLMOutputError, LLMRateLimitError, LLMTimeoutError
 from app.llm.factory import get_llm_provider
 from app.main import app
-from app.users import current_active_user
+from app.consents import user_with_terms
 
 VALID = '{"errors": [{"original": "I goed", "correction": "I went", "error_type": "verb", "explanation": "Irregular."}]}'
 
@@ -30,7 +30,8 @@ class Scripted(BaseLLMProvider):
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    app.dependency_overrides[current_active_user] = lambda: object()
+    # A signed-in user who accepted the current terms (the terms check itself is tested in test_safety).
+    app.dependency_overrides[user_with_terms] = lambda: object()
     yield TestClient(app)
     app.dependency_overrides.clear()
 

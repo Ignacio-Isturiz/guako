@@ -35,7 +35,7 @@ from app.pronunciation.quota import QUOTA_SAFETY_MARGIN_SECONDS, USABLE_MONTHLY_
 from app.reports import FAIRNESS_NOTE, HARD_WORD_THRESHOLD, build_pronunciation_report
 from tests.analysis_helpers import ScriptedGrammarLLM, ScriptedPronunciation, busy, run_analyses
 from tests.fakes import FakeSTT, FakeTTS
-from tests.test_sessions_api import AUDIO, _login, _new_session, _query
+from tests.test_sessions_api import _allow_audio, AUDIO, _login, _new_session, _query
 
 FIXTURE = Path(__file__).parent / "fixtures" / "azure_pronunciation_response.json"
 KEY = "test-key-not-real"
@@ -383,6 +383,7 @@ def test_a_turn_with_audio_consent_is_assessed_after_saving(client: TestClient, 
     app.dependency_overrides[get_pronunciation_provider] = lambda: azure
     _login(client, "ana")
     session_id = _new_session(client)
+    _allow_audio(client)
     assert client.patch(f"/api/sessions/{session_id}", json={"audio_consent": True}).status_code == 200
 
     assert client.post(f"/api/sessions/{session_id}/turns", files=AUDIO).status_code == 201

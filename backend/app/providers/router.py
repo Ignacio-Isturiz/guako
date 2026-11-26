@@ -17,6 +17,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
+from app import observability
 from app.providers.pricing import is_paid
 from app.providers.state import CallRecord, ProviderState
 from app.providers.types import (
@@ -81,7 +82,10 @@ class ProviderRouter(Generic[T]):
         fallback_from: str | None = None
         wait_hints: list[float] = []
 
+        skipped: list[str] = []  # shown on the next attempt's trace: why the providers before it were passed over
+
         def skip(route: Route, outcome: str) -> None:
+            skipped.append(f"{route.name}:{outcome}")
             state.record(CallRecord(capability, self.use, route.name, route.model, outcome))
 
         for route in self.routes:
@@ -103,14 +107,30 @@ class ProviderRouter(Generic[T]):
                     continue
 
             started = time.perf_counter()
-            try:
-                value, usage = invoke(route)
-            except Exception as exc:
-                failure = self._classify(exc)
+            error: Exception | None = None
+            with observability.provider_call(
+                capability, self.use, route.name, route.model, fallback_from=fallback_from, skipped=list(skipped)
+            ) as traced:
+                try:
+                    value, usage = invoke(route)
+                except Exception as exc:
+                    error, failure = exc, self._classify(exc)
+                    traced.failed(failure.kind.value)
+                else:
+                    cached = hit or usage.from_cache
+                    cost = 0.0 if cached else state.pricing.cost(route.name, capability, usage)
+                    traced.succeeded(
+                        prompt_tokens=usage.prompt_tokens,
+                        completion_tokens=usage.completion_tokens,
+                        cost=cost,
+                        metadata={"cache_hit": cached} if cached else {},
+                    )
+            if error is not None:
+                exc = error
                 if failure.kind is FailureKind.FATAL:
                     if not hit:
                         breaker.release_probe()
-                    raise
+                    raise exc
                 latency = int((time.perf_counter() - started) * 1000)
                 used = Usage(prompt_tokens=failure.prompt_tokens, completion_tokens=failure.completion_tokens)
                 state.record(
@@ -134,14 +154,13 @@ class ProviderRouter(Generic[T]):
             latency = int((time.perf_counter() - started) * 1000)
             self.last_route = route
             self.used_fallback = fallback_from is not None
-            if hit or usage.from_cache:
+            if cached:
                 state.record(CallRecord(capability, self.use, route.name, route.model, CACHE_HIT, latency, usage))
             else:
                 breaker.record_success()
                 state.record(
                     CallRecord(
-                        capability, self.use, route.name, route.model, OK, latency, usage,
-                        state.pricing.cost(route.name, capability, usage), fallback_from,
+                        capability, self.use, route.name, route.model, OK, latency, usage, cost, fallback_from,
                     )
                 )  # fmt: skip
             return value

@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from app.llm.base import LLMProvider
 from app.prompts import load_prompt
+from app.safety.text import untrusted
 
 # Below this, the score is not shown to the learner.
 MIN_JUDGE_CONFIDENCE = 0.6
@@ -120,7 +121,7 @@ _NO_LISTENING_BLOCK = '\nSet "listening" to null and "asked_to_repeat" to false:
 def build_prompt(ctx: dict[str, Any], want_listening: bool, intended: dict | None) -> str:
     fixes = (intended or {}).get("fixes") or []
     meant = (
-        f'\nWhat the learner most likely MEANT (the recognizer wrote some words differently): """{intended["text"]}"""\n'
+        f'\nWhat the learner most likely MEANT (the recognizer wrote some words differently): """{untrusted(intended["text"])}"""\n'
         if intended and intended.get("text")
         else ""
     )
@@ -129,9 +130,10 @@ def build_prompt(ctx: dict[str, Any], want_listening: bool, intended: dict | Non
         "judge",
         PROMPT_VERSION,
         level=ctx.get("level") or "unknown",
-        topic=(ctx.get("topic") or "free conversation")[:MAX_TOPIC_CHARS],
-        tutor=(ctx.get("tutor_prev") or "")[:MAX_TUTOR_CHARS] or "(none)",
-        learner=ctx["transcript"],
+        # What the learner said or wrote is data, never instructions: neutralised before it goes in.
+        topic=untrusted(ctx.get("topic"), max_chars=MAX_TOPIC_CHARS) or "free conversation",
+        tutor=untrusted(ctx.get("tutor_prev"), max_chars=MAX_TUTOR_CHARS) or "(none)",
+        learner=untrusted(ctx["transcript"]),
         meant_block=meant,
         reliability_note=_RELIABILITY_NOTES.get(reliability, ""),
         listening_block=_LISTENING_BLOCK if want_listening else _NO_LISTENING_BLOCK,

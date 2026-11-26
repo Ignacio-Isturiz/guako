@@ -9,6 +9,9 @@ from app.llm.base import LLMProvider
 from app.llm.schemas import TutorReply
 from app.prompts import load_prompt
 from app.providers.errors import TTSExhausted
+from app.safety.guard import guard_reply
+from app.safety.moderation import Moderator
+from app.safety.text import untrusted
 from app.stt import STTProvider
 from app.stt.errors import NoSpeechError
 from app.tts import TTSProvider
@@ -18,7 +21,9 @@ logger = logging.getLogger("app.conversation")
 
 Node = Callable[[ConversationState], dict]
 
-TUTOR_PROMPT_VERSION = 3
+TUTOR_PROMPT_VERSION = 4
+# What the learner writes for the scene and the part: the same limit the API accepts.
+SCENE_MAX_CHARS = 200
 DEFAULT_ROLE = "a friendly English tutor who chats with the learner."
 
 
@@ -42,22 +47,36 @@ def make_transcribe(stt: STTProvider) -> Node:
     return transcribe
 
 
+def tutor_system_prompt(level: str, topic: str, role: str | None) -> str:
+    """The tutor's instructions. The scene and the part are the learner's text: neutralised before they go in."""
+    return load_prompt(
+        "tutor",
+        TUTOR_PROMPT_VERSION,
+        level=level,
+        topic=untrusted(topic, max_chars=SCENE_MAX_CHARS),
+        role=untrusted(role, max_chars=SCENE_MAX_CHARS) or DEFAULT_ROLE,
+    )
+
+
 def _format_history(messages: list[Message], learner_text: str) -> str:
-    """LLMProvider takes one prompt string, so the history goes inside it."""
+    """LLMProvider takes one prompt string, so the history goes inside it.
+
+    Everything the learner said is neutralised, and the new message goes inside <learner_message>: the
+    prompt treats it as speech to answer, never as instructions.
+    """
     lines = ["Conversation so far:"]
     for message in messages:
         speaker = "Learner" if message["role"] == "user" else "Guako"
-        lines.append(f"{speaker}: {message['content']}")
+        lines.append(f"{speaker}: {untrusted(message['content'])}")
     lines.append("")
-    lines.append(f"Learner's new message: {learner_text}")
+    lines.append(f"<learner_message>{untrusted(learner_text)}</learner_message>")
     lines.append("Write Guako's next reply.")
     return "\n".join(lines)
 
 
 def make_tutor_reply(llm: LLMProvider) -> Node:
     def tutor_reply(state: ConversationState) -> dict:
-        role = (state.get("role") or "").strip() or DEFAULT_ROLE
-        system = load_prompt("tutor", TUTOR_PROMPT_VERSION, level=state["level"], topic=state["topic"], role=role)
+        system = tutor_system_prompt(state["level"], state["topic"], state.get("role"))
         history = state.get("messages", [])
         learner_text = state["user_transcript"]
         reply = llm.generate(_format_history(history, learner_text), TutorReply, system=system).reply
@@ -72,6 +91,24 @@ def make_tutor_reply(llm: LLMProvider) -> Node:
         }
 
     return tutor_reply
+
+
+def make_guard(moderator: Moderator | None = None) -> Node:
+    """Checks the learner's words and the reply before the voice: may replace the reply with a safe line."""
+
+    def guard(state: ConversationState) -> dict:
+        result = guard_reply(
+            state["user_transcript"], state["reply_text"], prompt=("tutor", TUTOR_PROMPT_VERSION), moderator=moderator
+        )
+        update: dict = {"safety_events": result.events}
+        if result.reply != state["reply_text"]:
+            messages = list(state.get("messages", []))
+            if messages and messages[-1]["role"] == "assistant":
+                messages[-1] = {"role": "assistant", "content": result.reply}
+            update |= {"reply_text": result.reply, "messages": messages}
+        return update
+
+    return guard
 
 
 def make_synthesize(tts: TTSProvider, audio_dir: str) -> Node:

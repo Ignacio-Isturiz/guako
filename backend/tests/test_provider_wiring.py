@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 from pydantic import BaseModel, SecretStr
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from tests.fakes import TERMS
 from app.analysis.retry import EXPIRE_AFTER, MIN_AGE_SECONDS, retry_pending_once
 from app.config import settings
 from app.conversation.deps import get_stt_provider, get_tts_provider
@@ -303,7 +304,7 @@ def test_the_admin_endpoint_is_only_for_superusers(client: TestClient, db_path: 
 
 
 def test_registration_cannot_make_someone_an_admin(client: TestClient, db_path: Path) -> None:
-    res = client.post("/api/auth/register", json={"username": "eve", "email": "eve@example.com", "password": "Passw0rd123", "is_superuser": True})
+    res = client.post("/api/auth/register", json={"username": "eve", "email": "eve@example.com", "password": "Passw0rd123", "is_superuser": True, **TERMS})
 
     assert res.status_code == 201
     assert _query(db_path, "select is_superuser from \"user\" where username = 'eve'") == [(0,)]

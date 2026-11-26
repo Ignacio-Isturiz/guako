@@ -17,6 +17,9 @@ os.environ["AZURE_SPEECH_KEY"] = ""
 os.environ["AZURE_SPEECH_REGION"] = ""
 # OpenAI is paid: no test may use it, even by accident. No key = the paid provider is simply not in any chain.
 os.environ["OPENAI_API_KEY"] = ""
+# Langfuse off: tests never send traces, whatever the local .env says.
+os.environ["LANGFUSE_PUBLIC_KEY"] = ""
+os.environ["LANGFUSE_SECRET_KEY"] = ""
 # No flusher or retrier in the API process while testing (the tests call those functions directly).
 os.environ["BACKGROUND_TASKS_ENABLED"] = "false"
 

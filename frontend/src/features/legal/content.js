@@ -8,6 +8,9 @@
 //
 // Los datos de la empresa se cambian aquí, en un solo sitio:
 export const LEGAL_CONFIG = {
+  // Versión vigente de los Términos y la Política. Debe coincidir con LEGAL_VERSION del backend: al cambiarla,
+  // el backend vuelve a pedir la aceptación a todos. Cámbiala junto con la fecha `legal.date` de i18n.
+  version: '2026-11-26',
   company: 'Guako',
   email: 'privacidad@guako.example', // ← reemplazar por el correo real de contacto
   country: { es: 'Colombia', en: 'Colombia' }, // ← país/jurisdicción de la empresa
@@ -51,6 +54,7 @@ export const LEGAL = {
             `Intentar vulnerar la seguridad, hacer ingeniería inversa, copiar o extraer de forma masiva el contenido o el código.`,
             `Usar programas automatizados para abusar del Servicio o sobrecargarlo.`,
             `Introducir contenido ofensivo, discriminatorio o ilegal en tus conversaciones de práctica.`,
+            `Intentar que la IA ignore sus reglas, revele sus instrucciones o genere contenido dañino, por ejemplo con órdenes escondidas en el tema de la conversación o en lo que dices.`,
           ],
         },
         {
@@ -130,6 +134,8 @@ export const LEGAL = {
             `Datos técnicos: tipo de dispositivo y navegador, dirección IP, fecha y hora de acceso y registros de errores.`,
             `Pagos: si contratas un plan de pago, el cobro lo procesa un proveedor de pagos; {company} no almacena el número completo de tu tarjeta.`,
             `Comunicaciones: los mensajes que nos envías a soporte.`,
+            `Registros de seguridad: cuando un mensaje se marca como posiblemente dañino o como un intento de manipular a la IA, guardamos el tipo de alerta y la fecha, no el texto.`,
+            `Tus autorizaciones: cuándo aceptaste los términos y esta política (y qué versión), y si autorizaste guardar tu audio, con la dirección IP y el navegador desde los que lo hiciste, como prueba.`,
           ],
           p2: `No te pedimos datos sensibles. La voz puede considerarse un dato biométrico cuando se usa para identificarte; {company} no la utiliza con esa finalidad.`,
         },
@@ -142,13 +148,16 @@ export const LEGAL = {
             `Mantener, medir y mejorar el Servicio usando, siempre que sea posible, datos agregados o anonimizados.`,
             `Solo si lo autorizas de forma expresa: usar tus grabaciones para mejorar los modelos de evaluación. Puedes retirar esa autorización cuando quieras.`,
             `Enviarte comunicaciones del Servicio (seguridad, cambios, facturación) y, solo con tu consentimiento, novedades y ofertas.`,
+            `Revisar de forma automática lo que dices y lo que responde Guako para evitar contenido dañino y usos indebidos de la IA.`,
+            `Medir la calidad, el tiempo de respuesta y los errores del Servicio para corregirlos.`,
             `Prevenir fraude y abusos, y cumplir obligaciones legales.`,
           ],
         },
         {
           h: 'Tratamiento de la voz y el audio',
           p: [
-            `De forma predeterminada guardamos tu audio para medir tu pronunciación; puedes desactivar "Guardar mi audio" en Ajustes cuando quieras y entonces se descarta después de transcribirlo. Solo capturamos audio cuando tú activas una práctica de voz. Para transcribirlo y evaluarlo, el audio puede enviarse a proveedores de reconocimiento de voz que actúan como encargados del tratamiento bajo nuestras instrucciones.`,
+            `Solo capturamos audio cuando tú activas una práctica de voz. Para entender lo que dices, el audio se envía a un proveedor de reconocimiento de voz que lo transcribe.`,
+            `Guardar tu audio para medir tu pronunciación es opcional y viene desactivado: solo lo guardamos si nos lo autorizas, ya sea cuando te lo preguntamos o en "Guardar mi audio" de Ajustes. Si no lo autorizas, el audio se descarta después de transcribirlo. Si retiras la autorización, dejamos de guardarlo desde ese momento, también en la conversación que tengas abierta, y borramos lo que ya se había grabado en ella.`,
             `Conservamos las grabaciones únicamente el tiempo necesario para darte la retroalimentación y, si lo autorizaste, para mejorar el Servicio. Puedes pedir en cualquier momento que las eliminemos.`,
           ],
         },
@@ -159,12 +168,15 @@ export const LEGAL = {
           ],
           ul: [
             `Servicios de alojamiento e infraestructura en la nube.`,
-            `Proveedores de reconocimiento de voz e inteligencia artificial (por ejemplo, Microsoft Azure Speech, que evalúa tu pronunciación).`,
+            `Proveedores de inteligencia artificial que transcriben tu voz, generan las respuestas de Guako y analizan tu inglés: Groq, OpenAI y Google (Gemini).`,
+            `Microsoft Azure Speech, que evalúa tu pronunciación cuando autorizas guardar tu audio.`,
+            `OpenAI, que revisa de forma automática que los mensajes no tengan contenido dañino (moderación).`,
+            `Langfuse, que usamos para medir la calidad y los errores del Servicio. Recibe las transcripciones y las respuestas de tus conversaciones, nunca el audio, con los correos y teléfonos ocultos e identificadas solo con un número interno.`,
             `Servicios de envío de correo electrónico (por ejemplo, para los códigos OTP).`,
             `Proveedores de pagos y de analítica, si aplican.`,
             `Autoridades competentes, cuando la ley lo exija.`,
           ],
-          p2: `Algunos proveedores pueden estar fuera de {country}. En ese caso exigimos garantías adecuadas para proteger tus datos, conforme a la ley.`,
+          p2: `Varios de estos proveedores procesan los datos fuera de {country}, por ejemplo en Estados Unidos o en la Unión Europea. En esos casos exigimos garantías adecuadas para proteger tus datos, conforme a la ley.`,
         },
         {
           h: 'Cookies y almacenamiento en tu navegador',
@@ -196,6 +208,7 @@ export const LEGAL = {
           h: 'Cuánto tiempo conservamos tus datos',
           p: [
             `Conservamos tus datos mientras tengas una cuenta y el tiempo adicional que exija la ley o sea necesario para atender reclamos. Cuando dejen de ser necesarios, los eliminamos o los anonimizamos. La vigencia de nuestras bases de datos es la del tiempo que duren las finalidades descritas.`,
+            `La prueba de tus autorizaciones se conserva mientras tengas la cuenta y el tiempo que la ley exija para demostrarlas. Los registros de calidad que recibe Langfuse se borran automáticamente según su plazo de retención.`,
           ],
         },
         {
@@ -257,6 +270,7 @@ export const LEGAL = {
             `Try to breach security, reverse engineer, or copy or bulk-extract the content or code.`,
             `Use automated programs to abuse or overload the Service.`,
             `Enter offensive, discriminatory or unlawful content in your practice conversations.`,
+            `Try to make the AI ignore its rules, reveal its instructions or produce harmful content, for example with orders hidden in the conversation topic or in what you say.`,
           ],
         },
         {
@@ -336,6 +350,8 @@ export const LEGAL = {
             `Technical data: device and browser type, IP address, access date and time, and error logs.`,
             `Payments: if you subscribe to a paid plan, a payment provider processes the charge; {company} does not store your full card number.`,
             `Communications: the messages you send to our support team.`,
+            `Safety records: when a message is flagged as possibly harmful or as an attempt to manipulate the AI, we keep the type of alert and the date, not the text.`,
+            `Your authorisations: when you accepted the terms and this policy (and which version), and whether you allowed us to keep your audio, with the IP address and browser you used, as proof.`,
           ],
           p2: `We do not ask for sensitive data. Voice can be considered biometric data when it is used to identify you; {company} does not use it for that purpose.`,
         },
@@ -348,6 +364,8 @@ export const LEGAL = {
             `Maintaining, measuring and improving the Service, using aggregated or anonymized data whenever possible.`,
             `Only if you expressly allow it: using your recordings to improve our assessment models. You can withdraw that permission at any time.`,
             `Sending you service communications (security, changes, billing) and, only with your consent, news and offers.`,
+            `Automatically checking what you say and what Guako answers to prevent harmful content and misuse of the AI.`,
+            `Measuring the quality, response time and errors of the Service to fix them.`,
             `Preventing fraud and abuse, and complying with legal obligations.`,
           ],
           p2: `Legal bases (for users in Europe): performance of the contract, our legitimate interest in securing and improving the Service, compliance with legal obligations, and your consent where indicated.`,
@@ -355,7 +373,8 @@ export const LEGAL = {
         {
           h: 'How we handle voice and audio',
           p: [
-            `By default we keep your audio to measure your pronunciation; you can turn off "Save my audio" in Settings at any time, and then it is discarded after it is transcribed. We only capture audio when you start a voice practice. To transcribe and assess it, the audio may be sent to speech-recognition providers that act as processors on our instructions.`,
+            `We only capture audio when you start a voice practice. To understand what you say, the audio is sent to a speech-recognition provider that transcribes it.`,
+            `Saving your audio to measure your pronunciation is optional and off by default: we only keep it if you authorise it, either when we ask you or with "Save my audio" in Settings. If you do not, the audio is discarded after it is transcribed. If you withdraw the authorisation, we stop keeping it from that moment, also in the conversation you have open, and we delete what was already recorded there.`,
             `We keep recordings only for as long as needed to give you feedback and, if you allowed it, to improve the Service. You can ask us to delete them at any time.`,
           ],
         },
@@ -366,12 +385,15 @@ export const LEGAL = {
           ],
           ul: [
             `Hosting and cloud infrastructure services.`,
-            `Speech-recognition and artificial-intelligence providers (for example, Microsoft Azure Speech, which assesses your pronunciation).`,
+            `Artificial-intelligence providers that transcribe your voice, write Guako's replies and analyse your English: Groq, OpenAI and Google (Gemini).`,
+            `Microsoft Azure Speech, which assesses your pronunciation when you allow us to keep your audio.`,
+            `OpenAI, which automatically checks that messages contain no harmful content (moderation).`,
+            `Langfuse, which we use to measure the quality and errors of the Service. It receives the transcripts and replies of your conversations, never the audio, with emails and phone numbers hidden and identified only by an internal number.`,
             `Email delivery services (for example, for OTP codes).`,
             `Payment and analytics providers, if applicable.`,
             `Competent authorities, when required by law.`,
           ],
-          p2: `Some providers may be located outside {country}. In that case we require adequate safeguards to protect your data, as required by law.`,
+          p2: `Several of these providers process data outside {country}, for example in the United States or the European Union. In those cases we require adequate safeguards to protect your data, as required by law.`,
         },
         {
           h: 'Cookies and browser storage',
@@ -403,6 +425,7 @@ export const LEGAL = {
           h: 'How long we keep your data',
           p: [
             `We keep your data while you have an account and for any additional time required by law or needed to handle claims. When it is no longer needed, we delete or anonymize it. Our databases remain in force for as long as the purposes described here last.`,
+            `The proof of your authorisations is kept while you have an account and for as long as the law requires to show it. The quality records Langfuse receives are deleted automatically according to its retention period.`,
           ],
         },
         {
