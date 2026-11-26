@@ -102,3 +102,52 @@ def test_router_traces_every_attempt_with_failure_and_fallback(monkeypatch) -> N
     updates = {name: kwargs for name, kwargs in fake.log if "start" not in kwargs}
     assert updates["llm:groq"]["level"] == "WARNING"
     assert updates["llm:gemini"]["usage_details"] == {"input": 10, "output": 5}
+
+
+class _FakeLangfuseApi:
+    """observations.get_many (two pages) and trace.delete_multiple, recording what was asked."""
+
+    def __init__(self, pages: list[list[str]]) -> None:
+        from types import SimpleNamespace
+
+        self.pages, self.asked, self.deleted, self.flushed = pages, [], [], False
+        api = self
+
+        class Observations:
+            def get_many(self, **kwargs):  # noqa: ANN001, ANN201
+                api.asked.append(kwargs)
+                index = 0 if kwargs.get("cursor") is None else int(kwargs["cursor"])
+                data = [SimpleNamespace(trace_id=t) for t in api.pages[index]]
+                cursor = str(index + 1) if index + 1 < len(api.pages) else None
+                return SimpleNamespace(data=data, meta=SimpleNamespace(cursor=cursor))
+
+        class Trace:
+            def delete_multiple(self, *, trace_ids):  # noqa: ANN001, ANN201
+                api.deleted.append(list(trace_ids))
+
+        self.api = SimpleNamespace(observations=Observations(), trace=Trace())
+
+    def flush(self) -> None:
+        self.flushed = True
+
+
+def test_forget_user_deletes_every_trace_of_the_learner(monkeypatch) -> None:
+    fake = _FakeLangfuseApi([["t1", "t2", "t1"], ["t3"]])
+    monkeypatch.setattr(observability, "_client", fake)
+
+    observability.forget_user(7)
+
+    assert fake.flushed
+    assert [a["user_id"] for a in fake.asked] == ["7", "7"]  # both pages, only this learner
+    assert fake.deleted == [["t1", "t2", "t3"]]  # each trace once
+
+
+def test_forget_user_never_raises(monkeypatch) -> None:
+    fake = _FakeLangfuseApi([["t1"]])
+    fake.api.trace.delete_multiple = lambda **_: (_ for _ in ()).throw(RuntimeError("langfuse down"))
+    monkeypatch.setattr(observability, "_client", fake)
+    observability.forget_user(7)  # logged and swallowed
+
+
+def test_forget_user_is_a_no_op_without_keys() -> None:
+    observability.forget_user(7)

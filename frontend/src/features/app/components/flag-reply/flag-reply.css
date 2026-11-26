@@ -1,0 +1,87 @@
+/* Botón "reportar" dentro de la burbuja de Guako y su diálogo */
+.flag-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  opacity: 0.45;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+.flag-btn:hover,
+.flag-btn:focus-visible {
+  opacity: 1;
+  background: rgba(11, 42, 107, 0.08);
+}
+
+.modal--flag .modal__card {
+  text-align: left;
+}
+.flag__reasons {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+.flag__legend {
+  margin-bottom: 0.4rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+.flag__option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0 0.8rem;
+  border: 2px solid rgba(11, 42, 107, 0.15);
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.flag__option:has(input:checked) {
+  border-color: var(--navy);
+  background: rgba(255, 199, 0, 0.2);
+}
+.flag__option input {
+  accent-color: var(--navy);
+}
+.flag__label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+.flag__comment {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid rgba(11, 42, 107, 0.2);
+  border-radius: 10px;
+  font: inherit;
+  resize: vertical;
+}
+.flag__comment:focus {
+  outline: none;
+  border-color: var(--navy);
+}
+
+.flag__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flag-btn {
+    transition: none;
+  }
+}

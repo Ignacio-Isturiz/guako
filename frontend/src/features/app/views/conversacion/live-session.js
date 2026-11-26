@@ -59,11 +59,11 @@ export function createLiveSession({ level, topic, role }) {
       // "Guardar mi audio" no se envía aquí: el backend copia en la sesión la autorización guardada.
     },
 
-    // Guako habla primero: pide su frase de apertura y deja lista su voz. Devuelve { text }.
+    // Guako habla primero: pide su frase de apertura y deja lista su voz. Devuelve { turnNumber, text }.
     async opening() {
       const turn = await startOpening(sessionId)
       await loadAudio(turn.reply_audio_url, turn.reply_text)
-      return { text: turn.reply_text }
+      return { turnNumber: turn.turn_number, text: turn.reply_text }
     },
 
     startRecording: () => mic.start(),

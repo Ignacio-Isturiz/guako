@@ -288,6 +288,22 @@ export default {
     },
   },
 
+  flag: {
+    button: 'Report this reply',
+    title: "Report Guako's reply",
+    sub: 'Guako is an AI and sometimes gets things wrong. Tell us what happened with this reply and we will review it.',
+    why: "What's wrong with it?",
+    reasons: {
+      offensive: 'It is offensive or disrespectful',
+      harmful: 'It is dangerous or inappropriate',
+      wrong: 'It is wrong or makes no sense',
+      other: 'Another reason',
+    },
+    comment: 'Details (optional)',
+    cancel: 'Cancel',
+    send: 'Send report',
+    thanks: 'Thank you. We will review this reply.',
+  },
   review: {
     eyebrow: 'Review',
     title: 'What you said',
@@ -411,6 +427,10 @@ export default {
     ruleBtn: 'Practise this rule',
   },
 
+  reminder: {
+    title: 'Time for a little practice?',
+    body: 'Five minutes with Guako keeps your streak alive.',
+  },
   settings: {
     eyebrow: 'Your account',
     title: 'Settings',
@@ -435,6 +455,13 @@ export default {
       '30d': { name: 'Keep them for 30 days', hint: 'You can listen to them in the review for a month.' },
       keep: { name: 'Keep them until I delete them', hint: 'Keep them to see your evolution with your own voice.' },
     },
+    reminderTitle: 'Daily reminder',
+    reminderText: "Every day at this time we remind you to practice so you don't lose your streak. If you already practiced that day, we won't.",
+    reminderAt: 'Time',
+    reminderPermOn: 'Notifications are on for this phone.',
+    reminderPermOff: "Guako's notifications are off.",
+    reminderEnable: 'Turn on notifications',
+    reminderDenied: "Turn on Guako's notifications in your phone settings to get the reminder.",
     soundTitle: "Guako's voice",
     soundText: 'Guako answers you with voice during the conversation.',
     soundOn: 'On',
@@ -446,6 +473,7 @@ export default {
     deleteTitle: 'Delete my account',
     deleteText: 'Your account and all your data are deleted. This cannot be undone.',
     deleteBtn: 'Delete my account and data',
+    deleteError: 'We could not delete your account. Check your connection and try again.',
     deleteConfirmTitle: 'Are you sure you want to delete everything?',
     deleteConfirmText: 'Type {word} to confirm.',
     deleteWord: 'DELETE',

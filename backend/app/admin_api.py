@@ -1,4 +1,7 @@
-"""GET /api/admin/usage: what each provider served today, the spending of the period and the router's state.
+"""Admin views. Only for superusers.
+
+GET /api/admin/usage:   what each provider served today, the spending of the period and the router's state.
+GET /api/admin/reports: the latest replies of Guako reported by learners, with the reply text, to review them.
 
 Only for superusers (``users.is_superuser``). A normal account gets 403; registration cannot set the flag.
 To make an account an admin, once, from the host:
@@ -8,9 +11,10 @@ To make an account an admin, once, from the host:
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.db import User, get_async_session
+from app.db import ReplyReport, Turn, User, get_async_session
 from app.providers.state import get_state
 from app.providers.usage import flush_usage, usage_for_day
 from app.users import current_superuser
@@ -37,3 +41,29 @@ async def usage(
         },
         **state.snapshot(),  # budget (spent, limit, status), breakers, daily caps
     }
+
+
+@router.get("/reports")
+async def reply_reports(
+    _admin: Annotated[User, Depends(current_superuser)],
+    db: Annotated[AsyncSession, Depends(get_async_session)],
+    limit: int = 100,
+) -> list[dict]:
+    rows = await db.execute(
+        select(ReplyReport, Turn.reply_text)
+        .outerjoin(Turn, (Turn.session_id == ReplyReport.session_id) & (Turn.turn_number == ReplyReport.turn_number))
+        .order_by(ReplyReport.created_at.desc())
+        .limit(min(max(limit, 1), 500))
+    )
+    return [
+        {
+            "id": report.id,
+            "created_at": report.created_at.isoformat() if report.created_at else None,
+            "session_id": report.session_id,
+            "turn_number": report.turn_number,
+            "reason": report.reason,
+            "comment": report.comment,
+            "reply_text": reply_text,
+        }
+        for report, reply_text in rows.all()
+    ]

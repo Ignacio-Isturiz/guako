@@ -2,6 +2,7 @@ import './conversacion.css'
 import logo from '@/shared/assets/brand/guako-logo.png'
 import { t } from '@/core/i18n.js'
 import { navigate } from '@/core/router.js'
+import { haptic } from '@/core/native.js'
 import { TEMPLATES, TOPICS } from '@/features/app/data/seed.js'
 import { createConversation, settings, setSetting } from '@/features/app/data/store.js'
 import { speak, stopSpeaking } from '@/features/app/services/tts.js'
@@ -15,6 +16,7 @@ import { explain, gloss } from '@/features/app/utils/explain.js'
 import { DEMO_MODE } from '@/features/app/data/config.js'
 import { errorText } from '@/features/app/data/sessions-api.js'
 import { createLiveSession } from './live-session.js'
+import { flagButton, openFlagReply } from '@/features/app/components/flag-reply/flag-reply.js'
 import { clearSession } from '@/features/auth/index.js'
 import en from '@/features/app/i18n/en.js'
 
@@ -126,7 +128,9 @@ export default {
     const addLog = (who, turn) => {
       const li = document.createElement('li')
       li.className = `tbubble tbubble--${who}`
-      li.innerHTML = `<small>${who === 'guako' ? t('app.talk.guako') : t('app.talk.you')}</small><p>${esc(turn.text)}</p>`
+      // Las respuestas reales de Guako se pueden reportar (requisito de las tiendas para apps con IA)
+      const flag = who === 'guako' && live && turn.turnNumber != null ? flagButton(turn.turnNumber) : ''
+      li.innerHTML = `<small>${who === 'guako' ? t('app.talk.guako') : t('app.talk.you')}</small><p>${esc(turn.text)}</p>${flag}`
       log.appendChild(li)
       log.scrollTop = log.scrollHeight
     }
@@ -228,12 +232,14 @@ export default {
     const start = () => {
       if (busy || finished || state === 'listening') return
       heldAt = Date.now()
+      haptic('Medium') // en el teléfono se siente que empezó a escuchar
       live?.startRecording()
       setState('listening')
       setKey(true)
     }
     const release = () => {
       if (state !== 'listening') return
+      haptic('Light')
       setKey(false)
       if (Date.now() - heldAt < MIN_HOLD) {
         live?.cancelRecording()
@@ -335,6 +341,10 @@ export default {
       setKey()
     })
     scope.listen($('#endBtn'), 'click', askEnd)
+    scope.listen(log, 'click', (e) => {
+      const flag = e.target.closest('[data-flag]')
+      if (flag && live?.id) openFlagReply({ sessionId: live.id, turnNumber: Number(flag.dataset.flag) })
+    })
     scope.listen($('#exitBtn'), 'click', askEnd)
 
     const sound = $('#soundBtn')

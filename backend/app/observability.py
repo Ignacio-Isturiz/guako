@@ -199,3 +199,32 @@ def shutdown() -> None:
     client = _get()
     if client is not None:
         _safe("shutdown", client.shutdown)
+
+
+def forget_user(user_id: int) -> None:
+    """Delete every trace of a learner from Langfuse (their account was deleted: Law 1581 "supresión").
+
+    Finds the traces through the learner's observations (all of them carry the user id) and deletes them in
+    batches. Blocking network calls: run it in the background. Like everything here, a failure is logged and
+    swallowed; a trace still being ingested at that moment can escape and is caught by Langfuse's retention.
+    """
+    client = _get()
+    if client is None:
+        return
+
+    def run() -> None:
+        client.flush()  # what is still queued for this learner goes out first, so it can be found
+        trace_ids: set[str] = set()
+        cursor: str | None = None
+        while True:
+            page = client.api.observations.get_many(user_id=str(user_id), fields="core", limit=100, cursor=cursor)
+            trace_ids.update(obs.trace_id for obs in page.data if obs.trace_id)
+            cursor = page.meta.cursor
+            if not cursor or not page.data:
+                break
+        ids = sorted(trace_ids)
+        for start in range(0, len(ids), 100):
+            client.api.trace.delete_multiple(trace_ids=ids[start : start + 100])
+        logger.info("langfuse_forget_user user=%s traces=%d", user_id, len(ids))
+
+    _safe("forget_user", run)

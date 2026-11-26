@@ -1,0 +1,99 @@
+/* ---------- Página propia de un documento legal (/privacidad, /terminos) ---------- */
+.legal-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--navy);
+  color: var(--white);
+}
+
+.legal-page__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: calc(1rem + var(--safe-top)) 1rem 1rem;
+}
+.legal-page__brand img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+.legal-page__langs {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(8, 20, 56, 0.55);
+}
+.legal-page__langs button {
+  min-width: 2.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.legal-page__langs button:hover {
+  opacity: 1;
+}
+.legal-page__langs button.is-on {
+  background: var(--white);
+  color: var(--ink);
+  opacity: 1;
+}
+
+.legal-page__main {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem calc(2.5rem + var(--safe-bottom));
+}
+.legal-page__tabs {
+  margin-bottom: 0.9rem;
+}
+.legal-page__tabs a {
+  padding: 0.5rem 1rem;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.legal-page__tabs a:hover {
+  border-color: var(--white);
+}
+.legal-page__tabs a.is-on {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: var(--ink);
+}
+
+.legal-page__card {
+  padding: clamp(1.2rem, 4vw, 2.2rem);
+  border-radius: 18px;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+.legal-page__back {
+  display: inline-block;
+  margin-top: 1.4rem;
+  color: var(--white);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .legal-page__tabs a {
+    transition: none;
+  }
+}

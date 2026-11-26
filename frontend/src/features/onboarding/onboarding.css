@@ -1,0 +1,160 @@
+/* ---------- Onboarding (app móvil) ---------- */
+.onb {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--navy);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1.6px, transparent 1.8px);
+  background-size: 20px 20px;
+  color: var(--white);
+  overflow: hidden;
+}
+
+.onb__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(0.8rem + var(--safe-top)) calc(1rem + var(--safe-right)) 0.4rem calc(1rem + var(--safe-left));
+}
+.onb__langs {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(8, 20, 56, 0.55);
+}
+.onb__langs button {
+  min-width: 2.4rem;
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1;
+  opacity: 0.75;
+  cursor: pointer;
+}
+.onb__langs button.is-on {
+  background: var(--white);
+  color: var(--ink);
+  opacity: 1;
+}
+.onb__skip {
+  min-height: 44px;
+  padding: 0 0.6rem;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Las 3 vistas en fila; se deslizan con el dedo y encajan una a una */
+.onb__track {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  outline: none;
+}
+.onb__track::-webkit-scrollbar {
+  display: none;
+}
+.onb__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.9rem;
+  padding: 0.5rem calc(1.8rem + var(--safe-right)) 0 calc(1.8rem + var(--safe-left));
+  text-align: center;
+}
+.onb__art {
+  width: min(68vw, 300px, 40vh);
+  aspect-ratio: 1;
+  margin-bottom: 1rem;
+  border: 5px solid #fff;
+  border-radius: 10px 26px 12px 28px;
+  overflow: hidden;
+  box-shadow: 10px 10px 0 var(--yellow);
+}
+.onb__art--0 {
+  rotate: -3deg;
+}
+.onb__art--1 {
+  rotate: 2deg;
+  box-shadow: 10px 10px 0 var(--red);
+}
+.onb__art--2 {
+  rotate: -2deg;
+  box-shadow: 10px 10px 0 var(--blue);
+}
+.onb__art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.onb__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 7.5vw, 2.4rem);
+  line-height: 1.02;
+}
+.onb__text {
+  max-width: 24rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.onb__foot {
+  display: grid;
+  justify-items: center;
+  gap: 1.1rem;
+  padding: 1rem calc(1.4rem + var(--safe-right)) calc(1.4rem + var(--safe-bottom)) calc(1.4rem + var(--safe-left));
+}
+.onb__dots {
+  display: flex;
+  gap: 8px;
+}
+.onb__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+.onb__dot.is-on {
+  width: 28px;
+  background: var(--yellow);
+}
+.onb__actions {
+  display: grid;
+  gap: 0.7rem;
+  width: min(100%, 360px);
+}
+.onb__actions .btn {
+  width: 100%;
+  min-height: 52px;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb__dot {
+    transition: none;
+  }
+  .onb__track {
+    scroll-behavior: auto;
+  }
+}

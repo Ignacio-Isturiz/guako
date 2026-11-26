@@ -1,0 +1,26 @@
+{
+  "appId": "com.guako.app",
+  "appName": "Guako",
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "CapacitorCookies": {
+      "enabled": true
+    },
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0b2a6b",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0b2a6b"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_guako",
+      "iconColor": "#0b2a6b"
+    }
+  }
+}

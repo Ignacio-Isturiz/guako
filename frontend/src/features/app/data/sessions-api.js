@@ -87,6 +87,10 @@ export const endSession = (sessionId, { keepalive = false } = {}) =>
 // Mis conversaciones: las sesiones con al menos un turno, la más reciente primero
 export const listSessions = () => request('/api/sessions').then(json)
 
+// Reportar una respuesta de Guako: { reason: offensive|harmful|wrong|other, comment? }
+export const flagReply = (sessionId, turnNumber, { reason, comment = null }) =>
+  request(`/api/sessions/${sessionId}/turns/${turnNumber}/flag`, { method: 'POST', json: { reason, comment } }).then(json)
+
 export const getTurns = (sessionId) => request(`/api/sessions/${sessionId}/turns`).then(json)
 
 // El informe hace una llamada al modelo por turno: se guarda en memoria para que Informe y Revisión

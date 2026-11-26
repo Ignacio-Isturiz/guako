@@ -20,12 +20,24 @@ html.is-app body {
   display: grid;
   grid-template-columns: 252px minmax(0, 1fr);
   min-height: 100vh;
+  padding: var(--safe-top) var(--safe-right) 0 var(--safe-left);
   background-image: radial-gradient(rgba(11, 42, 107, 0.045) 1.6px, transparent 1.8px);
   background-size: 24px 24px;
+}
+/* Franja fija detrás de la barra de estado del teléfono (hora, batería): el contenido pasa por debajo
+   sin mezclarse con ella. En la web mide 0. */
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 70;
+  height: var(--safe-top);
+  background: #fcf6e8;
+  pointer-events: none;
 }
 @media (max-width: 860px) {
   .app {
     grid-template-columns: minmax(0, 1fr);
-    padding-bottom: 5.2rem;
+    padding-bottom: calc(5.2rem + var(--safe-bottom));
   }
 }

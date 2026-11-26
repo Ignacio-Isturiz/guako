@@ -288,6 +288,22 @@ export default {
     },
   },
 
+  flag: {
+    button: 'Reportar esta respuesta',
+    title: 'Reportar respuesta de Guako',
+    sub: 'Guako es una IA y a veces se equivoca. Cuéntanos qué pasó con esta respuesta y la revisaremos.',
+    why: '¿Qué tiene de malo?',
+    reasons: {
+      offensive: 'Es ofensiva o irrespetuosa',
+      harmful: 'Es peligrosa o inapropiada',
+      wrong: 'Está equivocada o no tiene sentido',
+      other: 'Otra razón',
+    },
+    comment: 'Detalles (opcional)',
+    cancel: 'Cancelar',
+    send: 'Enviar reporte',
+    thanks: 'Gracias. Revisaremos esta respuesta.',
+  },
   review: {
     eyebrow: 'Revisión',
     title: 'Lo que dijiste',
@@ -411,6 +427,10 @@ export default {
     ruleBtn: 'Practicar esta regla',
   },
 
+  reminder: {
+    title: '¿Practicamos un poco?',
+    body: 'Cinco minutos con Guako y tu racha sigue viva.',
+  },
   settings: {
     eyebrow: 'Tu cuenta',
     title: 'Ajustes',
@@ -435,6 +455,13 @@ export default {
       '30d': { name: 'Guardarlos 30 días', hint: 'Podrás escucharlos en la revisión durante un mes.' },
       keep: { name: 'Guardarlos hasta que yo los borre', hint: 'Los conservas para ver tu evolución con tu propia voz.' },
     },
+    reminderTitle: 'Recordatorio diario',
+    reminderText: 'Cada día a esta hora te recordamos practicar para no perder tu racha. Si ese día ya practicaste, no te avisamos.',
+    reminderAt: 'Hora',
+    reminderPermOn: 'Notificaciones activadas en este teléfono.',
+    reminderPermOff: 'Las notificaciones de Guako están desactivadas.',
+    reminderEnable: 'Activar notificaciones',
+    reminderDenied: 'Activa las notificaciones de Guako en los ajustes del teléfono para recibir el recordatorio.',
     soundTitle: 'Voz de Guako',
     soundText: 'Guako te responde con voz durante la conversación.',
     soundOn: 'Activada',
@@ -447,6 +474,7 @@ export default {
     deleteText: 'Se borran tu cuenta y todos tus datos. No se puede deshacer.',
     deleteBtn: 'Borrar mi cuenta y mis datos',
     deleteConfirmTitle: '¿Seguro que quieres borrar todo?',
+    deleteError: 'No pudimos borrar tu cuenta. Revisa tu conexión e inténtalo de nuevo.',
     deleteConfirmText: 'Escribe {word} para confirmar.',
     deleteWord: 'BORRAR',
     deleteYes: 'Borrar definitivamente',

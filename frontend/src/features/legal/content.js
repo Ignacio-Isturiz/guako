@@ -12,7 +12,7 @@ export const LEGAL_CONFIG = {
   // el backend vuelve a pedir la aceptación a todos. Cámbiala junto con la fecha `legal.date` de i18n.
   version: '2026-11-26',
   company: 'Guako',
-  email: 'privacidad@guako.example', // ← reemplazar por el correo real de contacto
+  email: 'ignacioisturizr@gmail.com', // ← reemplazar por el correo real de contacto
   country: { es: 'Colombia', en: 'Colombia' }, // ← país/jurisdicción de la empresa
 }
 
@@ -209,6 +209,7 @@ export const LEGAL = {
           p: [
             `Conservamos tus datos mientras tengas una cuenta y el tiempo adicional que exija la ley o sea necesario para atender reclamos. Cuando dejen de ser necesarios, los eliminamos o los anonimizamos. La vigencia de nuestras bases de datos es la del tiempo que duren las finalidades descritas.`,
             `La prueba de tus autorizaciones se conserva mientras tengas la cuenta y el tiempo que la ley exija para demostrarlas. Los registros de calidad que recibe Langfuse se borran automáticamente según su plazo de retención.`,
+            `Puedes borrar tu cuenta cuando quieras desde Ajustes → «Borrar mi cuenta y mis datos». En ese momento borramos tu cuenta, tus conversaciones, tus grabaciones, tus reportes y tus autorizaciones, y pedimos a Langfuse que borre los registros asociados a tu cuenta.`,
           ],
         },
         {
@@ -227,6 +228,32 @@ export const LEGAL = {
           h: 'Cambios a esta política y vigencia',
           p: [
             `Podemos actualizar esta política. Si el cambio es sustancial, te lo comunicaremos por correo o dentro de la aplicación; si cambia la finalidad del tratamiento, volveremos a pedir tu autorización. Esta versión entra en vigor el {date}.`,
+          ],
+        },
+      ],
+    },
+    deletion: {
+      intro: `Puedes borrar tu cuenta de {company} y todos sus datos cuando quieras. Así se hace:`,
+      sections: [
+        {
+          h: 'Desde la app o la web',
+          ul: [
+            `Inicia sesión en {company} (en la app o en la web).`,
+            `Ve a Ajustes y toca «Borrar mi cuenta y mis datos».`,
+            `Escribe la palabra que se te pide para confirmar. El borrado es inmediato.`,
+          ],
+        },
+        {
+          h: 'Si ya no puedes entrar',
+          p: [
+            `Escríbenos a {email} desde el correo de tu cuenta con el asunto «Borrar mi cuenta». La borraremos y te confirmaremos en un plazo máximo de 15 días hábiles.`,
+          ],
+        },
+        {
+          h: 'Qué se borra',
+          p: [
+            `Tu cuenta, tus conversaciones y transcripciones, tus grabaciones de voz, tus informes, tu progreso y tu racha, tus reportes de respuestas y tus autorizaciones. También pedimos a Langfuse que borre los registros de calidad asociados a tu cuenta.`,
+            `Solo conservamos registros de costos y tiempos de respuesta de los proveedores, que no contienen tus textos ni tu voz ni te identifican.`,
           ],
         },
       ],
@@ -426,6 +453,7 @@ export const LEGAL = {
           p: [
             `We keep your data while you have an account and for any additional time required by law or needed to handle claims. When it is no longer needed, we delete or anonymize it. Our databases remain in force for as long as the purposes described here last.`,
             `The proof of your authorisations is kept while you have an account and for as long as the law requires to show it. The quality records Langfuse receives are deleted automatically according to its retention period.`,
+            `You can delete your account at any time from Settings → “Delete my account and data”. We then delete your account, your conversations, your recordings, your reports and your authorisations, and ask Langfuse to delete the records linked to your account.`,
           ],
         },
         {
@@ -444,6 +472,32 @@ export const LEGAL = {
           h: 'Changes to this policy and effective date',
           p: [
             `We may update this policy. If a change is substantial, we will tell you by email or in the app; if the purpose of the processing changes, we will ask for your authorization again. This version takes effect on {date}.`,
+          ],
+        },
+      ],
+    },
+    deletion: {
+      intro: `You can delete your {company} account and all its data at any time. This is how:`,
+      sections: [
+        {
+          h: 'From the app or the website',
+          ul: [
+            `Log in to {company} (in the app or on the website).`,
+            `Go to Settings and tap “Delete my account and data”.`,
+            `Type the word you are asked for to confirm. The deletion is immediate.`,
+          ],
+        },
+        {
+          h: 'If you can no longer log in',
+          p: [
+            `Email us at {email} from your account's email address with the subject “Delete my account”. We will delete it and confirm within 15 business days.`,
+          ],
+        },
+        {
+          h: 'What is deleted',
+          p: [
+            `Your account, your conversations and transcripts, your voice recordings, your reports, your progress and streak, your reply reports and your authorizations. We also ask Langfuse to delete the quality records linked to your account.`,
+            `We only keep provider cost and response-time records, which contain none of your text or voice and do not identify you.`,
           ],
         },
       ],

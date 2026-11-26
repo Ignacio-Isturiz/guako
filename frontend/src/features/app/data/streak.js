@@ -5,6 +5,7 @@
 //   GET  /api/streak?tz=…            → estado de hoy
 //   POST /api/streak/activity?tz=…   → registrar la acción clave
 // Con VITE_AUTH_MOCK=true (sin backend) se calcula en el navegador con las conversaciones locales.
+import { apiUrl } from '@/core/api.js'
 import { MOCK } from '@/features/auth/index.js'
 import { conversations } from '@/features/app/data/store.js'
 
@@ -70,7 +71,7 @@ function set(next) {
 }
 
 async function call(method, path) {
-  const res = await fetch(`${path}?tz=${encodeURIComponent(tz())}`, { method, credentials: 'include' })
+  const res = await fetch(`${apiUrl(path)}?tz=${encodeURIComponent(tz())}`, { method, credentials: 'include' })
   if (!res.ok) throw new Error(`streak ${res.status}`)
   return fromApi(await res.json())
 }

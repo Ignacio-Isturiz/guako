@@ -6,6 +6,7 @@ import { getTurns, getReport, fetchReplyAudio, errorText } from '@/features/app/
 import { icon } from '@/features/app/components/icon/icon.js'
 import { esc } from '@/features/app/utils/html.js'
 import { markText } from '@/features/app/utils/mark-text.js'
+import { flagButton, openFlagReply } from '@/features/app/components/flag-reply/flag-reply.js'
 
 export const liveReviewHead = () => ({ eyebrow: t('app.review.eyebrow'), title: t('app.review.title') })
 
@@ -46,6 +47,7 @@ const guakoBubble = (turn) => `
       <p>${esc(turn.reply_text)}</p>
       <div class="rv__audio">
         <button type="button" class="say say--sm" data-play="${esc(turn.reply_audio_url)}" aria-label="${t('app.review.playGuako')}">${icon('volume', 16)}</button>
+        ${flagButton(turn.turn_number)}
       </div>
     </div>
   </li>`
@@ -123,6 +125,8 @@ export function initLiveReview(root, p, scope) {
 
   scope.listen(root, 'click', async (e) => {
     if (e.target.closest('[data-retry]')) return load()
+    const flag = e.target.closest('[data-flag]')
+    if (flag) return openFlagReply({ sessionId: Number(p.id), turnNumber: Number(flag.dataset.flag) })
     const play = e.target.closest('[data-play]')
     if (!play) return
     stop()
