@@ -1,7 +1,7 @@
 // Genera las imágenes base de la app móvil a partir del logo (src/shared/assets/brand/guako-logo.png):
-//   assets/icon-only.png        1024×1024 logo completo sobre blanco, sin transparencia (iOS, App Store, Play Store 512 se saca de aquí)
+//   assets/icon-only.png        1024×1024 guacamaya completa sobre el azul del logo, sin transparencia (iOS, App Store, Play Store 512 se saca de aquí)
 //   assets/icon-foreground.png  1024×1024 capa delantera del ícono adaptable de Android (dentro de la zona segura)
-//   assets/icon-background.png  1024×1024 capa de fondo (blanca)
+//   assets/icon-background.png  1024×1024 capa de fondo (degradado azul del logo)
 //   public/icons/*              íconos de la web instalable (manifest) y apple-touch-icon
 //   assets/splash.png           2732×2732 pantalla de inicio (y splash-dark.png igual)
 //   assets/play-store-icon-512.png  ícono de la ficha de Google Play
@@ -16,7 +16,6 @@ import sharp from 'sharp'
 const root = fileURLToPath(new URL('..', import.meta.url))
 const LOGO = `${root}src/shared/assets/brand/guako-logo.png`
 const OUT = `${root}assets`
-const LOGO_BG = '#01296a' // azul del fondo del logo (medido en sus píxeles)
 const SPLASH_BG = '#0b2a6b' // --navy de tokens.css, el mismo de capacitor.config.json
 
 // El logo sin el margen transparente que lo rodea
@@ -26,35 +25,75 @@ const fit = (size) => sharp(trimmed).resize(size, size, { fit: 'cover', kernel: 
 
 await mkdir(OUT, { recursive: true })
 
-// Íconos con el logo COMPLETO (su cuadro azul de esquinas redondeadas entero) sobre fondo blanco, con aire
-// alrededor: así ningún sistema le recorta las esquinas ni la cresta (cada uno pone su máscara encima).
-const ICON_BG = '#ffffff'
-const contain = (size) =>
-  sharp(trimmed).resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 }, kernel: 'lanczos3' }).toBuffer()
-const iconOn = async (size, ratio, background = ICON_BG) =>
-  square(size, background)
-    .composite([{ input: await contain(Math.round(size * ratio)), gravity: 'center' }])
-    .flatten({ background })
-    .png()
+// Íconos: la guacamaya COMPLETA (cresta incluida) sobre el azul del logo, llenando todo el ícono, sin
+// bordes blancos. Se separa la guacamaya del cuadro azul del logo (así no se ve la línea de su borde
+// redondeado) y se pone sobre un degradado del mismo azul, apoyada abajo: el cuerpo sale por el borde
+// inferior, como en el logo. Cada sistema pone su máscara (círculo, cuadrado redondeado…) encima.
+const ICON_TOP = '#002d70' // azul de arriba del logo (medido)
+const ICON_BOTTOM = '#01255d' // azul de abajo del logo (medido)
+const parrot = await (async () => {
+  const { data, info } = await sharp(trimmed).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const { width: W, height: H } = info
+  const out = Buffer.from(data)
+  const opaque = (x, y) => x >= 0 && y >= 0 && x < W && y < H && data[(y * W + x) * 4 + 3] === 255
+  const EDGE = 8 // px del borde del cuadro azul (y su halo claro) que se descartan si no son de la guacamaya
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4
+      const [r, g, b, al] = [data[i], data[i + 1], data[i + 2], data[i + 3]]
+      const d = Math.hypot(r - 1, g - 41, b - 104) // distancia al azul del fondo del logo
+      let a = al < 255 && (y < H - 3 || d < 140) ? 0 : Math.max(0, Math.min(1, (d - 45) / 35)) * al
+      if (a > 0 && d < 200) {
+        outer: for (let dy = -EDGE; dy <= EDGE; dy++) {
+          for (let dx = -EDGE; dx <= EDGE; dx++) {
+            if (y + dy < H && !opaque(x + dx, y + dy)) {
+              a = 0
+              break outer
+            }
+          }
+        }
+      }
+      out[i + 3] = Math.round(a)
+    }
+  }
+  return sharp(out, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer()
+})()
+const gradient = (size) =>
+  Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">` +
+      `<stop offset="0" stop-color="${ICON_TOP}"/><stop offset="1" stop-color="${ICON_BOTTOM}"/></linearGradient></defs>` +
+      `<rect width="100%" height="100%" fill="url(#g)"/></svg>`,
+  )
+// La guacamaya a `ratio` del ancho, centrada y apoyada en el borde de abajo (sin sus 1,5 % inferiores,
+// que el logo deja medio transparentes)
+async function parrotLayer(size, ratio) {
+  const w = Math.round(size * ratio)
+  const { data, info } = await sharp(parrot).resize({ width: w, kernel: 'lanczos3' }).toBuffer({ resolveWithObject: true })
+  const h = info.height - Math.round(info.height * 0.015)
+  const input = await sharp(data).extract({ left: 0, top: 0, width: info.width, height: h }).toBuffer()
+  return { input, left: Math.round((size - w) / 2), top: size - h }
+}
+const iconOn = async (size, ratio) =>
+  sharp(gradient(size)).composite([await parrotLayer(size, ratio)]).flatten({ background: ICON_TOP }).png()
 
-// iOS / App Store / Play Store: iOS redondea el cuadrado blanco y el logo queda dentro con margen
-await (await iconOn(1024, 0.8)).toFile(`${OUT}/icon-only.png`)
+// iOS / App Store / Play Store (y el ícono de Android antiguo, sin capas)
+await (await iconOn(1024, 0.86)).toFile(`${OUT}/icon-only.png`)
 
-// Ícono adaptable de Android: el XML lo dibuja dentro de la zona visible y la máscara más estricta es un
-// círculo; al 70 % las esquinas redondeadas del logo caben enteras dentro de ese círculo
+// Ícono adaptable de Android: fondo azul + guacamaya. El XML dibuja la capa en la zona visible y la máscara
+// más estricta es un círculo: al 84 % la cresta y las plumas de los lados caben enteras
+await sharp(gradient(1024)).png().toFile(`${OUT}/icon-background.png`)
 await square(1024, { r: 0, g: 0, b: 0, alpha: 0 })
-  .composite([{ input: await contain(Math.round(1024 * 0.7)), gravity: 'center' }])
+  .composite([await parrotLayer(1024, 0.84)])
   .png()
   .toFile(`${OUT}/icon-foreground.png`)
-await square(1024, ICON_BG).png().toFile(`${OUT}/icon-background.png`)
 
 // Íconos de la web instalable (manifest.webmanifest) y del acceso directo de iPhone
 const PUB = `${root}public/icons`
 await mkdir(PUB, { recursive: true })
-await (await iconOn(192, 0.8)).toFile(`${PUB}/icon-192.png`)
-await (await iconOn(512, 0.8)).toFile(`${PUB}/icon-512.png`)
-await (await iconOn(512, 0.62)).toFile(`${PUB}/icon-maskable-512.png`) // "maskable": Android recorta hasta un círculo
-await (await iconOn(180, 0.8)).toFile(`${PUB}/apple-touch-icon.png`)
+await (await iconOn(192, 0.86)).toFile(`${PUB}/icon-192.png`)
+await (await iconOn(512, 0.86)).toFile(`${PUB}/icon-512.png`)
+await (await iconOn(512, 0.84)).toFile(`${PUB}/icon-maskable-512.png`) // "maskable": Android recorta hasta un círculo
+await (await iconOn(180, 0.86)).toFile(`${PUB}/apple-touch-icon.png`)
 
 // Pantalla de inicio: el logo pequeño en el centro (los sistemas recortan los bordes según la pantalla)
 const splash = await square(2732, SPLASH_BG)

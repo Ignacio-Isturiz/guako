@@ -10,7 +10,7 @@
     "build:mobile": "vite build --mode mobile && cap sync",
     "android": "npm run build:mobile && cap open android",
     "ios": "npm run build:mobile && cap open ios",
-    "assets:mobile": "node scripts/brand-assets.mjs && capacitor-assets generate --android --ios --iconBackgroundColor \"#ffffff\" --iconBackgroundColorDark \"#ffffff\" --splashBackgroundColor \"#0b2a6b\" --splashBackgroundColorDark \"#0b2a6b\"",
+    "assets:mobile": "node scripts/brand-assets.mjs && capacitor-assets generate --android --ios --iconBackgroundColor \"#01296a\" --iconBackgroundColorDark \"#01296a\" --splashBackgroundColor \"#0b2a6b\" --splashBackgroundColorDark \"#0b2a6b\"",
     "version:mobile": "node scripts/bump-mobile-version.mjs",
     "android:keystore": "node scripts/android-keystore.mjs",
     "android:bundle": "npm run build:mobile && cd android && gradlew bundleRelease"
