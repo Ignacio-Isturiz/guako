@@ -2,6 +2,7 @@ import './hero.css'
 import '@/features/landing/components/mark/mark.css'
 import { t } from '@/core/i18n.js'
 import { renderCardStack, initCardStack } from '@/features/landing/components/card-stack/card-stack.js'
+import { renderInstallApp, initInstallApp } from '@/features/landing/components/install-app/install-app.js'
 import { renderSideColumns } from '@/features/landing/components/side-columns/side-columns.js'
 import pronunciacion from '@/features/landing/assets/benefits/pronunciacion.webp'
 import pena from '@/features/landing/assets/benefits/pena.webp'
@@ -33,6 +34,7 @@ export function renderHero() {
           <button class="btn btn--primary" type="button" data-auth="register">${t('hero.start')}</button>
           <a class="btn btn--ghost" href="#como-funciona">${t('hero.how')}</a>
         </div>
+        ${renderInstallApp()}
       </div>
 
       <div class="hero__stack">
@@ -44,6 +46,7 @@ export function renderHero() {
 
 export function initHero() {
   const BENEFITS = benefits()
+  initInstallApp(document.querySelector('.hero__copy'))
 
   /* ---- Palabra del titular: su "cuadro" se ajusta al ancho de la palabra ---- */
   const mark = document.querySelector('#mark')

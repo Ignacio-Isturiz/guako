@@ -102,4 +102,30 @@ export default {
     privacy: 'Privacy policy',
     rights: '© 2026 Guako',
   },
+
+  install: {
+    button: 'Install the app on your phone',
+    done: 'Done! Look for Guako on your phone’s home screen.',
+    close: 'Close',
+    ok: 'Got it',
+    title: {
+      android: 'Install Guako on your Android',
+      ios: 'Install Guako on your iPhone',
+      desktop: 'Install Guako on your phone',
+    },
+    steps: {
+      android: [
+        'Open this page in <strong>Chrome</strong>.',
+        'Tap the <strong>⋮</strong> menu at the top right.',
+        'Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.',
+      ],
+      ios: [
+        'Open this page in <strong>Safari</strong>.',
+        'Tap the <strong>Share</strong> button (the square with the up arrow).',
+        'Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.',
+      ],
+    },
+    desktop: 'Open <strong>{url}</strong> on your phone and tap <strong>Install the app on your phone</strong>: we detect whether it is Android or iPhone and take you to install it.',
+    store: { android: 'Get it on Google Play', ios: 'Download on the App Store' },
+  },
 }

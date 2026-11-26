@@ -9,6 +9,15 @@ import { Capacitor } from '@capacitor/core'
 
 export const isNative = Capacitor.isNativePlatform()
 
+// La web instalada en el celular (desde "Instalar la app en el celular") abre a pantalla completa.
+// Se comporta como la app móvil: sin landing, con onboarding la primera vez.
+export const isStandalone =
+  !isNative &&
+  (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true)
+
+// App "instalada": la nativa (Capacitor) o la web instalada. Ninguna de las dos tiene landing.
+export const isInstalledApp = isNative || isStandalone
+
 export async function initNative() {
   if (!isNative) return
   const { App } = await import('@capacitor/app')

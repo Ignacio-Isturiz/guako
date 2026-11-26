@@ -1,6 +1,10 @@
-// Recordatorio diario de racha (solo en la app móvil): SIEMPRE activo, una notificación local cada día a la
-// hora elegida en Ajustes. No se puede apagar desde la app (solo negando el permiso en el teléfono).
+// Recordatorio diario de racha: SIEMPRE activo, una notificación cada día a la hora elegida en Ajustes.
+// No se puede apagar desde la app (solo negando el permiso en el teléfono). Dos caminos:
+//   · App nativa: notificaciones locales programadas en el teléfono (lo que sigue en este comentario).
+//   · Web instalada (desde "Instalar la app en el celular"): Web Push enviado por el backend (web-push.js);
+//     el backend ya sabe si ese día practicó, así que ahí no hay límite de "otro dispositivo".
 //
+// App nativa:
 // Se programan los próximos 7 días como avisos sueltos (no uno que se repite) para poder saltarse HOY cuando
 // ya se practicó. Se reprograma al abrir la app, al cambiar la racha, el idioma o la sesión, así que mientras
 // se use la app siempre hay una semana por delante. Sin sesión no hay recordatorios.
@@ -12,10 +16,11 @@ import { isNative } from '@/core/native.js'
 import { getSession } from '@/features/auth/index.js'
 import { settings, setSetting } from '@/features/app/data/store.js'
 import { streak } from '@/features/app/data/streak.js'
+import { webPushAvailable, canAskWithoutTap, webPermission, askWebPermission, syncWebPush } from './web-push.js'
 
 const IDS = [101, 102, 103, 104, 105, 106, 107]
 export const DEFAULT_HOUR = 19
-export const remindersAvailable = isNative
+export const remindersAvailable = isNative || webPushAvailable
 
 // OJO: nunca devolver el plugin desde una promesa (`.then((m) => m.LocalNotifications)` ni `async` que lo
 // retorne): al resolverla, JavaScript le pide `.then` al plugin, Capacitor lo toma como un método nativo y
@@ -26,6 +31,7 @@ export const reminderHour = () => settings().reminderHour ?? DEFAULT_HOUR
 
 // Estado del permiso de notificaciones: 'granted' | 'denied' | 'prompt' (o 'prompt-with-rationale')
 export async function notificationPermission() {
+  if (webPushAvailable) return webPermission()
   if (!isNative) return 'denied'
   try {
     const { LocalNotifications } = await loadModule()
@@ -37,6 +43,11 @@ export async function notificationPermission() {
 
 // Pide el permiso (el sistema solo muestra el diálogo si todavía se puede). Devuelve true si quedó concedido.
 export async function askNotificationPermission() {
+  if (webPushAvailable) {
+    const granted = await askWebPermission()
+    if (granted) await refreshReminder()
+    return granted
+  }
   if (!isNative) return false
   try {
     const { LocalNotifications } = await loadModule()
@@ -55,6 +66,11 @@ export async function setReminderHour(hour) {
 
 // Vuelve a programar los avisos según la hora y si hoy ya se practicó
 export async function refreshReminder() {
+  if (webPushAvailable) {
+    return syncWebPush({ hasSession: !!getSession(), hour: reminderHour() }).catch(() => {
+      /* sin servicio de push o sin red: se reintenta al volver a abrir la app */
+    })
+  }
   if (!isNative) return
   try {
     const { LocalNotifications: notifications } = await loadModule()
@@ -85,15 +101,17 @@ export async function refreshReminder() {
 
 // Con sesión y sin haber respondido nunca al permiso, lo pide una vez; después programa los avisos
 async function start() {
-  if (getSession() && (await notificationPermission()) === 'prompt') await askNotificationPermission()
+  const canAsk = isNative || canAskWithoutTap // en iPhone (web) se pide con el botón de Ajustes
+  if (canAsk && getSession() && (await notificationPermission()) === 'prompt') await askNotificationPermission()
   await refreshReminder()
 }
 
 let started = false
 export function initReminders() {
-  if (!isNative || started) return
+  if (!remindersAvailable || started) return
   started = true
-  window.addEventListener('streakchange', refreshReminder)
+  // En la web el backend ya sabe si hoy practicó: la racha no cambia nada de la suscripción
+  if (isNative) window.addEventListener('streakchange', refreshReminder)
   window.addEventListener('langchange', refreshReminder)
   window.addEventListener('authchange', start)
   start()

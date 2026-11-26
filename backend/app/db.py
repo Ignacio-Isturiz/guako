@@ -226,6 +226,30 @@ class ProviderCall(Base):
     turn_id: Mapped[int | None] = mapped_column(default=None, index=True)
 
 
+class PushSubscription(Base):
+    """A browser where the learner gets the daily streak reminder by Web Push (the installed web app).
+
+    The native app schedules local notifications instead and never lands here. One row per browser
+    (`endpoint` is unique: the same browser signing in with another account moves to that account).
+    `hour`, `timezone` and `lang` are what the reminder needs; `last_sent_day` (in that zone) keeps it to
+    one a day. A push service answering 404/410 means the browser dropped it: the row is deleted.
+    Goes away with the account.
+    """
+
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True)
+    endpoint: Mapped[str] = mapped_column(String(1000), unique=True)
+    p256dh: Mapped[str] = mapped_column(String(200))
+    auth: Mapped[str] = mapped_column(String(100))
+    hour: Mapped[int] = mapped_column(default=19)
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC")
+    lang: Mapped[str] = mapped_column(String(2), default="es")
+    last_sent_day: Mapped[date | None] = mapped_column(Date, default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 engine = create_async_engine(settings.database_url)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -376,3 +400,4 @@ class ReplyReport(Base):
     reason: Mapped[str] = mapped_column(String(16))  # offensive, harmful, wrong, other
     comment: Mapped[str | None] = mapped_column(Text, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
