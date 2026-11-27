@@ -164,6 +164,8 @@ def test_llm_failure_creates_no_turn(client: TestClient, providers: Providers, d
     ("fake", "error", "status", "code"),
     [
         ("stt", STTError("down"), 503, "stt_unavailable"),
+        # The provider rejected the recording (an iOS MP4 Whisper could not read): not "service down"
+        ("stt", STTError("bad audio", status_code=400), 422, "audio_unreadable"),
         ("tts", TTSError("down"), 503, "tts_unavailable"),
     ],
 )

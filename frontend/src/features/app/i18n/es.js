@@ -197,6 +197,7 @@ export default {
     audio_too_large: 'El audio es demasiado largo. Habla en frases más cortas.',
     audio_format: 'Tu navegador grabó el audio en un formato que no admitimos.',
     audio_empty: 'No se grabó nada. Inténtalo otra vez.',
+    audio_unreadable: 'No pudimos leer tu grabación. Inténtalo otra vez.',
     turn_in_progress: 'Espera la respuesta de Guako antes de hablar de nuevo.',
     audio_consent_required: 'Para practicar tus palabras activa "Guardar mi audio" en Ajustes.',
     word_not_found: 'Esa palabra no está en tu lista.',

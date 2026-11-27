@@ -10,6 +10,9 @@ from app.tts.errors import TTSError
 
 logger = logging.getLogger("app.conversation")
 
+# The provider answered "what you sent is wrong" (bad or unreadable audio), not "I am down"
+_BAD_AUDIO_STATUSES = {400, 413, 415, 422}
+
 
 def _body(code: str, message: str) -> dict:
     return {"detail": {"code": code, "message": message}}
@@ -22,6 +25,12 @@ async def _handle_stt_error(_: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(
             status_code=422,
             content=_body("no_speech", "No se escuchó nada en el audio. Inténtalo de nuevo hablando más cerca del micrófono."),
+        )
+    if exc.kind == "invalid_input" or exc.status_code in _BAD_AUDIO_STATUSES:
+        # The provider rejected the recording itself: retrying the same audio will not help
+        return JSONResponse(
+            status_code=422,
+            content=_body("audio_unreadable", "No pudimos leer tu grabación. Inténtalo de nuevo."),
         )
     return JSONResponse(
         status_code=503,

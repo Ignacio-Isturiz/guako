@@ -78,7 +78,8 @@ class GroqWhisperSTTProvider(STTProvider):
             raise STTError("Groq rejected the API key", status_code=401, kind="auth") from exc
         except groq.APIStatusError as exc:
             raise STTError(
-                f"Groq API error (HTTP {exc.status_code})", status_code=exc.status_code, retry_after=retry_after_seconds(exc)
+                # Groq's own reason (e.g. "could not process file") says what was wrong with the audio
+                f"Groq API error (HTTP {exc.status_code}): {exc.message[:300]}", status_code=exc.status_code, retry_after=retry_after_seconds(exc)
             ) from exc
         except groq.APIError as exc:
             raise STTError(f"Groq request failed: {type(exc).__name__}") from exc

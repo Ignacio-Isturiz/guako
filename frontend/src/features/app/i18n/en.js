@@ -197,6 +197,7 @@ export default {
     audio_too_large: 'The audio is too long. Speak in shorter sentences.',
     audio_format: 'Your browser recorded the audio in a format we do not support.',
     audio_empty: 'Nothing was recorded. Try again.',
+    audio_unreadable: "We couldn't read your recording. Try again.",
     turn_in_progress: "Wait for Guako's answer before speaking again.",
     audio_consent_required: 'To practice your words, turn on "Save my audio" in Settings.',
     word_not_found: 'That word is not in your list.',
