@@ -575,3 +575,67 @@ def test_openai_is_a_real_llm_provider_in_the_chain() -> None:
     analysis = chains.build_llm("analysis", cfg())
 
     assert isinstance(analysis._router.routes[0].provider, OpenAIProvider)
+
+
+class _PickySTT:
+    """Rejects anything but FLAC with HTTP 400, as Groq did with recordings from an iPhone."""
+
+    model = "m"
+
+    def __init__(self) -> None:
+        self.paths: list[str] = []
+
+    def transcribe(self, audio_path: str, context: str | None = None) -> TranscriptionResult:
+        self.paths.append(audio_path)
+        if not audio_path.endswith(".flac"):
+            raise STTError("Groq API error (HTTP 400): could not process file", status_code=400)
+        return TranscriptionResult(text="hello", words=[], duration=1.0)
+
+
+def _picky(state):  # noqa: ANN001, ANN202
+    picky = _PickySTT()
+    return picky, RoutedSTT(ProviderRouter("stt", "conversation", [Route("groq", picky)], state, classify_stt, stt_exhausted))
+
+
+def _no_ffmpeg_needed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """as_flac without running ffmpeg: it writes an empty .flac next to the test."""
+    import contextlib
+
+    from app.providers import routed
+
+    @contextlib.contextmanager
+    def fake_as_flac(audio_path: str):  # noqa: ANN202
+        target = tmp_path / "converted.flac"
+        target.write_bytes(b"")
+        yield str(target)
+
+    monkeypatch.setattr(routed, "as_flac", fake_as_flac)
+
+
+def test_a_recording_the_provider_cannot_read_is_converted_and_tried_again(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _no_ffmpeg_needed(monkeypatch, tmp_path)
+    picky, stt = _picky(make_state())
+
+    assert stt.transcribe("turn.webm").text == "hello"
+    assert picky.paths == ["turn.webm", str(tmp_path / "converted.flac")]
+
+
+def test_ios_mp4_is_converted_before_the_first_try(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _no_ffmpeg_needed(monkeypatch, tmp_path)
+    picky, stt = _picky(make_state())
+
+    assert stt.transcribe("turn.mp4").text == "hello"
+    assert picky.paths == [str(tmp_path / "converted.flac")]
+
+
+def test_without_a_conversion_the_rejection_reaches_the_caller(monkeypatch: pytest.MonkeyPatch) -> None:
+    import contextlib
+
+    from app.providers import routed
+
+    monkeypatch.setattr(routed, "as_flac", lambda path: contextlib.nullcontext(None))
+    picky, stt = _picky(make_state())
+
+    with pytest.raises(STTError) as info:
+        stt.transcribe("turn.webm")
+    assert info.value.status_code == 400 and picky.paths == ["turn.webm"]

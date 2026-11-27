@@ -64,7 +64,7 @@ class OpenAIWhisperSTTProvider(STTProvider):
             raise STTError("OpenAI rejected the API key", status_code=401, kind="auth") from exc
         except openai.APIStatusError as exc:
             raise STTError(
-                f"OpenAI API error (HTTP {exc.status_code})", status_code=exc.status_code, retry_after=retry_after_seconds(exc)
+                f"OpenAI API error (HTTP {exc.status_code}): {exc.message[:300]}", status_code=exc.status_code, retry_after=retry_after_seconds(exc)
             ) from exc
         except openai.APIError as exc:
             raise STTError(f"OpenAI request failed: {type(exc).__name__}") from exc

@@ -4,6 +4,8 @@ The rest of the app keeps depending on LLMProvider / STTProvider / TTSProvider a
 provider answered. Each adapter says how to call a provider, what a call consumed, and how to read its errors.
 """
 
+import logging
+from pathlib import Path
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -19,6 +21,7 @@ from app.llm.errors import (
 from app.providers.errors import LLMExhausted, STTExhausted, TTSExhausted
 from app.providers.router import ProviderRouter, Route
 from app.providers.types import Classified, FailureKind, Usage
+from app.stt.audio import CONVERT_FIRST, as_flac
 from app.stt.base import STTProvider
 from app.stt.errors import NoSpeechError, STTError
 from app.stt.schemas import TranscriptionResult
@@ -31,6 +34,11 @@ T = TypeVar("T", bound=BaseModel)
 
 # Statuses that mean "what we sent is wrong": no other provider can fix them.
 _BAD_INPUT_STATUSES = {400, 413, 415, 422}
+
+# The provider could not read the recording: re-encoding it may fix that (a 413 or 422 it would not).
+_REJECTED_AUDIO_STATUSES = {400, 415}
+
+logger = logging.getLogger("app.stt")
 
 
 def _classify_http(status: int | None, kind: str | None, retry_after: float | None) -> Classified:
@@ -125,6 +133,23 @@ class RoutedSTT(STTProvider):
         return route.model if route else "unknown"
 
     def transcribe(self, audio_path: str, context: str | None = None) -> TranscriptionResult:
+        # iOS MP4 is converted up front. Any other recording a provider rejects (HTTP 400/415, as Groq does with
+        # some iOS recordings) is converted with ffmpeg and tried once more: the happy path pays no conversion.
+        if Path(audio_path).suffix.lower() in CONVERT_FIRST:
+            with as_flac(audio_path) as flac:
+                return self._run(flac or audio_path, context)
+        try:
+            return self._run(audio_path, context)
+        except STTError as exc:
+            if exc.status_code not in _REJECTED_AUDIO_STATUSES:
+                raise
+            with as_flac(audio_path) as flac:
+                if flac is None:
+                    raise
+                logger.warning("stt_retry_converted file=%s first_error=%s", Path(audio_path).name, exc)
+                return self._run(flac, context)
+
+    def _run(self, audio_path: str, context: str | None) -> TranscriptionResult:
         def invoke(route: Route) -> tuple[TranscriptionResult, Usage]:
             result = route.provider.transcribe(audio_path, context)
             observability.record_io(output=result.text)  # the transcript only: audio never leaves the server
